@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <memory>
+#include <algorithm>
+#include <string>
 
 //From my Intercept fork
 extern uintptr_t engineAlloc;
@@ -175,7 +177,7 @@ protected:
     Type *_ref;
 public:
     __forceinline Ref() { _ref = NULL; }
- 
+
     const Ref<Type> &operator = (Type *source) {
         Type *old = _ref;
         if (source) source->addRef();
@@ -217,7 +219,9 @@ public:
     RString(const char* str) {
         if (str) _ref = create(str);
     }
-
+    RString(const std::string str) {
+        if (str.length()) _ref = create(str.c_str(),str.length());
+    }
     RString(RString&& _move) {
         _ref = _move._ref;
         _move._ref = nullptr;
@@ -251,7 +255,7 @@ public:
 
     operator const char *() { return data(); }
     //This calls strlen so O(N) 
-    int length() const {
+    size_t length() const {
         if (!_ref) return 0;
         return strlen(_ref->data());
     }
@@ -269,7 +273,14 @@ public:
     bool compare_case_sensitive(const char *other) {
         return _stricmp(*this, other) == 0;
     }
-
+    bool startsWith(const char* other) {
+        return _strnicmp(*this, other, std::min(length(), strlen(other))) == 0;
+    }
+    RString substr(size_t offset, size_t length) {
+        if (_ref)
+            return RString(data() + offset, length);
+        return RString();
+    }
     size_t find(char ch, size_t start = 0) const {
         if (length() == 0) return -1;
         const char *pos = strchr(_ref->data() + start, ch);

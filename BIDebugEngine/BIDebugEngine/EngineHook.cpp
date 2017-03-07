@@ -28,8 +28,7 @@ EngineHook::EngineHook() {
 }
 
 EngineHook::~EngineHook() {}
-
-
+    
 uintptr_t scriptVMConstructorJmpBack;
 uintptr_t scriptVMSimulateStartJmpBack;
 uintptr_t instructionBreakpointJmpBack;
@@ -162,7 +161,6 @@ _declspec(naked) void worldSimulate() {
         jmp worldSimulateJmpBack;
     }
 }
-
 
 _declspec(naked) void worldMissionEventStart() {
     __asm {
@@ -317,7 +315,6 @@ void EngineHook::_scriptEntered(uintptr_t scrVMPtr) {
     globalTimeKeeper _tc;
     auto scVM = reinterpret_cast<RV_ScriptVM *>(scrVMPtr);
     scVM->debugPrint("Enter");
-    inScriptVM = true;
     currentContext = scriptExecutionContext::scriptVM;
 
     auto context = GlobalDebugger.getVMContext(&scVM->_context);
@@ -350,7 +347,6 @@ void EngineHook::_scriptLeft(uintptr_t scrVMPtr) {
     //    auto scope = scVM->_context.callStacks[scVM->_context.callStacksCount - 1];
     //    scope->printAllVariables();
     //}
-    inScriptVM = false; //#TODO remove inScriptVM and use currentContext instead
     currentContext = scriptExecutionContext::Invalid;
 }
 uintptr_t lastCallstackIndex = 0;

@@ -33,36 +33,41 @@ void VMContext::dbg_instructionTimeDiff(std::chrono::high_resolution_clock::dura
 }
 extern std::chrono::high_resolution_clock::time_point globalTime;
 extern std::chrono::high_resolution_clock::time_point frameStart;
+
+RString str_newScope("NewScope");
+RString str_dummyPlaceholder("dummyPlaceholder");
+RString str_DbgEngine("DbgEngine");
+
 void VMContext::addInstruction(RV_VMContext* ctx, RV_GameInstruction* instruction) {
     static uint32_t instructionCounter{ 0 };
     std::chrono::high_resolution_clock::time_point time(globalTime - frameStart);
     instructionCounter++;
-    std::string filename;
+    RString filename;
     if (!instruction->_scriptPos._sourceFile.isNull())
         filename = instruction->_scriptPos._sourceFile;
     uint16_t line = instruction->_scriptPos._sourceLine;
     uint16_t offset = instruction->_scriptPos._pos;
     auto dbg = instruction->GetDebugName();
-    std::string dbgName = dbg; 
-    if (dbgName.substr(0, strlen("const")) == "const")
+    RString dbgName = dbg; 
+    if (dbgName.startsWith("const"))
         dbgName = dbgName.substr(0, 7);
     if (dbg.length() < 2) return;
     if (ctx->callStacksCount > 1 && instructions.empty())
-        instructions.push_back(Instruction{ "dummyPlaceholder","DbgEngine",0,0,time });
+        instructions.push_back(Instruction{ str_dummyPlaceholder,str_DbgEngine,0,0,time });
     if (ctx->callStacksCount == 1) {
         instructions.push_back(Instruction{ dbgName,filename,line,offset,time });
     } else if (ctx->callStacksCount > 1) {
         Instruction* lastInstruction = &instructions.back();
         for (int i = 0; i < ctx->callStacksCount - 2; i++) {
             if (lastInstruction->lowerScope.empty()) {
-                lastInstruction->lowerScope.push_back(Instruction{ "dummyPlaceholder","DbgEngine",0,0,time });
+                lastInstruction->lowerScope.push_back(Instruction{ str_dummyPlaceholder,str_DbgEngine,0,0,time });
             }
             lastInstruction = &lastInstruction->lowerScope.back();
         }
         if (lastInstruction->lowerScope.capacity() - lastInstruction->lowerScope.size() < 2)
             lastInstruction->lowerScope.reserve(lastInstruction->lowerScope.capacity() * 2);
         if (lastInstruction->lowerScope.empty()) { //New scope
-            lastInstruction->lowerScope.push_back(Instruction{ ctx->callStacks[ctx->callStacksCount - 1]->allVariablesToString(), "NewScope" ,0,0,time });
+            lastInstruction->lowerScope.push_back(Instruction{ ctx->callStacks[ctx->callStacksCount - 1]->allVariablesToString(), str_newScope ,0,0,time });
         }
         lastInstruction->lowerScope.push_back(Instruction{ dbgName,filename,line,offset,time });
     } else {

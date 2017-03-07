@@ -10,8 +10,8 @@ class Script;
 
 class Instruction {
 public:
-    std::string debugName;
-    std::string file;
+    RString debugName;
+    RString file;
     uint16_t line;
     uint16_t offset; //#TODO make 32bit
     std::chrono::high_resolution_clock::time_point execTime;

@@ -8,48 +8,9 @@ static DllInterface dllIface;
 static EngineInterface* engineIface;
 extern EngineHook GlobalEngineHook;
 uintptr_t engineAlloc;
-#include <Psapi.h>
-#pragma comment (lib, "Psapi.lib")//GetModuleInformation
-void DllInterface::Startup() {
-    GlobalEngineHook.placeHooks();
 
-
-
-    //Get engine allocator - From my Intercept fork
-    //Find the allocator base
-    MODULEINFO modInfo = { 0 };
-    HMODULE hModule = GetModuleHandleA(nullptr);
-    GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
-
-    auto findInMemory = [&modInfo](char* pattern, size_t patternLength) ->uintptr_t {
-        uintptr_t base = reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll);
-        uintptr_t size = static_cast<uintptr_t>(modInfo.SizeOfImage);
-        for (DWORD i = 0; i < size - patternLength; i++) {
-            bool found = true;
-            for (DWORD j = 0; j < patternLength; j++) {
-                found &= pattern[j] == *reinterpret_cast<char*>(base + i + j);
-                if (!found)
-                    break;
-            }
-            if (found)
-                return base + i;
-        }
-        return 0;
-    };
-
-    auto getRTTIName = [](uintptr_t vtable) -> const char* {
-        uintptr_t typeBase = *((uintptr_t*) (vtable - 4));
-        uintptr_t type = *((uintptr_t*) (typeBase + 0xC));
-        return (char*) (type + 9);
-    };
-
-
-
-    uintptr_t stringOffset = findInMemory("tbb4malloc_bi", 13);
-
-    uintptr_t allocatorVtablePtr = (findInMemory((char*) &stringOffset, 4) - 4);
-    const char* test = getRTTIName(*reinterpret_cast<uintptr_t*>(allocatorVtablePtr));
-    engineAlloc = allocatorVtablePtr;
+void DllInterface::Startup() {  
+    GlobalEngineHook.placeHooks();    
 }
 
 void DllInterface::Shutdown() {

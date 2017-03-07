@@ -1,11 +1,17 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include <windows.h>
 #include <string>
+#include <Psapi.h>
+#pragma comment (lib, "Psapi.lib")//GetModuleInformation
+extern uintptr_t engineAlloc;
 
 BOOL APIENTRY DllMain(HMODULE hModule,
     DWORD  ul_reason_for_call,
     LPVOID lpReserved
 ) {
+    while (!IsDebuggerPresent()) Sleep(1u);
+
+
     switch (ul_reason_for_call) {
         case DLL_PROCESS_ATTACH:
         case DLL_THREAD_ATTACH:
@@ -14,13 +20,80 @@ BOOL APIENTRY DllMain(HMODULE hModule,
             break;
     }
 
+    return TRUE;
+}
+
+extern "C" BOOL WINAPI _DllMainCRTStartup(
+    HINSTANCE const instance,
+    DWORD     const reason,
+    LPVOID    const reserved
+);
+
+BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason,LPVOID) {
+    if (reason != DLL_PROCESS_ATTACH) return TRUE;
+    //Post entry point and pre DllMain
+
+    while (!IsDebuggerPresent()) Sleep(1u);
+
+
+    //Get engine allocator - From my Intercept fork
+    //Find the allocator base
+    //This has to happen pre CRTInit because static/global Variables may need to alloc in Engine
+    MODULEINFO modInfo = { 0 };
+    HMODULE hModule = GetModuleHandleA(nullptr);
+    GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
+
+    auto findInMemory = [&modInfo](char* pattern, size_t patternLength) ->uintptr_t {
+        uintptr_t base = reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll);
+        uintptr_t size = static_cast<uintptr_t>(modInfo.SizeOfImage);
+        for (DWORD i = 0; i < size - patternLength; i++) {
+            bool found = true;
+            for (DWORD j = 0; j < patternLength; j++) {
+                found &= pattern[j] == *reinterpret_cast<char*>(base + i + j);
+                if (!found)
+                    break;
+            }
+            if (found)
+                return base + i;
+        }
+        return 0;
+    };
+
+    auto getRTTIName = [](uintptr_t vtable) -> const char* {
+        uintptr_t typeBase = *((uintptr_t*) (vtable - 4));
+        uintptr_t type = *((uintptr_t*) (typeBase + 0xC));
+        return (char*) (type + 9);
+    };
 
 
 
+    uintptr_t stringOffset = findInMemory("tbb4malloc_bi", 13);
+
+    uintptr_t allocatorVtablePtr = (findInMemory((char*) &stringOffset, 4) - 4);
+    const char* test = getRTTIName(*reinterpret_cast<uintptr_t*>(allocatorVtablePtr));
+    engineAlloc = allocatorVtablePtr;
+
+
+
+   
 
     return TRUE;
 }
 
+extern "C" BOOL(WINAPI * const _pRawDllMain)(HINSTANCE, DWORD, LPVOID) = &_RawDllMain;
+
+
+//Alternative entry point that can be specified in Linker settings that will be called before _RawDllMain
+extern "C" BOOL WINAPI _DllPreAttach(
+    HINSTANCE const instance,
+    DWORD     const reason,
+    LPVOID    const reserved
+) {
+    //Entry point
+    while (!IsDebuggerPresent()) Sleep(1u);
+
+    return _DllMainCRTStartup(instance, reason, reserved);
+};
 
 //kju asked for this in discord Feb, 18 2017 #tools_makers
 bool shouldCreate(std::string inFile, std::string outfile) {
