@@ -9,20 +9,19 @@
 *.pch
 
 # Compiled Dynamic libraries
-*.so
-*.dylib
 *.dll
 
-# Fortran module files
-*.mod
-
 # Compiled Static libraries
-*.lai
-*.la
-*.a
 *.lib
 
 # Executables
 *.exe
-*.out
-*.app
+
+*.sdf
+*.opendb
+/BIDebugEngine/BIDebugEngine/Release
+BIDebugEngine/BIDebugEngine/Debug/
+/BIDebugEngine/Release
+/BIDebugEngine/Debug
+/build-DisplayTest-Qt_5_5_MSVC2015x86-Release
+/build-DisplayTest-Qt_5_5_MSVC2015x86-Debug
