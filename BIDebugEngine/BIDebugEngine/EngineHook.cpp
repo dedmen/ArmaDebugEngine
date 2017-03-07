@@ -4,6 +4,7 @@
 #include "Debugger.h"
 #include "Script.h"
 #include "VMContext.h"
+#include <sstream>
 
 bool inScriptVM;
 EngineHook GlobalEngineHook;
@@ -28,7 +29,7 @@ EngineHook::EngineHook() {
 }
 
 EngineHook::~EngineHook() {}
-    
+
 uintptr_t scriptVMConstructorJmpBack;
 uintptr_t scriptVMSimulateStartJmpBack;
 uintptr_t instructionBreakpointJmpBack;
@@ -350,6 +351,10 @@ void EngineHook::_scriptLeft(uintptr_t scrVMPtr) {
     currentContext = scriptExecutionContext::Invalid;
 }
 uintptr_t lastCallstackIndex = 0;
+
+#include <typeinfo>
+
+
 void EngineHook::_scriptInstruction(uintptr_t instructionBP_Instruction, uintptr_t instructionBP_VMContext, uintptr_t instructionBP_gameState, uintptr_t instructionBP_IDebugScript) {
     globalTimeKeeper _tc;
     auto start = std::chrono::high_resolution_clock::now();
@@ -366,8 +371,43 @@ void EngineHook::_scriptInstruction(uintptr_t instructionBP_Instruction, uintptr
         script->_fileName = instruction->_scriptPos._sourceFile;
     //auto callStackIndex = ctx->callStacksCount;
     //bool stackChangeImminent = dbg == "operator call" || dbg == "function call"; //This is a call instruction. This means next instruction will go into lower scope
+    if (currentContext == scriptExecutionContext::scriptVM && ctx->callStacksCount > 3) {
 
-    context->addInstruction(ctx, instruction);
+        context->addInstruction(ctx, instruction);
+        std::stringstream callstack;
+        for (int i = ctx->callStacksCount - 1; i > -1; --i) {
+            auto callStackItem = ctx->callStacks[i];
+            auto *test = &typeid(*callStackItem);
+            callstack << typeid(*callStackItem).name() << " " << callStackItem->allVariablesToString();
+            if (strcmp(typeid(*callStackItem).name(), "class CallStackItemSimple") == 0) {
+                callstack << " f " << static_cast<CallStackItemSimple*>(callStackItem)->_content._fileName.data()
+                    << " - " << static_cast<CallStackItemSimple*>(callStackItem)->_content._content.substr(0, 40) << "\n";
+                auto item = static_cast<CallStackItemSimple*>(callStackItem);
+                callstack << "\t>>" << item->_instructions[item->_currentInstruction-1]->GetDebugName() << " f"
+                    << item->_instructions[item->_currentInstruction-1]->_scriptPos._sourceFile;
+
+            }
+            if (strcmp(typeid(*callStackItem).name(), "class CallStackItemData") == 0) {
+                auto item = static_cast<CallStackItemData*>(callStackItem);
+                callstack << " f " << item->_code->_instructions._code[item->_ip-1]->_scriptPos._sourceFile
+                    << " - " << item->_code->_instructions._code[item->_ip - 1]->_scriptPos._content.substr(0, 40) << "\n";
+                callstack << "\t>>" << item->_code->_instructions._code[item->_ip - 1]->GetDebugName() << " f"
+                    << item->_code->_instructions._code[item->_ip - 1]->_scriptPos._sourceFile;
+            }
+
+
+
+            
+                
+            callstack << "\n";
+        }
+        OutputDebugStringA(callstack.str().c_str());
+
+
+
+
+    }
+
 
 
 

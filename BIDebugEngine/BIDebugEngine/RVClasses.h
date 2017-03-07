@@ -365,3 +365,35 @@ public:
 
     SourceDocPos _scriptPos;
 };
+
+
+
+template<class Type>
+class Array {
+protected:
+    Type *_data;
+    int _n;
+public:
+    Array() {};
+    Type &get(int i) {
+        return _data[i];
+    }
+    Type &operator [] (int i) { return get(i); }
+    Type *data() { return _data; }
+    int count() const { return _n; }
+
+    Type &front() { return get(0); }
+    Type &back() { return get(_n - 1); }
+
+    bool isEmpty() const { return _n == 0; }
+};
+
+template<class Type>
+class AutoArray : public Array<Type> {
+protected:
+    int _maxItems;
+public:
+    AutoArray() : _maxItems(0), Array() {};
+};
+
+

@@ -126,6 +126,36 @@ class CallStackItem : public RefCount, public IDebugScope {
     RString _scopeName;
 };
 
+class CallStackItemSimple : public CallStackItem {
+public:
+    AutoArray<Ref<RV_GameInstruction>> _instructions;
+    int _currentInstruction;
+    SourceDoc _content;
+    bool _multipleInstructions;
+};
+
+class GameData : public RefCount, public IDebugValue {
+public:
+    virtual ~GameData() {}
+};
+struct GameCodeType { //#TODO can I inline this?
+    RString _string;
+    AutoArray<Ref<RV_GameInstruction>> _code;
+    bool _compiled;
+};
+
+class GameDataCode : public GameData {
+public:
+    GameCodeType _instructions;
+    bool _final;
+};
+
+class CallStackItemData : public CallStackItem {
+public:
+    Ref<GameDataCode> _code; // compiled code
+    int _ip; // instruction pointer
+};
+
 struct RV_VMContext {
     uintptr_t vtable;
     CallStackItem** callStacks;
