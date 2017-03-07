@@ -36,8 +36,8 @@ uintptr_t worldSimulateJmpBack;
 uintptr_t worldMissionEventStartJmpBack;
 uintptr_t worldMissionEventEndJmpBack;
 
-uintptr_t hookEnabled_Instruction{ 0 };
-uintptr_t hookEnabled_Simulate{ 0 };
+uintptr_t hookEnabled_Instruction{ 1 };
+uintptr_t hookEnabled_Simulate{ 1 };
 uintptr_t scriptVM;
 _declspec(naked) void scriptVMConstructor() {
     __asm {
@@ -235,7 +235,7 @@ enum class scriptExecutionContext {
     EventHandler = 2
 };
 scriptExecutionContext currentContext = scriptExecutionContext::Invalid;
-
+MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create some invalid handler type
 
 
 void EngineHook::placeHooks() {
@@ -395,6 +395,7 @@ void EngineHook::_scriptInstruction(uintptr_t instructionBP_Instruction, uintptr
 
 void EngineHook::_world_OnMissionEventStart(uintptr_t eventType) {
     currentContext = scriptExecutionContext::EventHandler;
+    currentEventHandler = static_cast<MissionEventType>(eventType);
 }
 
 void EngineHook::_world_OnMissionEventEnd() {
