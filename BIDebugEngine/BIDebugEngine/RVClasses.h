@@ -4,7 +4,8 @@
 #include <memory>
 #include <algorithm>
 #include <string>
-
+#include "GlobalHeader.h"
+class JsonArchive;
 //From my Intercept fork
 extern uintptr_t engineAlloc;
 template<class Type>
@@ -176,6 +177,7 @@ class Ref {
 protected:
     Type *_ref;
 public:
+    typedef Type baseType;
     __forceinline Ref() { _ref = NULL; }
 
     const Ref<Type> &operator = (Type *source) {
@@ -206,6 +208,78 @@ public:
 
     __forceinline Type *operator -> () const { return _ref; }
     __forceinline operator Type *() const { return _ref; }
+
+    template < typename = typename std::enable_if<has_Serialize<Type>::value>::type>
+    void Serialize(JsonArchive& ar) {
+        _ref->Serialize(ar);
+    }
+
+    template < typename = typename std::enable_if<has_Serialize<Type>::value>::type>
+    void Serialize(JsonArchive& ar) const {
+        _ref->Serialize(ar);
+    }
+
+};
+
+template<class Type>
+class IRef {
+protected:
+    Type *_ref;
+public:
+    typedef Type baseType;
+    __forceinline IRef() { _ref = NULL; }
+
+    const Ref<Type> &operator = (Type *source) {
+        Type *old = _ref;
+        if (source) source->IaddRef();
+        _ref = source;
+        if (old) old->Irelease();
+        return *this;
+    }
+    IRef(const IRef &sRef) {
+        Type *source = sRef._ref;
+        if (source) source->IaddRef();
+        _ref = source;
+    }
+    const IRef<Type> &operator = (const IRef &sRef) {
+        Type *source = sRef._ref;
+        Type *old = _ref;
+        if (source) source->IaddRef();
+        _ref = source;
+        if (old) old->Irelease();
+        return *this;
+    }
+    __forceinline bool isNull() const { return _ref == nullptr; }
+    __forceinline bool isNotNull() const { return !isNull(); }
+    __forceinline ~IRef() { release(); }
+    void release() { if (_ref) _ref->Irelease(), _ref = nullptr; }
+    __forceinline Type *get() const { return _ref; }
+
+    __forceinline Type *operator -> () const { return _ref; }
+    __forceinline operator Type *() const { return _ref; }
+
+    template < typename = typename std::enable_if<has_Serialize<Type>::value>::type>
+    void Serialize(JsonArchive& ar) {
+        _ref->Serialize(ar);
+    }
+
+    template < typename = typename std::enable_if<has_Serialize<Type>::value>::type>
+    void Serialize(JsonArchive& ar) const {
+        _ref->Serialize(ar);
+    }
+};
+
+
+
+class RStringRef {
+    RStringRef(Ref<compact_array<char>>& str) {
+
+    }
+private:
+    Ref<compact_array<char>> _ref;
+    uint32_t offset;
+    uint32_t length;
+    //#TODO complete this. And return ref for RString::substr
 };
 
 
@@ -220,7 +294,7 @@ public:
         if (str) _ref = create(str);
     }
     RString(const std::string str) {
-        if (str.length()) _ref = create(str.c_str(),str.length());
+        if (str.length()) _ref = create(str.c_str(), str.length());
     }
     RString(RString&& _move) {
         _ref = _move._ref;
@@ -242,7 +316,7 @@ public:
         _ref = _copy._ref;
         return *this;
     }
-    const char* data() {
+    const char* data() const {
         if (_ref) return _ref->data();
         static char empty[]{ 0 };
         return empty;
@@ -253,7 +327,7 @@ public:
         return _ref->data();
     }
 
-    operator const char *() { return data(); }
+    operator const char *() const { return data(); }
     //This calls strlen so O(N) 
     size_t length() const {
         if (!_ref) return 0;
@@ -276,7 +350,7 @@ public:
     bool startsWith(const char* other) {
         return _strnicmp(*this, other, std::min(length(), strlen(other))) == 0;
     }
-    RString substr(size_t offset, size_t length) {
+    RString substr(size_t offset, size_t length) const {
         if (_ref)
             return RString(data() + offset, length);
         return RString();
@@ -362,11 +436,10 @@ public:
     virtual bool IsNewExpression() { return false; }
     virtual RString GetDebugName() { return RString(); };
 
+    void Serialize(JsonArchive& ar);
 
     SourceDocPos _scriptPos;
 };
-
-
 
 template<class Type>
 class Array {
@@ -378,14 +451,34 @@ public:
     Type &get(int i) {
         return _data[i];
     }
+    const Type &get(int i) const {
+        return _data[i];
+    }
     Type &operator [] (int i) { return get(i); }
+    const Type &operator [] (int i) const { return get(i); }
     Type *data() { return _data; }
     int count() const { return _n; }
 
     Type &front() { return get(0); }
     Type &back() { return get(_n - 1); }
 
+    const Type &front() const { return get(0); }
+    const Type &back() const { return get(_n - 1); }
+
     bool isEmpty() const { return _n == 0; }
+
+    template <class Func>
+    void forEach(const Func &f) const {
+        for (int i = 0; i < count(); i++) {
+            f(get(i));
+        }
+    }
+    template <class Func>
+    void forEach(const Func &f) {
+        for (int i = 0; i < count(); i++) {
+            f(get(i));
+        }
+    }
 };
 
 template<class Type>
@@ -396,4 +489,101 @@ public:
     AutoArray() : _maxItems(0), Array() {};
 };
 
+static inline unsigned int CalculateStringHashValue(const char *key, int hashValue = 0) {
+    while (*key) {
+        hashValue = hashValue * 33 + static_cast<unsigned char>(*key++);
+    }
+    return hashValue;
+}
+static inline unsigned int CalculateStringHashValueCI(const char *key, int hashValue = 0) {
+    while (*key) {
+        hashValue = hashValue * 33 + static_cast<unsigned char>(tolower(*key++));
+    }
+    return hashValue;
+}
 
+
+template <class Type>
+struct MapStringToClassTrait {
+    static unsigned int hashKey(const char * key) {
+        return CalculateStringHashValue(key);
+    }
+    static int compareKeys(const char * k1, const char * k2) {
+        return strcmp(k1, k2);
+    }
+};
+
+template <class Type>
+struct MapStringToClassTraitCaseInsensitive : public MapStringToClassTrait<Type> {
+    static unsigned int hashKey(const char * key) {
+        return CalculateStringHashValueCI(key);
+    }
+
+    static int compareKeys(const char * k1, const char * k2) {
+        return strcmpi(k1, k2);
+    }
+};
+
+template <class Type, class Container, class Traits = MapStringToClassTrait<Type>>
+class MapStringToClass {
+protected:
+    Container *_table;
+    int _tableCount{ 0 };
+    int _count{ 0 };
+    static Type _nullEntry;
+public:
+    MapStringToClass() {}
+    ~MapStringToClass() {}
+
+    template <class Func>
+    void forEach(Func func) const;
+
+    const Type &get(const char* key) const;
+
+    static bool isNull(const Type &value) { return &value == &_nullEntry; }
+
+    bool hasKey(const char* key) const;
+
+public:
+    int count() const { return _count; }
+protected:
+    int hashKey(const char* key) const;
+};
+
+template<class Type, class Container, class Traits>
+Type MapStringToClass<Type, Container, Traits>::_nullEntry;
+
+
+template<class Type, class Container, class Traits>
+int MapStringToClass<Type, Container, Traits>::hashKey(const char* key) const {
+    return Traits::hashKey(key) % _tableCount;
+}
+
+template<class Type, class Container, class Traits>
+template <class Func>
+void MapStringToClass<Type, Container, Traits>::forEach(Func func) const {
+    if (!_table || !_count) return;
+    for (int i = 0; i < _tableCount; i++) {
+        const Container &container = _table[i];
+        for (int j = 0; j < container.count(); j++) {
+            func(container[j]);
+        }
+    }
+}
+
+template<class Type, class Container, class Traits>
+const Type &MapStringToClass<Type, Container, Traits>::get(const char* key) const {
+    if (!_table || !_count) return _nullEntry;
+    int hashedKey = hashKey(key);
+    for (int i = 0; i < _table[hashedKey].Size(); i++) {
+        const Type &item = _table[hashedKey][i];
+        if (Traits::compareKeys(item.getMapKey(), key) == 0)
+            return item;
+    }
+    return _nullEntry;
+}
+
+template <class Type, class Container, class Traits>
+bool MapStringToClass<Type, Container, Traits>::hasKey(const char* key) const {
+    return !isNull(get(key));
+}

@@ -2,8 +2,10 @@
 #include "RVClasses.h"
 #include <string>
 
+class JsonArchive;
 class IDebugValue;
-typedef Ref<IDebugValue> IDebugValueRef;
+
+typedef IRef<IDebugValue> IDebugValueRef;
 
 class IDebugValue {
 public:
@@ -11,10 +13,10 @@ public:
     virtual ~IDebugValue() {}
 
     // reference counting
-    virtual int addRef() = 0;
-    virtual int release() = 0;
+    virtual int IaddRef() = 0;
+    virtual int Irelease() = 0;
 
-    virtual void getType(char *buffer, int len) const = 0;
+    virtual void getTypeString(char *buffer, int len) const = 0;
     //base is number base. So base10 by default probably
     virtual void getValue(unsigned int base, char *buffer, int len) const = 0;
     virtual bool isArray() const = 0;
@@ -28,7 +30,7 @@ public:
     //Use _name variable directly instead! getName copies the buffer
     virtual void getName(char *buffer, int len) const {};
     virtual IDebugValueRef getValue() const { return IDebugValueRef(); };
-    RString _name;
+    //RString _name;
 };
 
 class IDebugScope {
@@ -108,16 +110,65 @@ public:
 
     virtual void DebugEngineLog(const char *str);
 };
+class GameValue;
+class GameData : public RefCount, public IDebugValue {   //#TODO move to right headerfile
+public:
+
+    virtual const void* getGameType() const { return nullptr; } //Don't call
+    virtual ~GameData() {}
+
+    virtual bool getBool() const { return false; }
+    virtual float getNumber() const { return 0; }
+    virtual RString getString() const { return ""; } //Don't use this! use getAsString instead!
+    virtual const AutoArray<GameValue> &getArray() const { return AutoArray<GameValue>(); }
+    virtual void _1() const { }//Don't call this
+    virtual void _2() const {}//Don't call thiss
+    virtual void setReadOnly(bool val) {}
+    //! check read only status
+    virtual bool isReadOnly() const { return false; }
+
+    virtual bool isFinal() const { return false; }
+    virtual void setFinal(bool val) {};
+
+    virtual RString getAsString() const { return ""; }
+    virtual bool isEqualTo(const GameData *data) const { return false; };
+
+    virtual const char *getTypeString() const { return ""; }
+    virtual bool isNil() const { return false; }
+
+    void Serialize(JsonArchive& ar) const;
+
+
+};
+
+class GameValue {
+    uintptr_t vtable {0};
+public:
+    Ref<GameData> _data;
+    GameValue() {};
+    void Serialize(JsonArchive& ar) const;
+    bool isNull() const { return _data.isNull(); }
+};
+
+
+class GameVariable : public IDebugVariable {
+public:
+    RString _name;
+    GameValue _value;
+    bool _readOnly{ false };
+
+    GameVariable() {};
+    const char *getMapKey() const { return _name; }
+};
 
 class CallStackItem : public RefCount, public IDebugScope {
+public:
     CallStackItem* _parent;
     struct GameVarSpace {
         uintptr_t vtable;
-        uintptr_t _1;
-        uintptr_t _2;
-        uintptr_t _3;
-        uintptr_t _4;
-        uintptr_t _5;
+        MapStringToClass<GameVariable, AutoArray<GameVariable> > _variables;
+        GameVarSpace *_parent;
+        bool _1;
     } _varSpace;
     /// number of values on the data stack when item was created
     int _stackBottom;
@@ -134,10 +185,7 @@ public:
     bool _multipleInstructions;
 };
 
-class GameData : public RefCount, public IDebugValue {
-public:
-    virtual ~GameData() {}
-};
+
 struct GameCodeType { //#TODO can I inline this?
     RString _string;
     AutoArray<Ref<RV_GameInstruction>> _code;
@@ -158,8 +206,9 @@ public:
 
 struct RV_VMContext {
     uintptr_t vtable;
-    CallStackItem** callStacks;
-    int callStacksCount;
+    Array<Ref<CallStackItem>> callStack; //max 64 items
+
+    void Serialize(JsonArchive& ar);
 };
 
 class RV_ScriptVM : public IDebugScript {

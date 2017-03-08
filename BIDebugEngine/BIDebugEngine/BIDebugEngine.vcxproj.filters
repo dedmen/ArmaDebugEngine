@@ -25,6 +25,12 @@
     <Filter Include="Source Files\Debugger">
       <UniqueIdentifier>{7f20a2ee-7418-4649-a889-f1fb32d60cfd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Serialization">
+      <UniqueIdentifier>{1ae99b5e-f4fa-41e9-9914-b3e6b6033b5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Serialization">
+      <UniqueIdentifier>{e8658481-2172-41d8-9c7a-d91b55d751de}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -48,6 +54,12 @@
     <ClCompile Include="EngineHook.cpp">
       <Filter>Source Files\BIDebugEngine</Filter>
     </ClCompile>
+    <ClCompile Include="Serialize.cpp">
+      <Filter>Source Files\Serialization</Filter>
+    </ClCompile>
+    <ClCompile Include="RVClasses.cpp">
+      <Filter>Source Files\BIDebugEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BIDebugEngine.h">
@@ -67,6 +79,15 @@
     </ClInclude>
     <ClInclude Include="RVClasses.h">
       <Filter>Header Files\BIDebugEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Serialize.h">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="json.hpp">
+      <Filter>Header Files\Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalHeader.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

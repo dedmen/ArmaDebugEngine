@@ -173,15 +173,20 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="EngineHook.cpp" />
+    <ClCompile Include="RVClasses.cpp" />
     <ClCompile Include="Script.cpp" />
+    <ClCompile Include="Serialize.cpp" />
     <ClCompile Include="VMContext.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BIDebugEngine.h" />
     <ClInclude Include="Debugger.h" />
     <ClInclude Include="EngineHook.h" />
+    <ClInclude Include="GlobalHeader.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="RVClasses.h" />
     <ClInclude Include="Script.h" />
+    <ClInclude Include="Serialize.h" />
     <ClInclude Include="VMContext.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

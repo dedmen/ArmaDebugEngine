@@ -52,13 +52,13 @@ void VMContext::addInstruction(RV_VMContext* ctx, RV_GameInstruction* instructio
     if (dbgName.startsWith("const"))
         dbgName = dbgName.substr(0, 7);
     if (dbg.length() < 2) return;
-    if (ctx->callStacksCount > 1 && instructions.empty())
+    if (ctx->callStack.count() > 1 && instructions.empty())
         instructions.push_back(Instruction{ str_dummyPlaceholder,str_DbgEngine,0,0,time });
-    if (ctx->callStacksCount == 1) {
+    if (ctx->callStack.count() == 1) {
         instructions.push_back(Instruction{ dbgName,filename,line,offset,time });
-    } else if (ctx->callStacksCount > 1) {
+    } else if (ctx->callStack.count() > 1) {
         Instruction* lastInstruction = &instructions.back();
-        for (int i = 0; i < ctx->callStacksCount - 2; i++) {
+        for (int i = 0; i < ctx->callStack.count() - 2; i++) {
             if (lastInstruction->lowerScope.empty()) {
                 lastInstruction->lowerScope.push_back(Instruction{ str_dummyPlaceholder,str_DbgEngine,0,0,time });
             }
@@ -67,7 +67,7 @@ void VMContext::addInstruction(RV_VMContext* ctx, RV_GameInstruction* instructio
         if (lastInstruction->lowerScope.capacity() - lastInstruction->lowerScope.size() < 2)
             lastInstruction->lowerScope.reserve(lastInstruction->lowerScope.capacity() * 2);
         if (lastInstruction->lowerScope.empty()) { //New scope
-            lastInstruction->lowerScope.push_back(Instruction{ ctx->callStacks[ctx->callStacksCount - 1]->allVariablesToString(), str_newScope ,0,0,time });
+            lastInstruction->lowerScope.push_back(Instruction{ ctx->callStack.back()->allVariablesToString(), str_newScope ,0,0,time });
         }
         lastInstruction->lowerScope.push_back(Instruction{ dbgName,filename,line,offset,time });
     } else {

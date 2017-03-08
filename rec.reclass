@@ -5,8 +5,8 @@
     <Header Text="" />
     <Footer Text="" />
     <Notes Text="" />
-    <Class Name="GameInstruction" Type="28" Comment="" Offset="124100728" strOffset="0x0765a078" Code="">
-        <Node Name="N00000001" Type="8" Size="4" bHidden="0" Comment="" Pointer="N00000669" />
+    <Class Name="GameInstruction" Type="28" Comment="" Offset="1335000688" strOffset="0x4f927e70" Code="">
+        <Node Name="N00000001" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N00000002" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N00000003" Type="4" Size="4" bHidden="0" Comment="sourcePos" />
         <Node Name="N00000004" Type="4" Size="4" bHidden="0" Comment="rString sourceFIle" />
@@ -31,7 +31,7 @@
         <Node Name="N00000055" Type="18" Size="100" bHidden="0" Comment="" />
         <Node Name="N00000046" Type="18" Size="71" bHidden="0" Comment="" />
     </Class>
-    <Class Name="VmContext" Type="28" Comment="" Offset="9891956" strOffset="0x0096f074" Code="">
+    <Class Name="VmContext" Type="28" Comment="" Offset="1352049168" strOffset="0x5096a210" Code="">
         <Node Name="N00000059" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N0000005A" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N0000005B" Type="4" Size="4" bHidden="0" Comment="" />
@@ -39,9 +39,9 @@
         <Node Name="N0000005D" Type="8" Size="4" bHidden="0" Comment="" Pointer="CallStackItem" />
         <Node Name="N0000005E" Type="8" Size="4" bHidden="0" Comment="" Pointer="CallStackItem" />
         <Node Name="N0000005F" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000060" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000060" Type="8" Size="4" bHidden="0" Comment="" Pointer="CallStackItem" />
         <Node Name="N00000061" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000062" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000062" Type="8" Size="4" bHidden="0" Comment="" Pointer="CallStackItem" />
         <Node Name="N00000063" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N00000064" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N00000065" Type="8" Size="4" bHidden="0" Comment="" Pointer="CallStackItem" />
@@ -119,9 +119,9 @@
         <Node Name="N000000AB" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N000000AC" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N000000AD" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N000000AE" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N000000AE" Type="8" Size="4" bHidden="0" Comment="" Pointer="N000006C4" />
         <Node Name="N000000AF" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N000000B0" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N000000B0" Type="8" Size="4" bHidden="0" Comment="" Pointer="N000006C7" />
         <Node Name="N000000B1" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N000000B2" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N000000B3" Type="4" Size="4" bHidden="0" Comment="" />
@@ -374,7 +374,7 @@
         <Node Name="N000001DC" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N000001DD" Type="4" Size="4" bHidden="0" Comment="" />
     </Class>
-    <Class Name="ScriptVM" Type="28" Comment="" Offset="1623351040" strOffset="0x60c25f00" Code="">
+    <Class Name="ScriptVM" Type="28" Comment="" Offset="982542336" strOffset="0x3a906800" Code="">
         <Node Name="N000001A9" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N000001AA" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N000001AB" Type="4" Size="4" bHidden="0" Comment="" />
@@ -1186,25 +1186,6 @@
     <Class Name="N00000666" Type="28" Comment="" Offset="4194304" strOffset="400000" Code="">
         <Node Name="N00000667" Type="4" Size="4" bHidden="0" Comment="" />
     </Class>
-    <Class Name="N00000669" Type="28" Comment="" Offset="4194304" strOffset="400000" Code="">
-        <Node Name="N0000066A" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N0000066B" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N0000066C" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N0000066D" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N0000066E" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N0000066F" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000670" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000671" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000672" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000673" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000674" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000675" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000676" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000677" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000678" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N00000679" Type="4" Size="4" bHidden="0" Comment="" />
-        <Node Name="N0000067A" Type="4" Size="4" bHidden="0" Comment="" />
-    </Class>
     <Class Name="N0000067C" Type="28" Comment="" Offset="4194304" strOffset="400000" Code="">
         <Node Name="N0000067D" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N0000067E" Type="4" Size="4" bHidden="0" Comment="" />
@@ -1738,5 +1719,49 @@
         <Node Name="N00000D61" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N00000D62" Type="4" Size="4" bHidden="0" Comment="" />
         <Node Name="N00000D63" Type="4" Size="4" bHidden="0" Comment="" />
+    </Class>
+    <Class Name="N000006C4" Type="28" Comment="" Offset="4194304" strOffset="400000" Code="">
+        <Node Name="N000006C5" Type="4" Size="4" bHidden="0" Comment="" />
+    </Class>
+    <Class Name="N000006C7" Type="28" Comment="" Offset="4194304" strOffset="400000" Code="">
+        <Node Name="N000006C8" Type="4" Size="4" bHidden="0" Comment="" />
+    </Class>
+    <Class Name="N00000764" Type="28" Comment="" Offset="4194304" strOffset="400000" Code="">
+        <Node Name="N00000765" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000766" Type="8" Size="4" bHidden="0" Comment="" Pointer="N00000777" />
+        <Node Name="N00000767" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000768" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000769" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000076A" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000076B" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000076C" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000076D" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000076E" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000076F" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000770" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000771" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000772" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000773" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000774" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000775" Type="4" Size="4" bHidden="0" Comment="" />
+    </Class>
+    <Class Name="N00000777" Type="28" Comment="" Offset="4194304" strOffset="400000" Code="">
+        <Node Name="N00000778" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000779" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000077A" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000077B" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000077C" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000077D" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000077E" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N0000077F" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000780" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000781" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000782" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000783" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000784" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000785" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000786" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000787" Type="4" Size="4" bHidden="0" Comment="" />
+        <Node Name="N00000788" Type="4" Size="4" bHidden="0" Comment="" />
     </Class>
 </ReClass>
