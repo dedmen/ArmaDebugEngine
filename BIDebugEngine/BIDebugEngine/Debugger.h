@@ -3,7 +3,7 @@
 #include <map>
 #include <memory>
 #include "RVClasses.h"
-#include "breakPoint.h"
+#include "BreakPoint.h"
 #include "Monitor.h"
 struct RV_VMContext;
 class Script;
@@ -30,7 +30,7 @@ public:
     void checkForBreakpoint(DebuggerInstructionInfo& instructionInfo);
     void onShutdown();
     std::map<uintptr_t, std::shared_ptr<VMContext>> VMPtrToScript;
-    std::map<std::string, std::vector<breakPoint>> breakPoints;
+    std::map<std::string, std::vector<BreakPoint>> breakPoints;
 
     std::vector<std::shared_ptr<IMonitorBase>> monitors;
 };

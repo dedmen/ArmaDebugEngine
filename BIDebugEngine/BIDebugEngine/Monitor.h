@@ -14,19 +14,13 @@ public:
     virtual void onShutdown() = 0;
 };
 
-class Monitor_knownScriptFiles {
+class Monitor_knownScriptFiles : public IMonitorBase {
 public:
+    Monitor_knownScriptFiles() {}
     virtual ~Monitor_knownScriptFiles() {}
-    virtual void onInstruction(Debugger*, const DebuggerInstructionInfo&);
-    virtual void onShutdown();
+
+    void onInstruction(Debugger*, const DebuggerInstructionInfo&) override;
+    void onShutdown() override;
 private:
     std::map<RString, std::unordered_set<uint32_t>> scriptLines;
 };
-
-
-class Monitor {
-public:
-    Monitor();
-    ~Monitor();
-};
-

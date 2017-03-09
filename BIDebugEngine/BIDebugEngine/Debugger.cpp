@@ -6,10 +6,11 @@
 #include <unordered_set>
 
 Debugger::Debugger() {
-    breakPoint bp(8);
+    BreakPoint bp(8);
     
     bp.action = std::make_unique<BPAction_ExecCode>("systemChat \"hello guys");
     breakPoints["z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf"].push_back(std::move(bp));
+    monitors.push_back(std::make_shared<Monitor_knownScriptFiles>());
 }
 
 

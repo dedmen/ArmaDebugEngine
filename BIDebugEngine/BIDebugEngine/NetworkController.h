@@ -2,6 +2,12 @@
 #include "NamedPipeServer.h"
 #include <thread>
 
+enum class NC_CommandType {
+    
+
+
+};
+
 class NetworkController {
 public:
     NetworkController();

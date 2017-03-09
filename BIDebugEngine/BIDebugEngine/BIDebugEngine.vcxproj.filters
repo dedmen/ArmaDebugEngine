@@ -75,11 +75,11 @@
     <ClCompile Include="NetworkController.cpp">
       <Filter>Source Files\RC</Filter>
     </ClCompile>
-    <ClCompile Include="breakPoint.cpp">
+    <ClCompile Include="BreakPoint.cpp">
       <Filter>Source Files\Debugger</Filter>
     </ClCompile>
     <ClCompile Include="Monitor.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Debugger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -119,11 +119,11 @@
     <ClInclude Include="NetworkController.h">
       <Filter>Header Files\RC</Filter>
     </ClInclude>
-    <ClInclude Include="breakPoint.h">
+    <ClInclude Include="BreakPoint.h">
       <Filter>Header Files\Debugger</Filter>
     </ClInclude>
     <ClInclude Include="Monitor.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Debugger</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

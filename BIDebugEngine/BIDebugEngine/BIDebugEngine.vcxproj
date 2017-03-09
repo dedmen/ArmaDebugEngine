@@ -157,7 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BIDebugEngine.cpp" />
-    <ClCompile Include="breakPoint.cpp" />
+    <ClCompile Include="BreakPoint.cpp" />
     <ClCompile Include="Debugger.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -184,7 +184,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BIDebugEngine.h" />
-    <ClInclude Include="breakPoint.h" />
+    <ClInclude Include="BreakPoint.h" />
     <ClInclude Include="Debugger.h" />
     <ClInclude Include="EngineHook.h" />
     <ClInclude Include="GlobalHeader.h" />

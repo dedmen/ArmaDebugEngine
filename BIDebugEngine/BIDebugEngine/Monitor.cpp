@@ -3,12 +3,6 @@
 #include "Serialize.h"
 #include <fstream>
 
-
-Monitor::Monitor() {}
-
-
-Monitor::~Monitor() {}
-
 void Monitor_knownScriptFiles::onInstruction(Debugger*, const DebuggerInstructionInfo& instructionInfo) {
     scriptLines[instructionInfo.instruction->_scriptPos._sourceFile].insert(instructionInfo.instruction->_scriptPos._sourceLine);
 }
