@@ -40,3 +40,44 @@ class test2 {
 public:
     void Serialize2() {};
 };
+
+enum class MissionEventType {
+    Ended = 0,
+    SelectedActionPerformed = 1,
+    SelectedRotorLibActionPerformed = 2,
+    SelectedActionChanged = 3,
+    SelectedRotorLibActionChanged = 4,
+    ControlsShifted = 5,
+    Draw3D = 6,
+    Loaded = 7,
+    HandleDisconnect = 8,
+    EntityRespawned = 9,
+    EntityKilled = 10,
+    MapSingleClick = 11,
+    HCGroupSelectionChanged = 12,
+    CommandModeChanged = 13,
+    PlayerConnected = 14,
+    PlayerDisconnected = 15,
+    TeamSwitch = 16,
+    GroupIconClick = 17,
+    GroupIconOverEnter = 18,
+    GroupIconOverLeave = 19,
+    EachFrame = 20,
+    PreloadStarted = 21,
+    PreloadFinished = 22,
+    Map = 23,
+    PlayerViewChanged = 24
+};
+
+enum class scriptExecutionContext {
+    Invalid = 0,
+    scriptVM = 1,
+    EventHandler = 2
+};
+
+
+#ifdef _DEBUG
+#define WAIT_FOR_DEBUGGER_ATTACHED while (!IsDebuggerPresent()) Sleep(1);
+#else
+#define WAIT_FOR_DEBUGGER_ATTACHED 
+#endif

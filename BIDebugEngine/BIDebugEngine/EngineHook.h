@@ -35,6 +35,7 @@ public:
     void _scriptInstruction(uintptr_t instructionBP_Instruction, uintptr_t instructionBP_VMContext, uintptr_t instructionBP_gameState, uintptr_t instructionBP_IDebugScript);
     void _world_OnMissionEventStart(uintptr_t eventType);
     void _world_OnMissionEventEnd();
+    void onShutdown();
 private:
   
 

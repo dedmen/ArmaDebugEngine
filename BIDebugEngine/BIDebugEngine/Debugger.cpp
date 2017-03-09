@@ -1,8 +1,16 @@
 #include "Debugger.h"
 #include "VMContext.h"
 #include <fstream>
+#include "Script.h"
+#include "Serialize.h"
+#include <unordered_set>
 
-Debugger::Debugger() {}
+Debugger::Debugger() {
+    breakPoint bp(8);
+    
+    bp.action = std::make_unique<BPAction_ExecCode>("systemChat \"hello guys");
+    breakPoints["z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf"].push_back(std::move(bp));
+}
 
 
 Debugger::~Debugger() {}
@@ -53,4 +61,65 @@ void Debugger::writeFrameToFile(uint32_t frameCounter) {
         }
     }
     file.flush();
+}
+
+void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
+    checkForBreakpoint(instructionInfo);
+
+    for (auto& it : monitors)
+        it->onInstruction(this,instructionInfo);
+
+
+
+    auto instruction = instructionInfo.instruction;
+    //auto context = getVMContext(instructionInfo.context);
+    //context->addInstruction(instructionInfo.context, instruction);
+    //auto script = context->getScriptByContent(instruction->_scriptPos._content);
+    //script->dbg_instructionExec();
+    //auto dbg = instruction->GetDebugName();
+    //
+    //
+    //if (!instruction->_scriptPos._sourceFile.isNull())
+    //    script->_fileName = instruction->_scriptPos._sourceFile;
+    //auto callStackIndex = ctx->callStacksCount;
+    //bool stackChangeImminent = dbg == "operator call" || dbg == "function call"; //This is a call instruction. This means next instruction will go into lower scope
+    if (false && currentContext == scriptExecutionContext::EventHandler && instructionInfo.context->callStack.count() > 3) {
+        JsonArchive ar;
+        instructionInfo.context->Serialize(ar);
+        auto text = ar.to_string();
+
+
+    }
+
+
+
+}
+
+void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
+    
+    if (breakPoints.empty()) return;
+    auto found = breakPoints.find(instructionInfo.instruction->_scriptPos._sourceFile.data());
+    if (found == breakPoints.end() || found->second.empty()) return;
+    auto &bps = breakPoints[instructionInfo.instruction->_scriptPos._sourceFile.data()];
+    for (auto& bp : bps) {
+        if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine) {//#TODO move into breakPoint::trigger that returns bool if it triggered
+            bp.hitcount++;
+            if (bp.action) bp.action->execute(this, &bp, instructionInfo); //#TODO move into breakPoint::executeActions 
+
+            //JsonArchive ar;
+            //instructionInfo.context->Serialize(ar);
+            //auto text = ar.to_string();
+            //std::ofstream f("T:\\break.json", std::ios::out | std::ios::binary);
+            //f.write(text.c_str(), text.length());
+            //f.close();
+            //std::ofstream f2("T:\\breakScript.json", std::ios::out | std::ios::binary);
+            //f2.write(instructionInfo.instruction->_scriptPos._content.data(), instructionInfo.instruction->_scriptPos._content.length());
+            //f2.close();
+        }
+    }
+}
+
+void Debugger::onShutdown() {
+    for (auto& it : monitors)
+        it->onShutdown();
 }

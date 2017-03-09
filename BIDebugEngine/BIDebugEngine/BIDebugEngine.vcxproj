@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BIDebugEngine.cpp" />
+    <ClCompile Include="breakPoint.cpp" />
     <ClCompile Include="Debugger.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -173,6 +174,9 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="EngineHook.cpp" />
+    <ClCompile Include="Monitor.cpp" />
+    <ClCompile Include="NamedPipeServer.cpp" />
+    <ClCompile Include="NetworkController.cpp" />
     <ClCompile Include="RVClasses.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="Serialize.cpp" />
@@ -180,13 +184,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BIDebugEngine.h" />
+    <ClInclude Include="breakPoint.h" />
     <ClInclude Include="Debugger.h" />
     <ClInclude Include="EngineHook.h" />
     <ClInclude Include="GlobalHeader.h" />
     <ClInclude Include="json.hpp" />
+    <ClInclude Include="Monitor.h" />
+    <ClInclude Include="NamedPipeServer.h" />
+    <ClInclude Include="NetworkController.h" />
     <ClInclude Include="RVClasses.h" />
     <ClInclude Include="Script.h" />
     <ClInclude Include="Serialize.h" />
+    <ClInclude Include="SignalSlot.h" />
     <ClInclude Include="VMContext.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

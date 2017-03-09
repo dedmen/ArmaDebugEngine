@@ -87,6 +87,7 @@ _declspec(naked) void scriptVMSimulateStart() {
         jmp scriptVMSimulateStartJmpBack;
     }
 }
+
 _declspec(naked) void scriptVMSimulateEnd() {
     __asm {
         push    eax;
@@ -203,45 +204,13 @@ _declspec(naked) void worldMissionEventEnd() {
 
 //#TODO remember to call GlobalAlive while in break state
 
-enum class MissionEventType {
-    Ended = 0,
-    SelectedActionPerformed = 1,
-    SelectedRotorLibActionPerformed = 2,
-    SelectedActionChanged = 3,
-    SelectedRotorLibActionChanged = 4,
-    ControlsShifted = 5,
-    Draw3D = 6,
-    Loaded = 7,
-    HandleDisconnect = 8,
-    EntityRespawned = 9,
-    EntityKilled = 10,
-    MapSingleClick = 11,
-    HCGroupSelectionChanged = 12,
-    CommandModeChanged = 13,
-    PlayerConnected = 14,
-    PlayerDisconnected = 15,
-    TeamSwitch = 16,
-    GroupIconClick = 17,
-    GroupIconOverEnter = 18,
-    GroupIconOverLeave = 19,
-    EachFrame = 20,
-    PreloadStarted = 21,
-    PreloadFinished = 22,
-    Map = 23,
-    PlayerViewChanged = 24
-};
 
-enum class scriptExecutionContext {
-    Invalid = 0,
-    scriptVM = 1,
-    EventHandler = 2
-};
 scriptExecutionContext currentContext = scriptExecutionContext::Invalid;
 MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create some invalid handler type
 
 
 void EngineHook::placeHooks() {
-    while (!IsDebuggerPresent()) Sleep(1u);
+    WAIT_FOR_DEBUGGER_ATTACHED
     if (!_hooks[static_cast<std::size_t>(hookTypes::scriptVMConstructor)]) {
         scriptVMConstructorJmpBack = placeHook(0x10448BE, reinterpret_cast<uintptr_t>(scriptVMConstructor)) + 3;
         _hooks[static_cast<std::size_t>(hookTypes::scriptVMConstructor)] = true;
@@ -282,21 +251,21 @@ void EngineHook::removeHooks(bool leavePFrameHook) {
 void EngineHook::_worldSimulate() {
     static uint32_t frameCounter = 0;
     frameCounter++;
-    OutputDebugStringA(("#Frame " + std::to_string(frameCounter) + "\n").c_str());
-    for (auto& it : GlobalDebugger.VMPtrToScript) {
-        OutputDebugStringA("\t");
-        OutputDebugStringA((std::to_string(it.second->totalRuntime.count()) + "ns " + std::to_string(it.second->isScriptVM) + "\n").c_str());
-        for (auto& it2 : it.second->contentPtrToScript) {
-            if (it2.second->_fileName.empty()) continue;
-            OutputDebugStringA("\t\t");
-            OutputDebugStringA((it2.second->_fileName + " " + std::to_string(it2.second->instructionCount)).c_str());
-            OutputDebugStringA("\n");
-        }
-    }
-    OutputDebugStringA("#EndFrame\n");
-    bool logFrame = false;
-    if (logFrame || frameCounter % 1000 == 0)
-        GlobalDebugger.writeFrameToFile(frameCounter);
+    //OutputDebugStringA(("#Frame " + std::to_string(frameCounter) + "\n").c_str());
+    //for (auto& it : GlobalDebugger.VMPtrToScript) {
+    //    OutputDebugStringA("\t");
+    //    OutputDebugStringA((std::to_string(it.second->totalRuntime.count()) + "ns " + std::to_string(it.second->isScriptVM) + "\n").c_str());
+    //    for (auto& it2 : it.second->contentPtrToScript) {
+    //        if (it2.second->_fileName.empty()) continue;
+    //        OutputDebugStringA("\t\t");
+    //        OutputDebugStringA((it2.second->_fileName + " " + std::to_string(it2.second->instructionCount)).c_str());
+    //        OutputDebugStringA("\n");
+    //    }
+    //}
+    //OutputDebugStringA("#EndFrame\n");
+    //bool logFrame = false;
+    //if (logFrame || frameCounter % 1000 == 0)
+    //    GlobalDebugger.writeFrameToFile(frameCounter);
 
 
     GlobalDebugger.clear();
@@ -360,65 +329,17 @@ void EngineHook::_scriptInstruction(uintptr_t instructionBP_Instruction, uintptr
     globalTimeKeeper _tc;
     auto start = std::chrono::high_resolution_clock::now();
 
-    //#TODO implement gameState to get to GlobalVariables and current GameEvaluator with local variables
 
+
+    //#TODO implement gameState to get to GlobalVariables and current GameEvaluator with local variables
+    
     auto instruction = reinterpret_cast<RV_GameInstruction *>(instructionBP_Instruction);
     auto ctx = reinterpret_cast<RV_VMContext *>(instructionBP_VMContext);
-    auto context = GlobalDebugger.getVMContext(ctx);
-    auto script = context->getScriptByContent(instruction->_scriptPos._content);
-    script->dbg_instructionExec();
-    //auto dbg = instruction->GetDebugName();
-    //
-    //
-    if (!instruction->_scriptPos._sourceFile.isNull())
-        script->_fileName = instruction->_scriptPos._sourceFile;
-    //auto callStackIndex = ctx->callStacksCount;
-    //bool stackChangeImminent = dbg == "operator call" || dbg == "function call"; //This is a call instruction. This means next instruction will go into lower scope
-    if (currentContext == scriptExecutionContext::EventHandler && ctx->callStack.count() > 3) {
-        JsonArchive ar;
-        ctx->Serialize(ar);
-        auto text = ar.to_string();
-        context->addInstruction(ctx, instruction);
-        std::stringstream callstack;
-        ctx->callStack.forEach([&callstack](const Ref<CallStackItem>& callStackItem)
-        {
-            
-            auto *test = &typeid(*callStackItem);
-            callstack << typeid(*callStackItem).name() << " " << callStackItem->allVariablesToString();
+    GlobalDebugger.onInstruction(DebuggerInstructionInfo{ instruction, ctx });
 
 
-
-            if (strcmp(typeid(*callStackItem).name(), "class CallStackItemSimple") == 0) {
-                auto item = static_cast<CallStackItemSimple*>(callStackItem.get());
-                callstack << " f " << item->_content._fileName.data()
-                    << " - " << item->_content._content.substr(0, 40) << "\n";
-                callstack << "\t>>" << item->_instructions[item->_currentInstruction - 1]->GetDebugName() << " f"
-                    << item->_instructions[item->_currentInstruction - 1]->_scriptPos._sourceFile;
-
-            }
-            if (strcmp(typeid(*callStackItem).name(), "class CallStackItemData") == 0) {
-                auto item = static_cast<CallStackItemData*>(callStackItem.get());
-                callstack << " f " << item->_code->_instructions._code[item->_ip - 1]->_scriptPos._sourceFile
-                    << " - " << item->_code->_instructions._code[item->_ip - 1]->_scriptPos._content.substr(0, 40) << "\n";
-                callstack << "\t>>" << item->_code->_instructions._code[item->_ip - 1]->GetDebugName() << " f"
-                    << item->_code->_instructions._code[item->_ip - 1]->_scriptPos._sourceFile;
-            }
-
-
-
-
-
-            callstack << "\n";
-
-
-        });
-        OutputDebugStringA(callstack.str().c_str());
-
-
-
-
-    }
-
+    
+   
 
 
 
@@ -451,6 +372,10 @@ void EngineHook::_world_OnMissionEventStart(uintptr_t eventType) {
 
 void EngineHook::_world_OnMissionEventEnd() {
     currentContext = scriptExecutionContext::Invalid;
+}
+
+void EngineHook::onShutdown() {
+    GlobalDebugger.onShutdown();
 }
 
 uintptr_t EngineHook::placeHook(uintptr_t offset, uintptr_t jmpTo) const {

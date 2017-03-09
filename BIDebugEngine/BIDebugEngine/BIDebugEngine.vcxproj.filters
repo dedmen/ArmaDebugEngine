@@ -31,6 +31,15 @@
     <Filter Include="Source Files\Serialization">
       <UniqueIdentifier>{e8658481-2172-41d8-9c7a-d91b55d751de}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\RC">
+      <UniqueIdentifier>{bbb48793-70d1-4a2b-a39c-a3f0f7cfabbf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RC">
+      <UniqueIdentifier>{6796432c-1438-43f2-8e05-6e9604123ae1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\misc">
+      <UniqueIdentifier>{8f7668fe-b898-49f0-b12b-a771c1ee3482}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -60,6 +69,18 @@
     <ClCompile Include="RVClasses.cpp">
       <Filter>Source Files\BIDebugEngine</Filter>
     </ClCompile>
+    <ClCompile Include="NamedPipeServer.cpp">
+      <Filter>Source Files\RC</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkController.cpp">
+      <Filter>Source Files\RC</Filter>
+    </ClCompile>
+    <ClCompile Include="breakPoint.cpp">
+      <Filter>Source Files\Debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="Monitor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BIDebugEngine.h">
@@ -87,6 +108,21 @@
       <Filter>Header Files\Serialization</Filter>
     </ClInclude>
     <ClInclude Include="GlobalHeader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NamedPipeServer.h">
+      <Filter>Header Files\RC</Filter>
+    </ClInclude>
+    <ClInclude Include="SignalSlot.h">
+      <Filter>Header Files\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkController.h">
+      <Filter>Header Files\RC</Filter>
+    </ClInclude>
+    <ClInclude Include="breakPoint.h">
+      <Filter>Header Files\Debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="Monitor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

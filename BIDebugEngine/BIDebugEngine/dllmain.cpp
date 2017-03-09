@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <string>
 #include <Psapi.h>
+#include "GlobalHeader.h"
 #pragma comment (lib, "Psapi.lib")//GetModuleInformation
 extern uintptr_t engineAlloc;
 
@@ -9,7 +10,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
     DWORD  ul_reason_for_call,
     LPVOID lpReserved
 ) {
-    while (!IsDebuggerPresent()) Sleep(1u);
+    WAIT_FOR_DEBUGGER_ATTACHED
 
 
     switch (ul_reason_for_call) {
@@ -33,7 +34,7 @@ BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason,LPVOID) {
     if (reason != DLL_PROCESS_ATTACH) return TRUE;
     //Post entry point and pre DllMain
 
-    while (!IsDebuggerPresent()) Sleep(1u);
+    WAIT_FOR_DEBUGGER_ATTACHED
 
 
     //Get engine allocator - From my Intercept fork
@@ -90,7 +91,7 @@ extern "C" BOOL WINAPI _DllPreAttach(
     LPVOID    const reserved
 ) {
     //Entry point
-    while (!IsDebuggerPresent()) Sleep(1u);
+    WAIT_FOR_DEBUGGER_ATTACHED
 
     return _DllMainCRTStartup(instance, reason, reserved);
 };
