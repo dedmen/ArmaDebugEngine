@@ -336,7 +336,8 @@ void EngineHook::_scriptInstruction(uintptr_t instructionBP_Instruction, uintptr
     
     auto instruction = reinterpret_cast<RV_GameInstruction *>(instructionBP_Instruction);
     auto ctx = reinterpret_cast<RV_VMContext *>(instructionBP_VMContext);
-    GlobalDebugger.onInstruction(DebuggerInstructionInfo{ instruction, ctx });
+    auto gs = reinterpret_cast<GameState *>(instructionBP_gameState);
+    GlobalDebugger.onInstruction(DebuggerInstructionInfo{ instruction, ctx, gs });
 
 
     

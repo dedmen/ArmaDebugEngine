@@ -38,7 +38,8 @@ void NetworkController::init() {
 
     });
 }
-
+extern uintptr_t hookEnabled_Instruction;
+extern uintptr_t hookEnabled_Simulate;
 void NetworkController::incomingMessage(const std::string& message) {
 
     try {
@@ -86,7 +87,13 @@ void NetworkController::incomingMessage(const std::string& message) {
             case NC_CommandType::BPContinue: {
                 GlobalDebugger.commandContinue();
                 } break;
+
             default: break;
+            case NC_CommandType::MonitorDump: for (auto& it : GlobalDebugger.monitors) it->dump(); break;
+            case NC_CommandType::setHookEnable: {
+                hookEnabled_Simulate = packet.value<int>("state", 1);
+                hookEnabled_Instruction = hookEnabled_Instruction;
+            } break;
         }
     } catch (std::exception &ex) {
         JsonArchive ar;

@@ -6,9 +6,9 @@ enum class NC_CommandType {
       invalid,
       addBreakpoint,
       delBreakpoint,
-      BPContinue//Tell's breakpoint to leave breakState
-
-
+      BPContinue,//Tell's breakpoint to leave breakState
+      MonitorDump, //Dump's all Monitors
+      setHookEnable
 };
 
 class NetworkController {

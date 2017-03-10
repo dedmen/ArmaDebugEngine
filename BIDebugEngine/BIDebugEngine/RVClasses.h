@@ -587,3 +587,4 @@ template <class Type, class Container, class Traits>
 bool MapStringToClass<Type, Container, Traits>::hasKey(const char* key) const {
     return !isNull(get(key));
 }
+

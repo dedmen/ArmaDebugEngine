@@ -8,6 +8,10 @@ void Monitor_knownScriptFiles::onInstruction(Debugger*, const DebuggerInstructio
 }
 
 void Monitor_knownScriptFiles::onShutdown() {
+    dump();
+}
+
+void Monitor_knownScriptFiles::dump() {
     JsonArchive ar;
     for (auto& it : scriptLines) {
         std::vector<uint32_t> lines;

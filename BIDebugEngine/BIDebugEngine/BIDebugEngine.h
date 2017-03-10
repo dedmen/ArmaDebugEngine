@@ -110,6 +110,8 @@ public:
 
     virtual void DebugEngineLog(const char *str);
 };
+
+
 class GameValue;
 class GameData : public RefCount, public IDebugValue {   //#TODO move to right headerfile
 public:
@@ -121,8 +123,8 @@ public:
     virtual float getNumber() const { return 0; }
     virtual RString getString() const { return ""; } //Don't use this! use getAsString instead!
     virtual const AutoArray<GameValue> &getArray() const { return AutoArray<GameValue>(); }
-    virtual void _1() const { }//Don't call this
-    virtual void _2() const {}//Don't call thiss
+    virtual void _1() const {}//Don't call this
+    virtual void _2() const {}//Don't call this
     virtual void setReadOnly(bool val) {}
     //! check read only status
     virtual bool isReadOnly() const { return false; }
@@ -142,7 +144,7 @@ public:
 };
 
 class GameValue {
-    uintptr_t vtable {0};
+    uintptr_t vtable{ 0 };
 public:
     Ref<GameData> _data;
     GameValue() {};
@@ -198,6 +200,19 @@ public:
     bool _final;
 };
 
+class DummyVClass {
+public:
+    virtual void Dummy(){};
+};
+
+
+class GameDataNamespace : public GameData, public DummyVClass {
+public:
+    MapStringToClass<GameVariable, AutoArray<GameVariable> > _variables;
+    RString _name;
+    bool _1;
+};
+
 class CallStackItemData : public CallStackItem {
 public:
     Ref<GameDataCode> _code; // compiled code
@@ -210,6 +225,7 @@ struct RV_VMContext {
 
     void Serialize(JsonArchive& ar);
 };
+
 
 class RV_ScriptVM : public IDebugScript {
 public:
@@ -230,4 +246,17 @@ public:
     bool _exceptionThrown;
     bool _break;
     bool _breakOut;
+};
+
+class GameState {
+public:
+    virtual void _NOU() {} //GameState has vtable
+    AutoArray<void*> _1;
+    MapStringToClass<void*, AutoArray<void*>> _2; //functions  Should consult Intercept on these. 
+    MapStringToClass<void*, AutoArray<void*>> _3; //operators
+    MapStringToClass<void*, AutoArray<void*>> _4; //nulars  //#TODO add DebugBreak script nular. Check Visor
+    char _5[0x114];
+    void* GEval;
+    Ref<GameDataNamespace> _globalNamespace; //Can change by https://community.bistudio.com/wiki/with
+    AutoArray<GameDataNamespace *> _namespaces; //Contains missionNamespace and uiNamespace
 };

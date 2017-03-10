@@ -7,13 +7,13 @@
 #include <windows.h>
 
 Debugger::Debugger() {
-    BreakPoint bp(8);
+    //BreakPoint bp(8);
 
-    bp.action = std::make_unique<BPAction_ExecCode>("systemChat \"hello guys\"");
-    JsonArchive test;
-    bp.Serialize(test);
-    auto text = test.to_string();
-    breakPoints["z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf"].push_back(std::move(bp));
+    //bp.action = std::make_unique<BPAction_ExecCode>("systemChat \"hello guys\"");
+    //JsonArchive test;
+    //bp.Serialize(test);
+    //auto text = test.to_string();
+    //breakPoints["z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf"].push_back(std::move(bp));
     monitors.push_back(std::make_shared<Monitor_knownScriptFiles>());
 }
 
@@ -72,7 +72,7 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
     checkForBreakpoint(instructionInfo);
 
     for (auto& it : monitors)
-        it->onInstruction(this,instructionInfo);
+        it->onInstruction(this, instructionInfo);
 
 
 
@@ -110,6 +110,64 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
         if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine) {//#TODO move into breakPoint::trigger that returns bool if it triggered
             if (bp.condition && !bp.condition->isMatching(this, &bp, instructionInfo)) continue;
             bp.hitcount++;
+
+
+
+       /*
+            JsonArchive varArchive;
+            JsonArchive nsArchive[4];
+            auto func = [](JsonArchive& nsArchive, const GameDataNamespace* var) {
+                var->_variables.forEach([&nsArchive](const GameVariable& var) {
+
+                    JsonArchive variableArchive;
+
+                    auto name = var._name;
+                    if (var._value.isNull()) {
+                        variableArchive.Serialize("type", "nil");
+                        nsArchive.Serialize(name.data(), variableArchive);
+                        return;
+                    }
+                    auto value = var._value._data;
+                    const auto type = value->getTypeString();
+
+                    variableArchive.Serialize("type", type);
+                    if (strcmp(type, "array") == 0) {
+                        variableArchive.Serialize("value", value->getArray());
+                    } else {
+                        variableArchive.Serialize("value", value->getAsString());
+                    }
+                    nsArchive.Serialize(name.data(), variableArchive);
+
+                });
+            };
+
+            std::thread _1([&]() {func(nsArchive[0], instructionInfo.gs->_namespaces.get(0)); });
+            std::thread _2([&]() {func(nsArchive[1], instructionInfo.gs->_namespaces.get(1)); });
+            std::thread _3([&]() {func(nsArchive[2], instructionInfo.gs->_namespaces.get(2)); });
+            std::thread _4([&]() {func(nsArchive[3], instructionInfo.gs->_namespaces.get(3)); });
+
+
+            if (_1.joinable()) _1.join();
+            varArchive.Serialize(instructionInfo.gs->_namespaces.get(0)->_name.data(), nsArchive[0]);
+            if (_2.joinable()) _2.join();
+            varArchive.Serialize(instructionInfo.gs->_namespaces.get(1)->_name.data(), nsArchive[1]);
+            if (_3.joinable()) _3.join();
+            varArchive.Serialize(instructionInfo.gs->_namespaces.get(2)->_name.data(), nsArchive[2]);
+            if (_4.joinable()) _4.join();
+            varArchive.Serialize(instructionInfo.gs->_namespaces.get(3)->_name.data(), nsArchive[3]);
+
+            auto text = varArchive.to_string();
+            std::ofstream f("P:\\AllVars.json", std::ios::out | std::ios::binary);
+            f.write(text.c_str(), text.length());
+            f.close();
+
+
+
+            */
+
+
+
+
             if (bp.action) bp.action->execute(this, &bp, instructionInfo); //#TODO move into breakPoint::executeActions 
 
             //JsonArchive ar;
@@ -142,7 +200,7 @@ void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructio
     JsonArchive ar;
     ar.Serialize("command", 1); //#TODO make enum for this
     instructionInfo.context->Serialize(ar); //Set's callstack
-    
+
     //#TODO add GameState variables
 
     JsonArchive instructionAr;

@@ -2,6 +2,8 @@
 #include "Debugger.h"
 #include "Serialize.h"
 #include <windows.h>
+#include <fstream>
+
 BreakPoint::BreakPoint(uint16_t _line) :line(_line) {}
 
 
@@ -48,10 +50,14 @@ void BreakPoint::Serialize(JsonArchive& ar) {
                     JsonArchive actJsonAr(actJson);
                     action->Serialize(actJsonAr);
                 } break;
+                case BPAction_types::LogCallstack: {
+                    action = std::make_unique<BPAction_LogCallstack>();
+                    JsonArchive actJsonAr(actJson);
+                    action->Serialize(actJsonAr);
+                } break;
             }
         }
-
-
+        label = pJson->value("label", "");
     }
 
 
@@ -122,4 +128,20 @@ void BPAction_Halt::Serialize(JsonArchive& ar) {
     if (!ar.reading()) {
         ar.Serialize("type", static_cast<int>(BPAction_types::Halt));
     }
+}
+
+void BPAction_LogCallstack::execute(Debugger*, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo) {
+    JsonArchive ar;
+    instructionInfo.context->Serialize(ar);
+    auto text = ar.to_string();
+    std::ofstream f(basePath + bp->label + std::to_string(bp->hitcount) + ".json", std::ios::out | std::ios::binary);
+    f.write(text.c_str(), text.length());
+    f.close();
+}
+
+void BPAction_LogCallstack::Serialize(JsonArchive& ar) {
+    if (!ar.reading()) {
+        ar.Serialize("type", static_cast<int>(BPAction_types::LogCallstack));
+    }
+    ar.Serialize("basePath", basePath);
 }

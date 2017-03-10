@@ -13,6 +13,7 @@ class VMContext;
 struct DebuggerInstructionInfo {
     RV_GameInstruction* instruction;
     RV_VMContext* context;
+    GameState* gs;
 };
                    
 extern scriptExecutionContext currentContext;

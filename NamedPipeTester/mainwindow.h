@@ -23,6 +23,14 @@ private slots:
 
     void on_button_Continue_clicked();
 
+    void on_button_dumpMonitor_clicked();
+
+    void on_button_removeBP_clicked();
+
+    void on_button_disableHook_clicked();
+
+    void on_button_enableHook_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

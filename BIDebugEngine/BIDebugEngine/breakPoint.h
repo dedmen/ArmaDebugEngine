@@ -57,6 +57,19 @@ public:
     void Serialize(JsonArchive& ar) override;
 };
 
+class BPAction_LogCallstack : public IBreakPointAction { //Logs callstack to file
+public:
+    BPAction_LogCallstack(std::string _basePath) : basePath(_basePath) {}
+    BPAction_LogCallstack() {}
+    virtual ~BPAction_LogCallstack() {};
+
+    void execute(Debugger*, BreakPoint*, const DebuggerInstructionInfo&) override;
+    void Serialize(JsonArchive& ar) override;
+private:
+    std::string basePath;
+};
+
+
 enum class BPCondition_types {
     invalid,
     Code
@@ -65,7 +78,8 @@ enum class BPCondition_types {
 enum class BPAction_types {
    invalid,
    ExecCode,
-   Halt
+   Halt,
+   LogCallstack
 };
 
 
@@ -94,5 +108,6 @@ public:
     uint16_t hitcount{ 0 };
     std::unique_ptr<IBreakPointCondition> condition;
     std::unique_ptr<IBreakPointAction> action;
+    std::string label;
 };
 

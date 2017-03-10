@@ -12,6 +12,7 @@ public:
     virtual ~IMonitorBase(){}
     virtual void onInstruction(Debugger*, const DebuggerInstructionInfo&) = 0;
     virtual void onShutdown() = 0;
+    virtual void dump() = 0;
 };
 
 class Monitor_knownScriptFiles : public IMonitorBase {
@@ -21,6 +22,7 @@ public:
 
     void onInstruction(Debugger*, const DebuggerInstructionInfo&) override;
     void onShutdown() override;
+    void dump() override;
 private:
     std::map<RString, std::unordered_set<uint32_t>> scriptLines;
 };
