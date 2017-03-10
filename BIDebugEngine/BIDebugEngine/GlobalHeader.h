@@ -81,3 +81,6 @@ enum class scriptExecutionContext {
 #else
 #define WAIT_FOR_DEBUGGER_ATTACHED 
 #endif
+
+
+typedef void EngineAlive(); //Call this periodically while in breakState

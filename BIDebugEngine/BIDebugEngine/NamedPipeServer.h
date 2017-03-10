@@ -13,7 +13,8 @@ public:
     void close();
     void writeMessage(std::string message);
     std::string readMessageBlocking();
-    Signal<void(std::string)> messageRead;                             
+    Signal<void(std::string)> messageRead;
+
 private:
     void transactMessage(char *output, int outputSize, const char *input); //don't use
     void queueRead(); //Failed attempt. Don't call
@@ -22,6 +23,7 @@ private:
     
     HANDLE pipe = nullptr;
     HANDLE waitForDataEvent = nullptr;
+    HANDLE waitForWriteEvent = nullptr;
     std::array<char,4096> recvBuffer;
 };
 

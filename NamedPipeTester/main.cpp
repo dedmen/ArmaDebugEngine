@@ -1,19 +1,14 @@
-#include <QCoreApplication>
+#include <QApplication>
 #include <QLocalSocket>
 #include <QDebug>
+#include <QThread>
+#include "mainwindow.h"
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
 
-    QLocalSocket socket;
-    socket.connectToServer("\\\\.\\pipe\\ArmaDebugEnginePipeIface",QLocalSocket::ReadWrite);
-    while (true){
-        QByteArray bb;bb.fill('t',5000);
-
-        socket.write(bb);
-        socket.waitForReadyRead(50000);
-        qDebug() << socket.readAll();
-    }
 
     return a.exec();
 }

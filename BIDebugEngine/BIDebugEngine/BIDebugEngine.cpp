@@ -15,7 +15,7 @@ uintptr_t engineAlloc;
 
 
 void DllInterface::Startup() {
-    GlobalEngineHook.placeHooks();
+    GlobalEngineHook.onStartup();
 }
 
 void DllInterface::Shutdown() {
@@ -110,7 +110,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 
     ar.Serialize("callstack", callStack, [](JsonArchive& ar, const Ref<CallStackItem>& item) {
         auto& type = typeid(*item.get());
-        auto typeName = type.name();
+        const auto typeName = type.name();
         ar.Serialize("type", typeName);
         auto hash = type.hash_code();
         {
@@ -127,7 +127,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                     return;
                 }
                 auto value = var._value._data;
-                auto type = value->getTypeString();
+                const auto type = value->getTypeString();
 
                 variableArchive.Serialize("type", type);
                 if (strcmp(type, "array") == 0) {
@@ -216,7 +216,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 }
 
 void GameData::Serialize(JsonArchive& ar) const {
-    auto type = getTypeString();
+    const auto type = getTypeString();
     ar.Serialize("type", type);
     if (strcmp(type, "array") == 0) {
         ar.Serialize("value", getArray());

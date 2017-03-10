@@ -9,9 +9,10 @@ using nlohmann::json;
 class JsonArchive {
 public:
     JsonArchive() : pJson(new json()), isReading(false) {}
-
-    ~JsonArchive() { delete pJson; }
-
+    JsonArchive(json& js) : pJson(&js), isReading(true) {}
+    ~JsonArchive() { if (!isReading) delete pJson; }
+    bool reading() const { return isReading; }
+    json* getRaw() const { return pJson; }
     std::string to_string();
 
      //typename std::enable_if<has_Serialize<Type>::value || has_Serialize<typename Type::baseType>::value>::type
@@ -108,11 +109,27 @@ public:
         }
     }
 
+    //Generic serialization. Calls Type::Serialize
+    template <class Type>
+    typename std::enable_if<has_Serialize<Type>::value>::type
+        Serialize(const char* key, std::unique_ptr<Type>& value) {
+        if (isReading) {
+            __debugbreak(); //not implemented
+        } else {
+            JsonArchive element;
+            if (value)
+                value->Serialize(element);
+            (*pJson)[key] = *element.pJson;
+        }
+    }
+
+
+
     template <class Type>
     typename std::enable_if<!has_Serialize<Type>::value>::type
         Serialize(const char* key, Type& value) {
         if (isReading) {
-            __debugbreak(); //not implemented
+            value = (*pJson)[key];
         } else {
             (*pJson)[key] = value;
         }

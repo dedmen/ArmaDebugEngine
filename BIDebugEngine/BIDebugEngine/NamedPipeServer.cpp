@@ -15,7 +15,13 @@ NamedPipeServer::NamedPipeServer() {
         TRUE,    // manual-reset event 
         TRUE,    // initial state = signaled 
         NULL);   // unnamed event object 
-                 //No error handling here
+                 
+    waitForWriteEvent = CreateEvent(
+        &SA,    // default security attribute 
+        TRUE,    // manual-reset event 
+        TRUE,    // initial state = signaled 
+        NULL);   // unnamed event object 
+                 
 }
 
 
@@ -34,13 +40,30 @@ void NamedPipeServer::close() {
 
 void NamedPipeServer::writeMessage(std::string message) {
     DWORD cbWritten;
+    OVERLAPPED pipeOverlap{ 0 };
+    pipeOverlap.hEvent = waitForWriteEvent;
     auto fSuccess = WriteFile(
         pipe,                  // pipe handle 
         message.c_str(),             // message 
         message.length(),              // message length 
         &cbWritten,             // bytes written 
-        nullptr);                  // not overlapped 
-
+        &pipeOverlap);                  // not overlapped 
+    if (!fSuccess) {
+        auto errorCode = GetLastError();
+        if (errorCode == ERROR_IO_PENDING)//Handle overlapped datatransfer
+        {
+            DWORD waitResult = WaitForSingleObject(waitForWriteEvent, 3000);
+            errorCode = GetLastError();
+            if (waitResult == WAIT_TIMEOUT) {
+                errorCode = WAIT_TIMEOUT;
+            } else {
+                return;	 //successful write. We dont need to handle any errors
+            }
+        }
+        if (errorCode == ERROR_BROKEN_PIPE) {
+            openPipe();
+        }
+    }
 }
 
 std::string NamedPipeServer::readMessageBlocking() {

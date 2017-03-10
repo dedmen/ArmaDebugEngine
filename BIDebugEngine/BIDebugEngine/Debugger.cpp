@@ -4,11 +4,15 @@
 #include "Script.h"
 #include "Serialize.h"
 #include <unordered_set>
+#include <windows.h>
 
 Debugger::Debugger() {
     BreakPoint bp(8);
-    
-    bp.action = std::make_unique<BPAction_ExecCode>("systemChat \"hello guys");
+
+    bp.action = std::make_unique<BPAction_ExecCode>("systemChat \"hello guys\"");
+    JsonArchive test;
+    bp.Serialize(test);
+    auto text = test.to_string();
     breakPoints["z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf"].push_back(std::move(bp));
     monitors.push_back(std::make_shared<Monitor_knownScriptFiles>());
 }
@@ -97,23 +101,24 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 }
 
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
-    
+
     if (breakPoints.empty()) return;
     auto found = breakPoints.find(instructionInfo.instruction->_scriptPos._sourceFile.data());
     if (found == breakPoints.end() || found->second.empty()) return;
     auto &bps = breakPoints[instructionInfo.instruction->_scriptPos._sourceFile.data()];
     for (auto& bp : bps) {
         if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine) {//#TODO move into breakPoint::trigger that returns bool if it triggered
+            if (bp.condition && !bp.condition->isMatching(this, &bp, instructionInfo)) continue;
             bp.hitcount++;
             if (bp.action) bp.action->execute(this, &bp, instructionInfo); //#TODO move into breakPoint::executeActions 
 
             //JsonArchive ar;
             //instructionInfo.context->Serialize(ar);
             //auto text = ar.to_string();
-            //std::ofstream f("T:\\break.json", std::ios::out | std::ios::binary);
+            //std::ofstream f("P:\\break.json", std::ios::out | std::ios::binary);
             //f.write(text.c_str(), text.length());
             //f.close();
-            //std::ofstream f2("T:\\breakScript.json", std::ios::out | std::ios::binary);
+            //std::ofstream f2("P:\\breakScript.json", std::ios::out | std::ios::binary);
             //f2.write(instructionInfo.instruction->_scriptPos._content.data(), instructionInfo.instruction->_scriptPos._content.length());
             //f2.close();
         }
@@ -123,4 +128,53 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
 void Debugger::onShutdown() {
     for (auto& it : monitors)
         it->onShutdown();
+}
+
+void Debugger::onStartup() {
+    nController.init();
+}
+
+void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo) {
+    breakStateContinueEvent = waitEvent;
+    state = DebuggerState::breakState;
+
+
+    JsonArchive ar;
+    ar.Serialize("command", 1); //#TODO make enum for this
+    instructionInfo.context->Serialize(ar); //Set's callstack
+    
+    //#TODO add GameState variables
+
+    JsonArchive instructionAr;
+    instructionInfo.instruction->Serialize(instructionAr);
+    ar.Serialize("instruction", instructionAr);
+
+
+    auto text = ar.to_string();
+    nController.sendMessage(text);
+
+
+    std::ofstream f("P:\\break.json", std::ios::out | std::ios::binary);
+    f.write(text.c_str(), text.length());
+    f.close();
+    std::ofstream f2("P:\\breakScript.json", std::ios::out | std::ios::binary);
+    f2.write(instructionInfo.instruction->_scriptPos._content.data(), instructionInfo.instruction->_scriptPos._content.length());
+    f2.close();
+
+
+
+
+
+
+}
+
+void Debugger::onContinue() {
+    state = DebuggerState::running;
+    breakStateContinueEvent = 0;
+}
+
+void Debugger::commandContinue() {
+    if (state != DebuggerState::breakState) return;
+    ResetEvent(breakStateContinueEvent);
+    SetEvent(breakStateContinueEvent);
 }

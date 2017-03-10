@@ -36,6 +36,7 @@ public:
     void _world_OnMissionEventStart(uintptr_t eventType);
     void _world_OnMissionEventEnd();
     void onShutdown();
+    void onStartup();
 private:
   
 

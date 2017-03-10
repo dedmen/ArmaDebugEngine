@@ -239,8 +239,9 @@ void EngineHook::placeHooks() {
         worldMissionEventEndJmpBack = placeHook(0x00B1A0AB, reinterpret_cast<uintptr_t>(worldMissionEventEnd)) + 1;
         _hooks[static_cast<std::size_t>(hookTypes::worldMissionEventEnd)] = true;
     }
-
-
+    bool* isDebuggerAttached = reinterpret_cast<bool*>(engineBase + 0x206F310);
+    *isDebuggerAttached = false; //Small hack to keep RPT logging while Debugger is attached
+    //Could also patternFind and patch (profv3 0107144F) to unconditional jmp
 }
 
 void EngineHook::removeHooks(bool leavePFrameHook) {
@@ -276,7 +277,7 @@ void EngineHook::_worldSimulate() {
 void EngineHook::_scriptLoaded(uintptr_t scrVMPtr) {
     globalTimeKeeper _tc;
     auto scVM = reinterpret_cast<RV_ScriptVM *>(scrVMPtr);
-    scVM->debugPrint("Load");
+    //scVM->debugPrint("Load");
     auto myCtx = GlobalDebugger.getVMContext(&scVM->_context);
     myCtx->isScriptVM = true;
     //myCtx->canBeDeleted = false; //Should reimplement that again sometime. This causes scriptVM's to be deleted and loose their upper callstack every frame
@@ -285,7 +286,7 @@ void EngineHook::_scriptLoaded(uintptr_t scrVMPtr) {
 void EngineHook::_scriptEntered(uintptr_t scrVMPtr) {
     globalTimeKeeper _tc;
     auto scVM = reinterpret_cast<RV_ScriptVM *>(scrVMPtr);
-    scVM->debugPrint("Enter");
+    //scVM->debugPrint("Enter");
     currentContext = scriptExecutionContext::scriptVM;
 
     auto context = GlobalDebugger.getVMContext(&scVM->_context);
@@ -300,7 +301,7 @@ void EngineHook::_scriptTerminated(uintptr_t scrVMPtr) {
     auto scVM = reinterpret_cast<RV_ScriptVM *>(scrVMPtr);
     GlobalDebugger.getVMContext(&scVM->_context)->dbg_LeaveContext();
     auto myCtx = GlobalDebugger.getVMContext(&scVM->_context);
-    scVM->debugPrint("Term " + std::to_string(myCtx->totalRuntime.count()));
+    //scVM->debugPrint("Term " + std::to_string(myCtx->totalRuntime.count()));
     if (scVM->_context.callStack.count() - 1 > 0) {
         auto scope = scVM->_context.callStack.back();
         scope->printAllVariables();
@@ -313,7 +314,7 @@ void EngineHook::_scriptLeft(uintptr_t scrVMPtr) {
     globalTimeKeeper _tc;
     auto scVM = reinterpret_cast<RV_ScriptVM *>(scrVMPtr);
     GlobalDebugger.getVMContext(&scVM->_context)->dbg_LeaveContext();
-    scVM->debugPrint("Left");
+    //scVM->debugPrint("Left");
     //if (scVM->_context.callStacksCount - 1 > 0) {
     //    auto scope = scVM->_context.callStacks[scVM->_context.callStacksCount - 1];
     //    scope->printAllVariables();
@@ -376,6 +377,11 @@ void EngineHook::_world_OnMissionEventEnd() {
 
 void EngineHook::onShutdown() {
     GlobalDebugger.onShutdown();
+}
+
+void EngineHook::onStartup() {
+    placeHooks();
+    GlobalDebugger.onStartup();
 }
 
 uintptr_t EngineHook::placeHook(uintptr_t offset, uintptr_t jmpTo) const {

@@ -17,7 +17,7 @@ void Monitor_knownScriptFiles::onShutdown() {
         ar.Serialize(it.first.data(), lines);
     }
     auto text = ar.to_string();
-    std::ofstream f("T:\\Monitor_knownScriptFiles.json");
+    std::ofstream f("P:\\Monitor_knownScriptFiles.json");
     f.write(text.c_str(), text.length());
     f.close();
 }
