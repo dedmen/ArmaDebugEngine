@@ -20,10 +20,10 @@ private:
     void queueRead(); //Failed attempt. Don't call
     void openPipe();
     void closePipe();
-    
+
     HANDLE pipe = nullptr;
     HANDLE waitForDataEvent = nullptr;
     HANDLE waitForWriteEvent = nullptr;
-    std::array<char,4096> recvBuffer;
+    std::array<char, 4096> recvBuffer;
 };
 

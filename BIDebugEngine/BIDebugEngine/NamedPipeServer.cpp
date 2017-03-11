@@ -15,13 +15,13 @@ NamedPipeServer::NamedPipeServer() {
         TRUE,    // manual-reset event 
         TRUE,    // initial state = signaled 
         NULL);   // unnamed event object 
-                 
+
     waitForWriteEvent = CreateEvent(
         &SA,    // default security attribute 
         TRUE,    // manual-reset event 
         TRUE,    // initial state = signaled 
         NULL);   // unnamed event object 
-                 
+
 }
 
 
@@ -229,7 +229,7 @@ void NamedPipeServer::queueRead() {
             openPipe();
         }
     }
-    SleepEx(5000,true);
+    SleepEx(5000, true);
 
 
 }

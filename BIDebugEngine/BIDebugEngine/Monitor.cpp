@@ -18,6 +18,7 @@ void Monitor_knownScriptFiles::dump() {
         for (auto& line : it.second)
             lines.push_back(line);
         std::sort(lines.begin(), lines.end());
+        lines.erase(std::unique(lines.begin(), lines.end()), lines.end()); //Remove duplicates. std::unordered_set doesn't seem to obey my orders
         ar.Serialize(it.first.data(), lines);
     }
     auto text = ar.to_string();

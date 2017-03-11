@@ -38,7 +38,7 @@ public:
     void onShutdown();
     void onStartup();
 private:
-  
+
 
 
     uintptr_t placeHook(uintptr_t offset, uintptr_t jmpTo) const;

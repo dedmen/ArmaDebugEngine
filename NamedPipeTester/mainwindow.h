@@ -31,6 +31,8 @@ private slots:
 
     void on_button_enableHook_clicked();
 
+    void on_button_Variable_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

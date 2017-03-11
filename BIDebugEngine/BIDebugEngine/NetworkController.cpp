@@ -18,7 +18,7 @@ NetworkController::~NetworkController() {
         pipeThread->join();
         delete pipeThread;
     }
-       
+
 
 }
 
@@ -73,8 +73,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                 ar.Serialize("filename", fileName);
                 auto found = GlobalDebugger.breakPoints.find(fileName);
                 if (found != GlobalDebugger.breakPoints.end()) {
-                    auto vecFound = std::find_if(found->second.begin(), found->second.end(),[lineNumber](const BreakPoint& bp)
-                    {
+                    auto vecFound = std::find_if(found->second.begin(), found->second.end(), [lineNumber](const BreakPoint& bp) {
                         return lineNumber == bp.line;
                     });
                     if (vecFound != found->second.end()) {
@@ -86,7 +85,7 @@ void NetworkController::incomingMessage(const std::string& message) {
             } break;
             case NC_CommandType::BPContinue: {
                 GlobalDebugger.commandContinue();
-                } break;
+            } break;
 
             default: break;
             case NC_CommandType::MonitorDump: for (auto& it : GlobalDebugger.monitors) it->dump(); break;
@@ -94,11 +93,31 @@ void NetworkController::incomingMessage(const std::string& message) {
                 hookEnabled_Simulate = packet.value<int>("state", 1);
                 hookEnabled_Instruction = hookEnabled_Instruction;
             } break;
+            case NC_CommandType::getVariable: {
+
+                JsonArchive ar(packet["data"]);
+                uint16_t scope;
+                std::string variableName;
+                ar.Serialize("scope", scope);
+                ar.Serialize("name", variableName);
+                auto var = GlobalDebugger.getVariable(static_cast<VariableScope>(scope), variableName);
+
+                JsonArchive answer;
+
+                if (!var) {
+                    answer.Serialize("type", "nil");
+                } else {
+                    answer.Serialize("name", var->_name);
+                    var->_value.Serialize(answer);
+                }
+                sendMessage(answer.to_string());
+            } break;
         }
-    } catch (std::exception &ex) {
+    }
+    catch (std::exception &ex) {
         JsonArchive ar;
         ar.Serialize("exception", std::string(ex.what()));
-        server.writeMessage(ar.to_string());    
+        server.writeMessage(ar.to_string());
     }
 }
 

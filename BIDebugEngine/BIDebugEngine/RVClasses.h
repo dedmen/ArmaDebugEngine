@@ -473,6 +473,14 @@ public:
             f(get(i));
         }
     }
+
+    template <class Func>
+    void forEachBackwards(const Func &f) const { //This returns if Func returns true
+        for (int i = count() - 1; i >= 0; i--) {
+            if (f(get(i))) return;
+        }
+    }
+
     template <class Func>
     void forEach(const Func &f) {
         for (int i = 0; i < count(); i++) {
@@ -538,6 +546,9 @@ public:
     template <class Func>
     void forEach(Func func) const;
 
+    template <class Func>
+    void forEachBackwards(Func func) const;
+
     const Type &get(const char* key) const;
 
     static bool isNull(const Type &value) { return &value == &_nullEntry; }
@@ -572,10 +583,22 @@ void MapStringToClass<Type, Container, Traits>::forEach(Func func) const {
 }
 
 template<class Type, class Container, class Traits>
+template <class Func>
+void MapStringToClass<Type, Container, Traits>::forEachBackwards(Func func) const {
+    if (!_table || !_count) return;
+    for (int i = _tableCount - 1; i >= 0; i--) {
+        const Container &container = _table[i];
+        for (int j = container.count() - 1; j >= 0; j--) {
+            func(container[j]);
+        }
+    }
+}
+
+template<class Type, class Container, class Traits>
 const Type &MapStringToClass<Type, Container, Traits>::get(const char* key) const {
     if (!_table || !_count) return _nullEntry;
     int hashedKey = hashKey(key);
-    for (int i = 0; i < _table[hashedKey].Size(); i++) {
+    for (int i = 0; i < _table[hashedKey].count(); i++) {
         const Type &item = _table[hashedKey][i];
         if (Traits::compareKeys(item.getMapKey(), key) == 0)
             return item;

@@ -15,7 +15,7 @@ class BreakPoint;
 class IBreakPointCondition {
 public:
     virtual ~IBreakPointCondition() {};
-    virtual bool isMatching(Debugger* ,BreakPoint* , const DebuggerInstructionInfo&) = 0;
+    virtual bool isMatching(Debugger*, BreakPoint*, const DebuggerInstructionInfo&) = 0;
     virtual void Serialize(JsonArchive& ar) { return; };
 };
 
@@ -28,7 +28,9 @@ public:
 private:
     std::string code;
 };
-       
+
+//Beware when adding hitcount condition. Hitcount is only incremented when condition is matching.
+
 class IBreakPointAction {
 public:
     virtual ~IBreakPointAction() {};
@@ -76,10 +78,10 @@ enum class BPCondition_types {
 };
 
 enum class BPAction_types {
-   invalid,
-   ExecCode,
-   Halt,
-   LogCallstack
+    invalid,
+    ExecCode,
+    Halt,
+    LogCallstack
 };
 
 
@@ -104,7 +106,7 @@ public:
     ~BreakPoint();
     void Serialize(JsonArchive& ar);
     RString filename;
-    uint16_t line {0};
+    uint16_t line{ 0 };
     uint16_t hitcount{ 0 };
     std::unique_ptr<IBreakPointCondition> condition;
     std::unique_ptr<IBreakPointAction> action;

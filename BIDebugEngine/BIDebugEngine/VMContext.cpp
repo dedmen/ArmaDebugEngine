@@ -48,7 +48,7 @@ void VMContext::addInstruction(RV_VMContext* ctx, RV_GameInstruction* instructio
     uint16_t line = instruction->_scriptPos._sourceLine;
     uint16_t offset = instruction->_scriptPos._pos;
     auto dbg = instruction->GetDebugName();
-    RString dbgName = dbg; 
+    RString dbgName = dbg;
     if (dbgName.startsWith("const"))
         dbgName = dbgName.substr(0, 7);
     if (dbg.length() < 2) return;
@@ -78,7 +78,7 @@ void VMContext::addInstruction(RV_VMContext* ctx, RV_GameInstruction* instructio
 void Instruction::writeToFile(std::ofstream& f, uint16_t tabs) {
     for (int i = 0; i < tabs; i++)
         f << "\t";
-    f << "instr " << file << " " << line << ":" << offset << " T:" << execTime.time_since_epoch().count()/1000 <<" " << debugName << "\n";
+    f << "instr " << file << " " << line << ":" << offset << " T:" << execTime.time_since_epoch().count() / 1000 << " " << debugName << "\n";
     for (auto& it : lowerScope) {
         //if (!it.lowerScope.empty() || it.file == "NewScope")
         it.writeToFile(f, tabs + 1);

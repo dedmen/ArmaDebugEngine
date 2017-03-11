@@ -84,7 +84,7 @@ public:
 };
 
 typedef Ref<IDebugScript> IDebugScriptRef;
-                        
+
 class EngineInterface {
 public:
     EngineInterface() {}
@@ -202,7 +202,7 @@ public:
 
 class DummyVClass {
 public:
-    virtual void Dummy(){};
+    virtual void Dummy() {};
 };
 
 
@@ -222,7 +222,7 @@ public:
 struct RV_VMContext {
     uintptr_t vtable;
     Array<Ref<CallStackItem>> callStack; //max 64 items
-
+    const GameVariable* getVariable(std::string varName);
     void Serialize(JsonArchive& ar);
 };
 
@@ -258,5 +258,11 @@ public:
     char _5[0x114];
     void* GEval;
     Ref<GameDataNamespace> _globalNamespace; //Can change by https://community.bistudio.com/wiki/with
+    /*
+    default,
+    ui,
+    parsing,
+    mission
+    */
     AutoArray<GameDataNamespace *> _namespaces; //Contains missionNamespace and uiNamespace
 };

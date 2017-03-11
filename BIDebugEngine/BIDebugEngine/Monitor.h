@@ -9,7 +9,7 @@ struct DebuggerInstructionInfo;
 
 class IMonitorBase {
 public:
-    virtual ~IMonitorBase(){}
+    virtual ~IMonitorBase() {}
     virtual void onInstruction(Debugger*, const DebuggerInstructionInfo&) = 0;
     virtual void onShutdown() = 0;
     virtual void dump() = 0;

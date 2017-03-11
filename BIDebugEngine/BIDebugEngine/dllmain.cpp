@@ -15,13 +15,13 @@ BOOL APIENTRY DllMain(HMODULE hModule,
     WAIT_FOR_DEBUGGER_ATTACHED
 
 
-    switch (ul_reason_for_call) {
-        case DLL_PROCESS_ATTACH:
-        case DLL_THREAD_ATTACH:
-        case DLL_THREAD_DETACH:
-        case DLL_PROCESS_DETACH:
-            break;
-    }
+        switch (ul_reason_for_call) {
+            case DLL_PROCESS_ATTACH:
+            case DLL_THREAD_ATTACH:
+            case DLL_THREAD_DETACH:
+            case DLL_PROCESS_DETACH:
+                break;
+        }
 
     return TRUE;
 }
@@ -32,17 +32,17 @@ extern "C" BOOL WINAPI _DllMainCRTStartup(
     LPVOID    const reserved
 );
 
-BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason,LPVOID) {
+BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason, LPVOID) {
     if (reason != DLL_PROCESS_ATTACH) return TRUE;
     //Post entry point and pre DllMain
 
     WAIT_FOR_DEBUGGER_ATTACHED
 
 
-    //Get engine allocator - From my Intercept fork
-    //Find the allocator base
-    //This has to happen pre CRTInit because static/global Variables may need to alloc in Engine
-    MODULEINFO modInfo = { 0 };
+        //Get engine allocator - From my Intercept fork
+        //Find the allocator base
+        //This has to happen pre CRTInit because static/global Variables may need to alloc in Engine
+        MODULEINFO modInfo = { 0 };
     HMODULE hModule = GetModuleHandleA(nullptr);
     GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
 
@@ -75,10 +75,10 @@ BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason,LPVOID) {
     uintptr_t allocatorVtablePtr = (findInMemory((char*) &stringOffset, 4) - 4);
     const char* test = getRTTIName(*reinterpret_cast<uintptr_t*>(allocatorVtablePtr));
     engineAlloc = allocatorVtablePtr;
-                                      
-    EngineAliveFnc = reinterpret_cast<EngineAlive*>(reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll) + 0x10454B0) ;
+
+    EngineAliveFnc = reinterpret_cast<EngineAlive*>(reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll) + 0x10454B0);
     //Find by searching for.  "XML parsing error: cannot read the source file". function call right after start of while loop
-   
+
 
     return TRUE;
 }
@@ -95,7 +95,7 @@ extern "C" BOOL WINAPI _DllPreAttach(
     //Entry point
     WAIT_FOR_DEBUGGER_ATTACHED
 
-    return _DllMainCRTStartup(instance, reason, reserved);
+        return _DllMainCRTStartup(instance, reason, reserved);
 };
 
 //kju asked for this in discord Feb, 18 2017 #tools_makers
@@ -111,7 +111,7 @@ bool shouldCreate(std::string inFile, std::string outfile) {
     //If input file was lastEdited after output file
     if (
         _ULARGE_INTEGER{ LastWriteTimeInputFile.dwLowDateTime, LastWriteTimeInputFile.dwHighDateTime }.QuadPart
-        >
+            >
         _ULARGE_INTEGER{ LastWriteTimeOutputFile.dwLowDateTime, LastWriteTimeOutputFile.dwHighDateTime }.QuadPart
         ) return true;
 

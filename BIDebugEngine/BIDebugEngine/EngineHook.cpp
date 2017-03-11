@@ -211,10 +211,10 @@ MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create s
 
 void EngineHook::placeHooks() {
     WAIT_FOR_DEBUGGER_ATTACHED
-    if (!_hooks[static_cast<std::size_t>(hookTypes::scriptVMConstructor)]) {
-        scriptVMConstructorJmpBack = placeHook(0x10448BE, reinterpret_cast<uintptr_t>(scriptVMConstructor)) + 3;
-        _hooks[static_cast<std::size_t>(hookTypes::scriptVMConstructor)] = true;
-    }
+        if (!_hooks[static_cast<std::size_t>(hookTypes::scriptVMConstructor)]) {
+            scriptVMConstructorJmpBack = placeHook(0x10448BE, reinterpret_cast<uintptr_t>(scriptVMConstructor)) + 3;
+            _hooks[static_cast<std::size_t>(hookTypes::scriptVMConstructor)] = true;
+        }
     if (!_hooks[static_cast<std::size_t>(hookTypes::scriptVMSimulateStart)]) {
         scriptVMSimulateStartJmpBack = placeHook(0x1044E80, reinterpret_cast<uintptr_t>(scriptVMSimulateStart)) + 1;
         _hooks[static_cast<std::size_t>(hookTypes::scriptVMSimulateStart)] = true;
@@ -333,15 +333,15 @@ void EngineHook::_scriptInstruction(uintptr_t instructionBP_Instruction, uintptr
 
 
     //#TODO implement gameState to get to GlobalVariables and current GameEvaluator with local variables
-    
+
     auto instruction = reinterpret_cast<RV_GameInstruction *>(instructionBP_Instruction);
     auto ctx = reinterpret_cast<RV_VMContext *>(instructionBP_VMContext);
     auto gs = reinterpret_cast<GameState *>(instructionBP_gameState);
     GlobalDebugger.onInstruction(DebuggerInstructionInfo{ instruction, ctx, gs });
 
 
-    
-   
+
+
 
 
 

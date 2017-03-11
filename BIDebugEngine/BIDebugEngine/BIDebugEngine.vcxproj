@@ -153,9 +153,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="BIDebugEngine.cpp" />
     <ClCompile Include="BreakPoint.cpp" />
     <ClCompile Include="Debugger.cpp" />

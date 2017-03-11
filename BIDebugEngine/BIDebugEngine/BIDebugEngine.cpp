@@ -48,7 +48,7 @@ void DllInterface::DebugEngineLog(const char *str) {
 
 DllInterface* Connect(EngineInterface *engineInt) {
     WAIT_FOR_DEBUGGER_ATTACHED
-    engineIface = engineInt;
+        engineIface = engineInt;
     return &dllIface;
 }
 char VarBuffer[1024];
@@ -105,6 +105,20 @@ void RV_ScriptVM::debugPrint(std::string prefix) {
     OutputDebugStringA((prefix + " " + title + "F " + filename + " " + data + "\n").c_str());
 }
 #include "Serialize.h"
+
+const GameVariable* RV_VMContext::getVariable(std::string varName) {
+    const GameVariable* value = nullptr;
+    callStack.forEachBackwards([&value, &varName](const Ref<CallStackItem>& item) {
+        auto & var = item->_varSpace._variables.get(varName.c_str());
+        if (!item->_varSpace._variables.isNull(var)) {
+            value = &var;
+            return true;
+        }
+        return false;
+    });
+    return value;
+}
+
 void RV_VMContext::Serialize(JsonArchive& ar) {
 
 
@@ -138,50 +152,8 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 varArchive.Serialize(name.data(), variableArchive);
 
             });
-
-
-            /*
-
-           auto varC = item->varCount();
-           std::vector<IDebugVariable*> vars;
-           vars.resize(varC);
-           IDebugVariable** vbase = vars.data();
-           item->getVariables(const_cast<const IDebugVariable**>(vbase), varC);
-
-
-           for (auto& var : vars) {
-               auto value = var->getValue();
-               if (!value) continue;
-               value->getTypeString(VarBuffer, 1023);
-               std::string valueType(VarBuffer);
-               std::string valueText;
-               JsonArchive variableArchive;
-               variableArchive.Serialize("type", valueType);
-               if (value->isArray()) {
-                   std::vector<std::string> values;
-                   for (int i = 0; i < value->itemCount(); ++i) {
-                       value->getItem(i)->getValue(10, VarBuffer, 1023);
-                       values.push_back(std::string(VarBuffer));
-                   }
-                   variableArchive.Serialize("value", values);
-               } else {
-                   value->getValue(10, VarBuffer, 1023);
-                   variableArchive.Serialize("value", std::string(VarBuffer));
-               }
-
-               varArchive.Serialize(var->_name.data(), variableArchive);
-
-           }  */
             ar.Serialize("variables", varArchive);
         }
-
-
-
-
-
-
-
-        //#TODO serialize all variables
 
         switch (hash) {
 

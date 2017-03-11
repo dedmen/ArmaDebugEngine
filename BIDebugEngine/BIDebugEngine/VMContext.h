@@ -34,7 +34,7 @@ public:
     bool isScriptVM{ false }; //is false for unscheduled scripts
     bool canBeDeleted{ true }; //scriptVM's are only deleted when they are finished
     std::map<uintptr_t, std::shared_ptr<Script>> contentPtrToScript;
-    std::chrono::high_resolution_clock::duration totalRuntime {0};
+    std::chrono::high_resolution_clock::duration totalRuntime{ 0 };
     std::chrono::high_resolution_clock::time_point runningSince; //Used to track elapsed time on scriptStop
 
     std::vector<Instruction> instructions;

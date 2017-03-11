@@ -15,12 +15,12 @@ public:
     json* getRaw() const { return pJson; }
     std::string to_string();
 
-     //typename std::enable_if<has_Serialize<Type>::value || has_Serialize<typename Type::baseType>::value>::type
+    //typename std::enable_if<has_Serialize<Type>::value || has_Serialize<typename Type::baseType>::value>::type
 
-     void Serialize(const char* key,JsonArchive& ar) {
-         if (isReading) __debugbreak(); //not implemented
-         (*pJson)[key] = *ar.pJson;
-     }
+    void Serialize(const char* key, JsonArchive& ar) {
+        if (isReading) __debugbreak(); //not implemented
+        (*pJson)[key] = *ar.pJson;
+    }
 
     template <class Type>
     typename std::enable_if<has_Serialize<Type>::value>::type
@@ -83,7 +83,7 @@ public:
         Serialize(const char* key, std::vector<Type>& value) {
         auto &_array = (*pJson)[key];
         if (isReading) {
-                __debugbreak(); //not implemented
+            __debugbreak(); //not implemented
         } else {
             for (Type& it : value)
                 _array.push_back(it);

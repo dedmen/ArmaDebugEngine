@@ -31,11 +31,11 @@ void MainWindow::on_button_addBP_clicked()
                          "action": {
                              "code": "systemChat \"BPCMDTEST\"",
                              "basePath" : "P:\\",
-                             "type": 3
+                             "type": 2
                          },
                          "condition": null,
-                         "filename": "A3\\functions_f\\arrays\\fn_conditionalSelect.sqf",
-                         "line": 9,
+                         "filename": "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf",
+                         "line": 8,
                          "label" : "condSelect"
                     }
          })";
@@ -43,6 +43,9 @@ void MainWindow::on_button_addBP_clicked()
 
 
         /*
+         *
+         *  "filename": "A3\\functions_f\\arrays\\fn_conditionalSelect.sqf",
+                         "line": 9,
 
                                  "filename": "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf",
                                  "line": 8,
@@ -88,8 +91,8 @@ void MainWindow::on_button_removeBP_clicked()
 {
     QByteArray bb = R"({"command" : 2,
                     "data" : {
-                         "filename": "A3\\functions_f\\arrays\\fn_conditionalSelect.sqf",
-                         "line": 9
+                    "filename": "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf",
+                    "line": 8
                     }
          })";
 
@@ -118,4 +121,18 @@ void MainWindow::on_button_enableHook_clicked()
 
     socket.write(bb);
     qDebug() << "Hook enabled";
+}
+
+void MainWindow::on_button_Variable_clicked()
+{
+    QByteArray bb = R"({"command" : 6,
+             "data" : {
+                         "scope":  15,
+                         "name":  "ace_advanced_fatigue_loadFactor"
+                    }
+         })";
+
+
+    socket.write(bb);
+    qDebug() << "Var Got";
 }

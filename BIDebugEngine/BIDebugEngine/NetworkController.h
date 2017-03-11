@@ -3,12 +3,13 @@
 #include <thread>
 
 enum class NC_CommandType {
-      invalid,
-      addBreakpoint,
-      delBreakpoint,
-      BPContinue,//Tell's breakpoint to leave breakState
-      MonitorDump, //Dump's all Monitors
-      setHookEnable
+    invalid,
+    addBreakpoint,
+    delBreakpoint,
+    BPContinue,//Tell's breakpoint to leave breakState
+    MonitorDump, //Dump's all Monitors
+    setHookEnable,
+    getVariable
 };
 
 class NetworkController {
@@ -20,6 +21,6 @@ public:
     void sendMessage(const std::string& message);
 private:
     NamedPipeServer server;
-    std::thread* pipeThread {nullptr};
+    std::thread* pipeThread{ nullptr };
 };
 

@@ -20,31 +20,17 @@
       <property name="topMargin">
        <number>0</number>
       </property>
-      <item row="0" column="0">
-       <widget class="QPushButton" name="button_addBP">
-        <property name="text">
-         <string>AddBP</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="button_Continue">
-        <property name="text">
-         <string>Continue</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QPushButton" name="button_dumpMonitor">
-        <property name="text">
-         <string>Dump Monitors</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
        <widget class="QPushButton" name="button_removeBP">
         <property name="text">
          <string>RemBP</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="button_addBP">
+        <property name="text">
+         <string>AddBP</string>
         </property>
        </widget>
       </item>
@@ -55,10 +41,31 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="button_dumpMonitor">
+        <property name="text">
+         <string>Dump Monitors</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="button_Continue">
+        <property name="text">
+         <string>Continue</string>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="2">
        <widget class="QPushButton" name="button_enableHook">
         <property name="text">
          <string>enableHook</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QPushButton" name="button_Variable">
+        <property name="text">
+         <string>getVariable</string>
         </property>
        </widget>
       </item>
