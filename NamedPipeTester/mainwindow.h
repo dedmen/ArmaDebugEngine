@@ -33,6 +33,8 @@ private slots:
 
     void on_button_Variable_clicked();
 
+    void on_button_stuff_clicked();
+
 private:
     Ui::MainWindow *ui;
 };

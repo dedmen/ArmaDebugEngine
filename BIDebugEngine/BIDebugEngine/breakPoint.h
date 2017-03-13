@@ -91,10 +91,10 @@ enum class BPAction_types {
 class BreakPoint {
 public:
     BreakPoint(uint16_t line);
-    BreakPoint(const BreakPoint& bp) : line(bp.line) {}
+    BreakPoint(const BreakPoint& bp) { __debugbreak();}//should never happen
     BreakPoint() {};
 
-    BreakPoint(BreakPoint&& other) : condition(std::move(other.condition)), action(std::move(other.action)), line(other.line) {}
+    BreakPoint(BreakPoint&& other) noexcept : line(other.line), condition(std::move(other.condition)), action(std::move(other.action)) {}
 
     BreakPoint& operator=(BreakPoint&& other) {
         condition = std::move(other.condition);
@@ -102,7 +102,10 @@ public:
         line = std::move(other.line);
         return *this;
     }
-
+    BreakPoint& operator=(BreakPoint& other) {
+        __debugbreak(); //This should not happen
+        return *this;
+    }
     ~BreakPoint();
     void Serialize(JsonArchive& ar);
     RString filename;

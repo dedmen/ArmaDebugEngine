@@ -136,3 +136,13 @@ void MainWindow::on_button_Variable_clicked()
     socket.write(bb);
     qDebug() << "Var Got";
 }
+
+void MainWindow::on_button_stuff_clicked()
+{
+    QByteArray bb = R"({"command":1,"data":{"action":{"code":"","basePath":"","type":2},"condition":null,"filename":"test.sqf","line":11}})";
+
+
+
+    socket.write(bb);
+    qDebug() << "STUFFZ!!";
+}

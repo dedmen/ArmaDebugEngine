@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <string>
 #include "GlobalHeader.h"
+#include <vector>
 class JsonArchive;
 //From my Intercept fork
 extern uintptr_t engineAlloc;
@@ -316,6 +317,10 @@ public:
         _ref = _copy._ref;
         return *this;
     }
+    bool operator < (const RString& _right) const {
+        return std::strcmp(*this, _right) > 0;
+    }
+
     const char* data() const {
         if (_ref) return _ref->data();
         static char empty[]{ 0 };
@@ -372,7 +377,10 @@ public:
         return _ref.isNull();
     }
 
-
+    void lower() {
+        if (_ref)
+            _strlwr_s(_ref->data(), _ref->_size);
+    };
 
 
 public://#TODO make private after all rv_strings were replaced
@@ -497,117 +505,261 @@ public:
     AutoArray() : _maxItems(0), Array() {};
 };
 
-static inline unsigned int CalculateStringHashValue(const char *key, int hashValue = 0) {
+static inline unsigned int hashStringCaseSensitive(const char *key, int hashValue = 0) {
     while (*key) {
         hashValue = hashValue * 33 + static_cast<unsigned char>(*key++);
     }
     return hashValue;
 }
-static inline unsigned int CalculateStringHashValueCI(const char *key, int hashValue = 0) {
+static inline unsigned int hashStringCaseInsensitive(const char *key, int hashValue = 0) {
     while (*key) {
         hashValue = hashValue * 33 + static_cast<unsigned char>(tolower(*key++));
     }
     return hashValue;
 }
 
+template<>
+struct std::hash<RString> {
+    size_t operator()(const RString& _Keyval) const {
+        return hashStringCaseInsensitive(_Keyval);
+    }
+};
 
-template <class Type>
 struct MapStringToClassTrait {
     static unsigned int hashKey(const char * key) {
-        return CalculateStringHashValue(key);
+        return hashStringCaseSensitive(key);
     }
     static int compareKeys(const char * k1, const char * k2) {
         return strcmp(k1, k2);
     }
 };
 
-template <class Type>
-struct MapStringToClassTraitCaseInsensitive : public MapStringToClassTrait<Type> {
+struct MapStringToClassTraitCaseInsensitive : public MapStringToClassTrait {
     static unsigned int hashKey(const char * key) {
-        return CalculateStringHashValueCI(key);
+        return hashStringCaseInsensitive(key);
     }
 
     static int compareKeys(const char * k1, const char * k2) {
-        return strcmpi(k1, k2);
+        return _strcmpi(k1, k2);
     }
 };
 
-template <class Type, class Container, class Traits = MapStringToClassTrait<Type>>
+template <class Type, class Container, class Traits = MapStringToClassTrait>
 class MapStringToClass {
 protected:
-    Container *_table;
+    Container* _table;
     int _tableCount{ 0 };
     int _count{ 0 };
     static Type _nullEntry;
 public:
     MapStringToClass() {}
-    ~MapStringToClass() {}
 
     template <class Func>
-    void forEach(Func func) const;
+    void forEach(Func func) const {
+        if (!_table || !_count) return;
+        for (int i = 0; i < _tableCount; i++) {
+            const Container &container = _table[i];
+            for (int j = 0; j < container.count(); j++) {
+                func(container[j]);
+            }
+        }
+    }
 
     template <class Func>
-    void forEachBackwards(Func func) const;
+    void forEachBackwards(Func func) const {
+        if (!_table || !_count) return;
+        for (int i = _tableCount - 1; i >= 0; i--) {
+            const Container &container = _table[i];
+            for (int j = container.count() - 1; j >= 0; j--) {
+                func(container[j]);
+            }
+        }
+    }
 
-    const Type &get(const char* key) const;
+    const Type &get(const char* key) const {
+        if (!_table || !_count) return _nullEntry;
+        int hashedKey = hashKey(key);
+        for (int i = 0; i < _table[hashedKey].count(); i++) {
+            const Type &item = _table[hashedKey][i];
+            if (Traits::compareKeys(item.getMapKey(), key) == 0)
+                return item;
+        }
+        return _nullEntry;
+    }
 
     static bool isNull(const Type &value) { return &value == &_nullEntry; }
 
-    bool hasKey(const char* key) const;
+    bool hasKey(const char* key) const {
+        return !isNull(get(key));
+    }
 
 public:
     int count() const { return _count; }
 protected:
-    int hashKey(const char* key) const;
+    int hashKey(const char* key) const {
+        return Traits::hashKey(key) % _tableCount;
+    }
 };
 
 template<class Type, class Container, class Traits>
 Type MapStringToClass<Type, Container, Traits>::_nullEntry;
 
+template <class Type, class Container, class Traits = MapStringToClassTrait>
+class MapStringToClassNonRV {
+protected:
+    std::vector<Container> _table;
+    int _tableCount{ 0 };
+    int _count{ 0 };
+    static Type _nullEntry;
+public:
+    MapStringToClassNonRV() { init(); }
+    ~MapStringToClassNonRV() {}
 
-template<class Type, class Container, class Traits>
-int MapStringToClass<Type, Container, Traits>::hashKey(const char* key) const {
-    return Traits::hashKey(key) % _tableCount;
-}
+    void init() {
+        clear();
+    }
 
-template<class Type, class Container, class Traits>
-template <class Func>
-void MapStringToClass<Type, Container, Traits>::forEach(Func func) const {
-    if (!_table || !_count) return;
-    for (int i = 0; i < _tableCount; i++) {
-        const Container &container = _table[i];
-        for (int j = 0; j < container.count(); j++) {
-            func(container[j]);
+    void clear() {
+        _table.clear();
+        _table.resize(15);
+        _count = 0;
+        _tableCount = 15;
+    }
+
+    void rebuild(int tableSize) {
+        _tableCount = tableSize;
+        std::vector<Container> newTable;
+        newTable.resize(tableSize);
+        for (auto& container : _table) {
+            for (Type& item : container) {
+                auto hashedKey = hashKey(item.getMapKey(), tableSize);
+                auto it = newTable[hashedKey].emplace(newTable[hashedKey].end(), Type());
+                *it = std::move(item);
+            }
+        }
+        std::swap(_table, newTable);
+    }
+
+
+    Type& insert(const Type &value) {
+        //Check if key already exists
+        auto key = value.getMapKey();
+        Type &old = get(key);
+        if (!isNull(old)) {
+            return old;
+        }
+
+        //Are we full?
+        if (_count + 1 > (16 * _tableCount)) {
+            int tableSize = _tableCount + 1;
+            do {
+                tableSize *= 2;
+            } while (_count + 1 > (16 * (tableSize - 1)));
+            rebuild(tableSize - 1);
+        }
+        auto hashedkey = hashKey(key);
+        auto &x = *(_table[hashedkey].insert(_table[hashedkey].end(), value));
+        _count++;
+        return x;
+    }
+
+    Type& insert(Type &&value) {
+        //Check if key already exists
+        auto key = value.getMapKey();
+        Type &old = get(key);
+        if (!isNull(old)) {
+            return old;
+        }
+
+        //Are we full?
+        if (_count + 1 > (16 * _tableCount)) {
+            int tableSize = _tableCount + 1;
+            do {
+                tableSize *= 2;
+            } while (_count + 1 > (16 * (tableSize - 1)));
+            rebuild(tableSize - 1);
+        }
+        auto hashedkey = hashKey(key);
+        auto &x = *(_table[hashedkey].emplace(_table[hashedkey].end(), Type()));
+        x = std::move(value);
+        _count++;
+        return x;
+    }
+
+    bool remove(const char* key) {
+        if (_count <= 0) return false;
+
+        int hashedKey = hashKey(key);
+        for (size_t i = 0; i < _table[hashedKey].size(); i++) {
+            Type &item = _table[hashedKey][i];
+            if (Traits::compareKeys(item.getMapKey(), key) == 0) {
+                _table[hashedKey].erase(_table[hashedKey].begin() + i);
+                _count--;
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
+    template <class Func>
+    void forEach(Func func) const {
+        if (_table.empty() || !_count) return;
+        for (int i = 0; i < _tableCount; i++) {
+            const Container &container = _table[i];
+            for (int j = 0; j < container.size(); j++) {
+                func(container[j]);
+            }
         }
     }
-}
 
-template<class Type, class Container, class Traits>
-template <class Func>
-void MapStringToClass<Type, Container, Traits>::forEachBackwards(Func func) const {
-    if (!_table || !_count) return;
-    for (int i = _tableCount - 1; i >= 0; i--) {
-        const Container &container = _table[i];
-        for (int j = container.count() - 1; j >= 0; j--) {
-            func(container[j]);
+    template <class Func>
+    void forEachBackwards(Func func) const {
+        if (_table.empty() || !_count) return;
+        for (int i = _tableCount - 1; i >= 0; i--) {
+            const Container &container = _table[i];
+            for (int j = container.size() - 1; j >= 0; j--) {
+                func(container[j]);
+            }
         }
     }
-}
+
+    const Type &get(const char* key) const {
+        if (_table.empty() || !_count) return _nullEntry;
+        int hashedKey = hashKey(key);
+        for (int i = 0; i < _table[hashedKey].size(); i++) {
+            const Type &item = _table[hashedKey][i];
+            if (Traits::compareKeys(item.getMapKey(), key) == 0)
+                return item;
+        }
+        return _nullEntry;
+    }
+
+    Type &get(const char* key) {
+        if (_table.empty() || !_count) return _nullEntry;
+        int hashedKey = hashKey(key);
+        for (auto& item : _table[hashedKey]) {
+            if (Traits::compareKeys(item.getMapKey(), key) == 0)
+                return item;
+        }
+        return _nullEntry;
+    }
+
+    static bool isNull(const Type &value) { return &value == &_nullEntry; }
+
+    bool hasKey(const char* key) const {
+        return !isNull(get(key));
+    }
+    bool empty() const { return _count == 0; }
+
+public:
+    int count() const { return _count; }
+protected:
+    int hashKey(const char* key, int modul = -1) const {
+        return Traits::hashKey(key) % (modul == -1 ? _tableCount : modul);
+    }
+};
 
 template<class Type, class Container, class Traits>
-const Type &MapStringToClass<Type, Container, Traits>::get(const char* key) const {
-    if (!_table || !_count) return _nullEntry;
-    int hashedKey = hashKey(key);
-    for (int i = 0; i < _table[hashedKey].count(); i++) {
-        const Type &item = _table[hashedKey][i];
-        if (Traits::compareKeys(item.getMapKey(), key) == 0)
-            return item;
-    }
-    return _nullEntry;
-}
-
-template <class Type, class Container, class Traits>
-bool MapStringToClass<Type, Container, Traits>::hasKey(const char* key) const {
-    return !isNull(get(key));
-}
-
+Type MapStringToClassNonRV<Type, Container, Traits>::_nullEntry;

@@ -14,6 +14,8 @@ std::chrono::high_resolution_clock::time_point globalTime; //This is the total t
 std::chrono::high_resolution_clock::time_point frameStart; //Time at framestart
 std::chrono::high_resolution_clock::time_point lastContextExit;
 
+#define OnlyOneInstructionPerLine
+
 class globalTimeKeeper {
 public:
     globalTimeKeeper() {
@@ -210,11 +212,11 @@ MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create s
 
 
 void EngineHook::placeHooks() {
-    WAIT_FOR_DEBUGGER_ATTACHED
-        if (!_hooks[static_cast<std::size_t>(hookTypes::scriptVMConstructor)]) {
-            scriptVMConstructorJmpBack = placeHook(0x10448BE, reinterpret_cast<uintptr_t>(scriptVMConstructor)) + 3;
-            _hooks[static_cast<std::size_t>(hookTypes::scriptVMConstructor)] = true;
-        }
+    WAIT_FOR_DEBUGGER_ATTACHED;
+    if (!_hooks[static_cast<std::size_t>(hookTypes::scriptVMConstructor)]) {
+        scriptVMConstructorJmpBack = placeHook(0x10448BE, reinterpret_cast<uintptr_t>(scriptVMConstructor)) + 3;
+        _hooks[static_cast<std::size_t>(hookTypes::scriptVMConstructor)] = true;
+    }
     if (!_hooks[static_cast<std::size_t>(hookTypes::scriptVMSimulateStart)]) {
         scriptVMSimulateStartJmpBack = placeHook(0x1044E80, reinterpret_cast<uintptr_t>(scriptVMSimulateStart)) + 1;
         _hooks[static_cast<std::size_t>(hookTypes::scriptVMSimulateStart)] = true;
@@ -242,6 +244,10 @@ void EngineHook::placeHooks() {
     bool* isDebuggerAttached = reinterpret_cast<bool*>(engineBase + 0x206F310);
     *isDebuggerAttached = false; //Small hack to keep RPT logging while Debugger is attached
     //Could also patternFind and patch (profv3 0107144F) to unconditional jmp
+
+
+    //To yield scriptVM and let engine run while breakPoint hit. 0103C5BB overwrite eax to Yield
+
 }
 
 void EngineHook::removeHooks(bool leavePFrameHook) {
@@ -323,27 +329,27 @@ void EngineHook::_scriptLeft(uintptr_t scrVMPtr) {
 }
 uintptr_t lastCallstackIndex = 0;
 
-#include <typeinfo>
-
+#ifdef OnlyOneInstructionPerLine
+uint16_t lastInstructionLine;
+const char* lastInstructionFile;
+#endif
 
 void EngineHook::_scriptInstruction(uintptr_t instructionBP_Instruction, uintptr_t instructionBP_VMContext, uintptr_t instructionBP_gameState, uintptr_t instructionBP_IDebugScript) {
     globalTimeKeeper _tc;
     auto start = std::chrono::high_resolution_clock::now();
 
-
-
-    //#TODO implement gameState to get to GlobalVariables and current GameEvaluator with local variables
-
     auto instruction = reinterpret_cast<RV_GameInstruction *>(instructionBP_Instruction);
     auto ctx = reinterpret_cast<RV_VMContext *>(instructionBP_VMContext);
     auto gs = reinterpret_cast<GameState *>(instructionBP_gameState);
-    GlobalDebugger.onInstruction(DebuggerInstructionInfo{ instruction, ctx, gs });
-
-
-
-
-
-
+#ifdef OnlyOneInstructionPerLine
+    if (instruction->_scriptPos._sourceLine != lastInstructionLine || instruction->_scriptPos._content.data() != lastInstructionFile) {
+#endif
+        GlobalDebugger.onInstruction(DebuggerInstructionInfo{ instruction, ctx, gs });
+#ifdef OnlyOneInstructionPerLine
+        lastInstructionLine = instruction->_scriptPos._sourceLine;
+        lastInstructionFile = instruction->_scriptPos._content.data();
+    }
+#endif       
 
 
     //if (dbg == "const \"cba_help_VerScript\"") __debugbreak();

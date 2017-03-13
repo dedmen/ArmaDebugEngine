@@ -5,16 +5,155 @@
 #include "Serialize.h"
 #include <unordered_set>
 #include <windows.h>
-
+#include <unordered_map>
+//std::array<const char*, 710> files{};
 Debugger::Debugger() {
     //BreakPoint bp(8);
-
+    //bp.filename = "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf";
     //bp.action = std::make_unique<BPAction_ExecCode>("systemChat \"hello guys\"");
     //JsonArchive test;
     //bp.Serialize(test);
     //auto text = test.to_string();
-    //breakPoints["z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf"].push_back(std::move(bp));
+    //breakPoints.insert(std::move(bp));
+
     //monitors.push_back(std::make_shared<Monitor_knownScriptFiles>());
+
+
+
+
+    /*
+    while (!IsDebuggerPresent()) Sleep(1);
+    struct keyedBP {
+        RString _name;
+        const char* getMapKey() const { return _name; }
+    };
+    std::vector<std::string> files2;
+    for (auto& f : files) {
+        files2.push_back(f);
+    }
+    for (int x = 0; x < 5; ++x) {
+        uint64_t addT{ 0 };
+        uint64_t resolve1T{ 0 };
+        uint64_t resolve2T{ 0 };
+        uint64_t resolveUnknownT{ 0 };
+        for (int i = 0; i < 1000; ++i) {
+            //MapStringToClassNonRV<keyedBP, std::vector<keyedBP>, MapStringToClassTraitCaseInsensitive> map;
+            //MapStringToClassNonRV<keyedBP, std::vector<keyedBP>> map;
+            std::unordered_map<RString, int> map;
+            std::chrono::high_resolution_clock::time_point preAdd = std::chrono::high_resolution_clock::now();
+            for (auto& f : files2) {
+                //std::transform(f.begin(), f.end(), f.begin(), ::tolower);
+                //map.insert(keyedBP{ f.c_str() });
+                map[f] = 1;
+            }
+            std::chrono::high_resolution_clock::time_point postAdd = std::chrono::high_resolution_clock::now();
+            for (auto& f : files2) {
+                //std::transform(f.begin(), f.end(), f.begin(), ::tolower);
+                //auto &found = map.get(f.c_str());
+                //if (map.isNull(found))  __debugbreak();
+                auto found = map.find(f);
+                if (!(found != map.end())) __debugbreak();
+            }
+            std::chrono::high_resolution_clock::time_point resolve1 = std::chrono::high_resolution_clock::now();
+            std::for_each(files2.rbegin(), files2.rend(), [&](std::string& f) {
+                //std::transform(f.begin(), f.end(), f.begin(), ::tolower);
+                //auto &found = map.get(f.c_str());
+                //if (map.isNull(found))  __debugbreak();
+                auto found = map.find(f);
+                if (!(found != map.end())) __debugbreak();
+            });
+            std::chrono::high_resolution_clock::time_point resolve2 = std::chrono::high_resolution_clock::now();
+
+            //auto &found = map.get("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+            //if (!map.isNull(found))  __debugbreak();
+            auto found = map.find("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+            if (found != map.end()) __debugbreak();
+            std::chrono::high_resolution_clock::time_point resolveUnknown = std::chrono::high_resolution_clock::now();
+
+            addT += std::chrono::duration_cast<std::chrono::microseconds>(postAdd - preAdd).count();
+            resolve1T += std::chrono::duration_cast<std::chrono::microseconds>(resolve1 - postAdd).count();
+            resolve2T += std::chrono::duration_cast<std::chrono::microseconds>(resolve2 - resolve1).count();
+            resolveUnknownT += std::chrono::duration_cast<std::chrono::microseconds>(resolveUnknown - resolve2).count();
+        }
+        OutputDebugStringA((std::string("addT ") + std::to_string(addT) + "\n").c_str());
+        OutputDebugStringA((std::string("resolve1T ") + std::to_string(resolve1T) + "\n").c_str());
+        OutputDebugStringA((std::string("resolve2T ") + std::to_string(resolve2T) + "\n").c_str());
+        OutputDebugStringA((std::string("resolveUnknownT ") + std::to_string(resolveUnknownT) + "\n").c_str());
+    }
+  */ 
+ /*
+results:
+    std::map<std::string, int> map; case sensitive
+        addT 327.888
+        resolve1T 431.802
+        resolve2T 426.456
+        resolveUnknownT 693
+
+        addT 328.354
+        resolve1T 464.537
+        resolve2T 459.745
+        resolveUnknownT 341
+
+    std::map<RString, int> map; case insensitive
+
+        addT 755.388
+        resolve1T 697.654
+        resolve2T 707.371
+        resolveUnknownT 108
+
+        addT 749.522
+        resolve1T 690.555
+        resolve2T 702.566
+        resolveUnknownT 106
+
+    std::map<RString, int> map; case sensitive
+
+        addT 471.092
+        resolve1T 395.438
+        resolve2T 394.476
+        resolveUnknownT 46
+
+    MapStringToClassNonRV<keyedBP, std::vector<keyedBP>> map; case sensitive
+
+        addT 515.686
+        resolve1T 154.526
+        resolve2T 156.115
+        resolveUnknownT 9
+
+    MapStringToClassNonRV<keyedBP, std::vector<keyedBP>, MapStringToClassTraitCaseInsensitive> map; Case insensitive
+
+        addT 916.630
+        resolve1T 363.788
+        resolve2T 362.788
+        resolveUnknownT 59
+
+    std::unordered_map<std::string, int> map; case sensitive
+
+        addT 386.028
+        resolve1T 218.414
+        resolve2T 220.328
+        resolveUnknownT 570
+
+    MapStringToClassNonRV<keyedBP, std::vector<keyedBP>> map; string tolower Case insensitive
+
+        addT 694.363
+        resolve1T 264.319
+        resolve2T 265.026
+        resolveUnknownT 13
+
+    std::unordered_map<RString, int> map;
+        addT 687.556
+        resolve1T 443.118
+        resolve2T 447.275
+        resolveUnknownT 148
+
+
+    Best resolve time while case insensitive MapClassToStringNonRV with tolowering all inputs
+    Best resolve time while case sensitive MapClassToStringNonRV
+
+*/
+
+
 }
 
 
@@ -69,6 +208,7 @@ void Debugger::writeFrameToFile(uint32_t frameCounter) {
 }
 
 void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
+    instructionInfo.instruction->_scriptPos._sourceFile.lower();
     checkForBreakpoint(instructionInfo);
 
     for (auto& it : monitors)
@@ -103,10 +243,11 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
 
     if (breakPoints.empty()) return;
-    auto found = breakPoints.find(instructionInfo.instruction->_scriptPos._sourceFile.data());
-    if (found == breakPoints.end() || found->second.empty()) return;
-    auto &bps = breakPoints[instructionInfo.instruction->_scriptPos._sourceFile.data()];
-    for (auto& bp : bps) {
+    //if (_strcmpi(instructionInfo.instruction->_scriptPos._sourceFile.data(), "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf") == 0)
+    //    __debugbreak();
+    auto &found = breakPoints.get(instructionInfo.instruction->_scriptPos._sourceFile.data());
+    if (breakPoints.isNull(found) || found.empty()) return;
+    for (auto& bp : found) {
         if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine) {//#TODO move into breakPoint::trigger that returns bool if it triggered
             if (bp.condition && !bp.condition->isMatching(this, &bp, instructionInfo)) continue;
             bp.hitcount++;
@@ -190,6 +331,7 @@ void Debugger::onShutdown() {
 
 void Debugger::onStartup() {
     nController.init();
+    state = DebuggerState::running;
 }
 
 void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo) {

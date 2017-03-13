@@ -64,12 +64,32 @@ public:
     void commandContinue(); //Tells Breakpoint in breakState to Stop halting
     const GameVariable* getVariable(VariableScope, std::string varName);
     std::map<uintptr_t, std::shared_ptr<VMContext>> VMPtrToScript;
-    std::map<std::string, std::vector<BreakPoint>> breakPoints;
+    //std::map<std::string, std::vector<BreakPoint>> breakPoints; //#TODO use MapStringToClass case insensitive
+    class breakPointList : public std::vector<BreakPoint> {
+    public:
+        breakPointList() {}
+       // breakPointList(const breakPointList& b) = delete;// : _name(b._name) { for (auto &it : b) emplace_back(std::move(it)); } //std::vector like's to still copy while passing rvalue-ref
+        //breakPointList(const BreakPoint& b) : _name(b.filename) {push_back(b); }
+        breakPointList(BreakPoint&& b) noexcept : _name(b.filename) {push_back(std::move(b)); }
+        breakPointList& operator=(breakPointList&& b) noexcept {_name = (b._name); for (auto &it : b) emplace_back(std::move(it));
+            return *this;
+        }
+        RString _name;
+        const char* getMapKey()const { return _name; }
+        breakPointList(const breakPointList& b) { if (!b._name.isNull()) __debugbreak(); }
+    private:
 
+        // disable copying
+       
+        breakPointList& operator=(const breakPointList&);
+
+
+    };
+    MapStringToClassNonRV<breakPointList, std::vector<breakPointList>> breakPoints; //All inputs have to be tolowered before accessing
     std::vector<std::shared_ptr<IMonitorBase>> monitors;
     NetworkController nController;
     HANDLE breakStateContinueEvent{ 0 };
-    DebuggerState state;
+    DebuggerState state{ DebuggerState::Uninitialized };
     BreakStateInfo breakStateInfo;
 };
 

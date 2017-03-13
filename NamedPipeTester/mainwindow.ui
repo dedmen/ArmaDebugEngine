@@ -69,6 +69,13 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="3">
+       <widget class="QPushButton" name="button_stuff">
+        <property name="text">
+         <string>General Purpose Stuffz Button</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item>

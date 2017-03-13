@@ -54,16 +54,20 @@ void NetworkController::incomingMessage(const std::string& message) {
                 JsonArchive ar(packet["data"]);
                 BreakPoint bp;
                 bp.Serialize(ar);
-                auto &bpVec = GlobalDebugger.breakPoints[bp.filename.data()];
-                auto vecFound = std::find_if(bpVec.begin(), bpVec.end(), [lineNumber = bp.line](const BreakPoint& bp) {
-                    return lineNumber == bp.line;
-                });
-                if (vecFound != bpVec.end()) {
-                    //Breakpoint already exists. Delete old one
-                    bpVec.erase(vecFound);
+                bp.filename.lower();
+                auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename);
+                if (!GlobalDebugger.breakPoints.isNull(bpVec)) {
+                    auto vecFound = std::find_if(bpVec.begin(), bpVec.end(), [lineNumber = bp.line](const BreakPoint& bp) {
+                        return lineNumber == bp.line;
+                    });
+                    if (vecFound != bpVec.end()) {
+                        //Breakpoint already exists. Delete old one
+                        bpVec.erase(vecFound);
+                    }
+                    bpVec.push_back(std::move(bp));
+                } else {
+                    GlobalDebugger.breakPoints.insert(std::move(bp));
                 }
-                bpVec.push_back(std::move(bp));
-
             } break;
             case NC_CommandType::delBreakpoint: {
                 JsonArchive ar(packet["data"]);
@@ -71,16 +75,17 @@ void NetworkController::incomingMessage(const std::string& message) {
                 std::string fileName;
                 ar.Serialize("line", lineNumber);
                 ar.Serialize("filename", fileName);
-                auto found = GlobalDebugger.breakPoints.find(fileName);
-                if (found != GlobalDebugger.breakPoints.end()) {
-                    auto vecFound = std::find_if(found->second.begin(), found->second.end(), [lineNumber](const BreakPoint& bp) {
+                std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
+                auto &found = GlobalDebugger.breakPoints.get(fileName.c_str());
+                if (!GlobalDebugger.breakPoints.isNull(found)) {
+                    auto vecFound = std::find_if(found.begin(), found.end(), [lineNumber](const BreakPoint& bp) {
                         return lineNumber == bp.line;
                     });
-                    if (vecFound != found->second.end()) {
-                        found->second.erase(vecFound);
+                    if (vecFound != found.end()) {
+                        found.erase(vecFound);
                     }
-                    if (found->second.empty())
-                        GlobalDebugger.breakPoints.erase(found);
+                    if (found.empty())
+                        GlobalDebugger.breakPoints.remove(fileName.c_str());
                 }
             } break;
             case NC_CommandType::BPContinue: {
