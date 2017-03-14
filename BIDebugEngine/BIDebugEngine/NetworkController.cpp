@@ -88,8 +88,8 @@ void NetworkController::incomingMessage(const std::string& message) {
                         GlobalDebugger.breakPoints.remove(fileName.c_str());
                 }
             } break;
-            case NC_CommandType::BPContinue: {
-                GlobalDebugger.commandContinue();
+            case NC_CommandType::BPContinue: {    
+                GlobalDebugger.commandContinue(static_cast<StepType>(packet.value<int>("data", 0)));
             } break;
 
             default: break;

@@ -80,78 +80,78 @@ Debugger::Debugger() {
         OutputDebugStringA((std::string("resolve2T ") + std::to_string(resolve2T) + "\n").c_str());
         OutputDebugStringA((std::string("resolveUnknownT ") + std::to_string(resolveUnknownT) + "\n").c_str());
     }
-  */ 
- /*
-results:
-    std::map<std::string, int> map; case sensitive
-        addT 327.888
-        resolve1T 431.802
-        resolve2T 426.456
-        resolveUnknownT 693
+  */
+  /*
+ results:
+     std::map<std::string, int> map; case sensitive
+         addT 327.888
+         resolve1T 431.802
+         resolve2T 426.456
+         resolveUnknownT 693
 
-        addT 328.354
-        resolve1T 464.537
-        resolve2T 459.745
-        resolveUnknownT 341
+         addT 328.354
+         resolve1T 464.537
+         resolve2T 459.745
+         resolveUnknownT 341
 
-    std::map<RString, int> map; case insensitive
+     std::map<RString, int> map; case insensitive
 
-        addT 755.388
-        resolve1T 697.654
-        resolve2T 707.371
-        resolveUnknownT 108
+         addT 755.388
+         resolve1T 697.654
+         resolve2T 707.371
+         resolveUnknownT 108
 
-        addT 749.522
-        resolve1T 690.555
-        resolve2T 702.566
-        resolveUnknownT 106
+         addT 749.522
+         resolve1T 690.555
+         resolve2T 702.566
+         resolveUnknownT 106
 
-    std::map<RString, int> map; case sensitive
+     std::map<RString, int> map; case sensitive
 
-        addT 471.092
-        resolve1T 395.438
-        resolve2T 394.476
-        resolveUnknownT 46
+         addT 471.092
+         resolve1T 395.438
+         resolve2T 394.476
+         resolveUnknownT 46
 
-    MapStringToClassNonRV<keyedBP, std::vector<keyedBP>> map; case sensitive
+     MapStringToClassNonRV<keyedBP, std::vector<keyedBP>> map; case sensitive
 
-        addT 515.686
-        resolve1T 154.526
-        resolve2T 156.115
-        resolveUnknownT 9
+         addT 515.686
+         resolve1T 154.526
+         resolve2T 156.115
+         resolveUnknownT 9
 
-    MapStringToClassNonRV<keyedBP, std::vector<keyedBP>, MapStringToClassTraitCaseInsensitive> map; Case insensitive
+     MapStringToClassNonRV<keyedBP, std::vector<keyedBP>, MapStringToClassTraitCaseInsensitive> map; Case insensitive
 
-        addT 916.630
-        resolve1T 363.788
-        resolve2T 362.788
-        resolveUnknownT 59
+         addT 916.630
+         resolve1T 363.788
+         resolve2T 362.788
+         resolveUnknownT 59
 
-    std::unordered_map<std::string, int> map; case sensitive
+     std::unordered_map<std::string, int> map; case sensitive
 
-        addT 386.028
-        resolve1T 218.414
-        resolve2T 220.328
-        resolveUnknownT 570
+         addT 386.028
+         resolve1T 218.414
+         resolve2T 220.328
+         resolveUnknownT 570
 
-    MapStringToClassNonRV<keyedBP, std::vector<keyedBP>> map; string tolower Case insensitive
+     MapStringToClassNonRV<keyedBP, std::vector<keyedBP>> map; string tolower Case insensitive
 
-        addT 694.363
-        resolve1T 264.319
-        resolve2T 265.026
-        resolveUnknownT 13
+         addT 694.363
+         resolve1T 264.319
+         resolve2T 265.026
+         resolveUnknownT 13
 
-    std::unordered_map<RString, int> map;
-        addT 687.556
-        resolve1T 443.118
-        resolve2T 447.275
-        resolveUnknownT 148
+     std::unordered_map<RString, int> map;
+         addT 687.556
+         resolve1T 443.118
+         resolve2T 447.275
+         resolveUnknownT 148
 
 
-    Best resolve time while case insensitive MapClassToStringNonRV with tolowering all inputs
-    Best resolve time while case sensitive MapClassToStringNonRV
+     Best resolve time while case insensitive MapClassToStringNonRV with tolowering all inputs
+     Best resolve time while case sensitive MapClassToStringNonRV
 
-*/
+ */
 
 
 }
@@ -242,6 +242,21 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
 
+    if (state == DebuggerState::stepState) {
+        if (instructionInfo.context != stepInfo.context) { //Lost context. Can't step anymore
+            //#TODO don't care about this if scriptVM stepping
+            commandContinue(StepType::STContinue);
+        }
+        auto level = instructionInfo.context->callStack.count();
+        if (level <= stepInfo.stepLevel && 
+            //Prevent stepOver from triggering in the same Line
+            (stepInfo.stepType == StepType::STOver ? stepInfo.stepLine != instructionInfo.instruction->_scriptPos._sourceLine : true) 
+            ) {
+            BPAction_Halt hAction;
+            hAction.execute(this, nullptr, instructionInfo);
+            return; //We already halted here. Don't care if there are more breakpoints here.
+        }
+    }
     if (breakPoints.empty()) return;
     //if (_strcmpi(instructionInfo.instruction->_scriptPos._sourceFile.data(), "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf") == 0)
     //    __debugbreak();
@@ -370,16 +385,40 @@ void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructio
 }
 
 void Debugger::onContinue() {
-    state = DebuggerState::running;
     breakStateContinueEvent = 0;
     breakStateInfo.bp = nullptr;
     breakStateInfo.instruction = nullptr;
 }
 
-void Debugger::commandContinue() {
-    if (state != DebuggerState::breakState) return;
+void Debugger::commandContinue(StepType stepType) {
+    if (state != DebuggerState::breakState && state != DebuggerState::stepState) return;
+
+    if (stepType == StepType::STContinue) {
+        state = DebuggerState::running;
+    } else {
+        state = DebuggerState::stepState;
+        stepInfo.stepType = stepType;
+        stepInfo.stepLine = breakStateInfo.instruction->instruction->_scriptPos._sourceLine;
+        stepInfo.context = breakStateInfo.instruction->context;
+
+        switch (stepType) {
+            case StepType::STInto:
+                stepInfo.stepLevel = std::numeric_limits<decltype(stepInfo.stepLevel)>::max();
+                break;
+            case StepType::STOver:
+                stepInfo.stepLevel = breakStateInfo.instruction->context->callStack.count();
+                break;
+            case StepType::STOut:
+                stepInfo.stepLevel = breakStateInfo.instruction->context->callStack.count() - 1;
+                break;
+            default: break;
+        }
+    }
+
+
     ResetEvent(breakStateContinueEvent);
     SetEvent(breakStateContinueEvent);
+    nController.sendMessage("{\"command\":2}");
 }
 
 const GameVariable * Debugger::getVariable(VariableScope scope, std::string varName) {

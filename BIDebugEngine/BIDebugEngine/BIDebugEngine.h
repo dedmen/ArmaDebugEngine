@@ -48,9 +48,10 @@ public:
 };
 
 enum class StepType {
-    SKInto,
-    SKOver,
-    SKOut
+    STContinue,
+    STInto,
+    STOver,
+    STOut
 };
 
 enum class StepSize {

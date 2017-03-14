@@ -95,6 +95,8 @@ void BPAction_ExecCode::Serialize(JsonArchive& ar) {
 }
 
 extern EngineAlive* EngineAliveFnc;
+extern EngineEnableMouse* EngineEnableMouseFnc;
+
 void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstructionInfo& info) {
     SECURITY_DESCRIPTOR SD;
     InitializeSecurityDescriptor(&SD, SECURITY_DESCRIPTOR_REVISION);
@@ -107,8 +109,9 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
         &SA,    // default security attribute 
         TRUE,    // manual-reset event 
         FALSE,    // initial state = signaled 
-        NULL);   // unnamed event object 
+        NULL);   // unnamed event object
 
+    EngineEnableMouseFnc(false); //Free mouse from Arma
     dbg->onHalt(waitEvent, bp, info);
     bool halting = true;
     while (halting) {
@@ -117,6 +120,7 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
         EngineAliveFnc();
         if (waitResult != WAIT_TIMEOUT) {
             halting = false;
+            //EngineEnableMouseFnc(true); Causes mouse to jump to bottom right screen corner
             dbg->onContinue();
         }
     }

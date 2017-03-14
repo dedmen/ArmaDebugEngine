@@ -6,7 +6,6 @@
 #pragma comment (lib, "Psapi.lib")//GetModuleInformation
 extern uintptr_t engineAlloc;
 extern uintptr_t globalAlivePtr;
-EngineAlive* EngineAliveFnc;
 
 BOOL APIENTRY DllMain(HMODULE hModule,
     DWORD  ul_reason_for_call,
@@ -75,10 +74,6 @@ BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason, LPVOID) {
     uintptr_t allocatorVtablePtr = (findInMemory((char*) &stringOffset, 4) - 4);
     const char* test = getRTTIName(*reinterpret_cast<uintptr_t*>(allocatorVtablePtr));
     engineAlloc = allocatorVtablePtr;
-
-    EngineAliveFnc = reinterpret_cast<EngineAlive*>(reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll) + 0x10454B0);
-    //Find by searching for.  "XML parsing error: cannot read the source file". function call right after start of while loop
-
 
     return TRUE;
 }

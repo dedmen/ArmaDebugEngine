@@ -27,7 +27,8 @@ struct BreakStateInfo {
 enum class DebuggerState {
     Uninitialized,
     running,
-    breakState
+    breakState,
+    stepState
 };
 
 enum class VariableScope { //This is a bitflag
@@ -61,7 +62,7 @@ public:
     void onStartup();
     void onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& info); //Breakpoint is halting engine
     void onContinue(); //Breakpoint has stopped halting
-    void commandContinue(); //Tells Breakpoint in breakState to Stop halting
+    void commandContinue(StepType stepType); //Tells Breakpoint in breakState to Stop halting
     const GameVariable* getVariable(VariableScope, std::string varName);
     std::map<uintptr_t, std::shared_ptr<VMContext>> VMPtrToScript;
     //std::map<std::string, std::vector<BreakPoint>> breakPoints; //#TODO use MapStringToClass case insensitive
@@ -88,8 +89,14 @@ public:
     MapStringToClassNonRV<breakPointList, std::vector<breakPointList>> breakPoints; //All inputs have to be tolowered before accessing
     std::vector<std::shared_ptr<IMonitorBase>> monitors;
     NetworkController nController;
-    HANDLE breakStateContinueEvent{ 0 };
+    HANDLE breakStateContinueEvent{ 0 }; 
     DebuggerState state{ DebuggerState::Uninitialized };
     BreakStateInfo breakStateInfo;
+    struct {
+        StepType stepType;
+        uint16_t stepLine;
+        uint8_t stepLevel;
+        RV_VMContext* context;
+    } stepInfo;
 };
 

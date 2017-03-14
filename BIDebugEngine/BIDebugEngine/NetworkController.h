@@ -12,6 +12,12 @@ enum class NC_CommandType {
     getVariable
 };
 
+enum class NC_OutgoingCommandType {
+    invalid,
+    BreakpointHalt,
+    ContinueExecution
+};
+
 class NetworkController {
 public:
     NetworkController();

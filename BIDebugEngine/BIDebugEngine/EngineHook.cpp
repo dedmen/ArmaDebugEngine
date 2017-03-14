@@ -43,6 +43,11 @@ uintptr_t worldMissionEventEndJmpBack;
 uintptr_t hookEnabled_Instruction{ 1 };
 uintptr_t hookEnabled_Simulate{ 1 };
 uintptr_t scriptVM;
+
+EngineAlive* EngineAliveFnc;
+EngineEnableMouse* EngineEnableMouseFnc;
+
+
 _declspec(naked) void scriptVMConstructor() {
     __asm {
         push edi; //scriptVM Pointer
@@ -245,6 +250,10 @@ void EngineHook::placeHooks() {
     *isDebuggerAttached = false; //Small hack to keep RPT logging while Debugger is attached
     //Could also patternFind and patch (profv3 0107144F) to unconditional jmp
 
+    EngineAliveFnc = reinterpret_cast<EngineAlive*>(engineBase + 0x10454B0);
+    //Find by searching for.  "XML parsing error: cannot read the source file". function call right after start of while loop
+   
+    EngineEnableMouseFnc = reinterpret_cast<EngineEnableMouse*>(engineBase + 0x1159250);
 
     //To yield scriptVM and let engine run while breakPoint hit. 0103C5BB overwrite eax to Yield
 

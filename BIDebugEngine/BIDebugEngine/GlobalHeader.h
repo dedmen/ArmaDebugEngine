@@ -84,3 +84,4 @@ enum class scriptExecutionContext {
 
 
 typedef void EngineAlive(); //Call this periodically while in breakState
+typedef void EngineEnableMouse(bool enabled); //Call this periodically while in breakState
