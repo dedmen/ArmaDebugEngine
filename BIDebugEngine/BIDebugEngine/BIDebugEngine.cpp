@@ -109,9 +109,9 @@ void RV_ScriptVM::debugPrint(std::string prefix) {
 const GameVariable* RV_VMContext::getVariable(std::string varName) {
     const GameVariable* value = nullptr;
     callStack.forEachBackwards([&value, &varName](const Ref<CallStackItem>& item) {
-        auto & var = item->_varSpace._variables.get(varName.c_str());
-        if (!item->_varSpace._variables.isNull(var)) {
-            value = &var;
+        auto var = item->_varSpace.getVariable(varName);
+        if (var) {
+            value = var;
             return true;
         }
         return false;
@@ -199,4 +199,15 @@ void GameData::Serialize(JsonArchive& ar) const {
 
 void GameValue::Serialize(JsonArchive& ar) const {
     _data->Serialize(ar);
+}
+
+const GameVariable* GameVarSpace::getVariable(const std::string& varName) const {
+    auto & var = _variables.get(varName.c_str());
+    if (!_variables.isNull(var)) {
+        return &var;
+    }
+    if (_parent) {
+        return _parent->getVariable(varName);
+    }
+    return nullptr;
 }

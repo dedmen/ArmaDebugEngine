@@ -83,14 +83,36 @@ public:
         Serialize(const char* key, std::vector<Type>& value) {
         auto &_array = (*pJson)[key];
         if (isReading) {
-            __debugbreak(); //not implemented
+            if (_array.is_array()) {
+                for (auto& it : _array) {
+                    value.push_back(it);
+                }
+            }
         } else {
             for (Type& it : value)
                 _array.push_back(it);
         }
     }
 
-
+    template <class Type>
+    typename std::enable_if<has_Serialize<Type>::value>::type
+        Serialize(const char* key, std::vector<Type>& value) {
+        auto &_array = (*pJson)[key];
+        if (isReading) {
+            if (_array.is_array()) {
+                for (auto& it : _array) {
+                    auto iterator = value.emplace(value.end(),Type());
+                    iterator->Serialize(JsonArchive(it));
+                }
+            }
+        } else {
+            for (Type& it : value) {
+                JsonArchive element;
+                it.Serialize(element);
+                _array.push_back(*element.pJson);
+            }
+        }
+    }
 
 
 

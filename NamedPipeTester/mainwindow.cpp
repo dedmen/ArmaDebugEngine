@@ -128,7 +128,7 @@ void MainWindow::on_button_Variable_clicked()
     QByteArray bb = R"({"command" : 6,
              "data" : {
                          "scope":  15,
-                         "name":  "ace_advanced_fatigue_loadFactor"
+                         "name":  ["ace_advanced_fatigue_loadFactor","_currentFrequency","_localNil","globalNil","_lVar"]
                     }
          })";
 

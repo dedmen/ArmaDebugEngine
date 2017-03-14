@@ -209,9 +209,6 @@ _declspec(naked) void worldMissionEventEnd() {
     }
 }
 
-//#TODO remember to call GlobalAlive while in break state
-
-
 scriptExecutionContext currentContext = scriptExecutionContext::Invalid;
 MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create some invalid handler type
 

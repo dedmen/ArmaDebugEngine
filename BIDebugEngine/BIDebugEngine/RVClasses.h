@@ -89,9 +89,6 @@ public:
 
         return ptr;
     }
-
-
-    //#TODO implement game_data_pool and string pool here
 };
 
 class RefCountBaseT {
@@ -124,7 +121,7 @@ public:
     virtual double memUsed() const { return 0; }
 };
 
-//From my Fork of Intercept //#TODO convert back to use Arma alloc
+//From my Fork of Intercept
 template<class Type, class Allocator = rv_allocator<char>> //Has to be allocator of type char
 class compact_array : public RefCountBaseT {
     static_assert(std::is_literal_type<Type>::value, "Type must be a literal type");
@@ -383,7 +380,7 @@ public:
     };
 
 
-public://#TODO make private after all rv_strings were replaced
+private:
     Ref<compact_array<char>> _ref;
 
     static compact_array<char> *create(const char *str, int len) {

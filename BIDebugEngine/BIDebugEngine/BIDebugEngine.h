@@ -164,15 +164,18 @@ public:
     const char *getMapKey() const { return _name; }
 };
 
+struct GameVarSpace {
+    uintptr_t vtable;
+    MapStringToClass<GameVariable, AutoArray<GameVariable> > _variables;
+    GameVarSpace *_parent;
+    const GameVariable* getVariable(const std::string& varName) const;
+    bool _1;
+};
+
 class CallStackItem : public RefCount, public IDebugScope {
 public:
     CallStackItem* _parent;
-    struct GameVarSpace {
-        uintptr_t vtable;
-        MapStringToClass<GameVariable, AutoArray<GameVariable> > _variables;
-        GameVarSpace *_parent;
-        bool _1;
-    } _varSpace;
+    GameVarSpace _varSpace;
     /// number of values on the data stack when item was created
     int _stackBottom;
     /// number of values on the data stack before the current instruction processing
@@ -188,16 +191,13 @@ public:
     bool _multipleInstructions;
 };
 
-
-struct GameCodeType { //#TODO can I inline this?
-    RString _string;
-    AutoArray<Ref<RV_GameInstruction>> _code;
-    bool _compiled;
-};
-
 class GameDataCode : public GameData {
 public:
-    GameCodeType _instructions;
+    struct {
+        RString _string;
+        AutoArray<Ref<RV_GameInstruction>> _code;
+        bool _compiled;
+    } _instructions;
     bool _final;
 };
 
@@ -242,11 +242,23 @@ public:
     char pad_0x0150[280]; //0x0150
     RString _displayName;
     bool _canSuspend;
-    bool _localOnly;
+    bool _1;
     bool _undefinedIsNil;
-    bool _exceptionThrown;
-    bool _break;
-    bool _breakOut;
+    bool _2;
+    bool _3;
+    bool _4;
+};
+
+class GameEvaluator : public RefCount {
+public:
+    GameVarSpace *local;  // local variables
+    int           handle; // for debug purposes to test the Begin/EndContext matching pairs
+
+    bool _1;
+    bool _2;
+    uint32_t _errorType;
+    RString _errorMessage;
+    SourceDocPos _errorPosition;
 };
 
 class GameState {
@@ -257,7 +269,7 @@ public:
     MapStringToClass<void*, AutoArray<void*>> _3; //operators
     MapStringToClass<void*, AutoArray<void*>> _4; //nulars  //#TODO add DebugBreak script nular. Check Visor
     char _5[0x114];
-    void* GEval;
+    GameEvaluator* GEval;
     Ref<GameDataNamespace> _globalNamespace; //Can change by https://community.bistudio.com/wiki/with
     /*
     default,

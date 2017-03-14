@@ -9,13 +9,15 @@ enum class NC_CommandType {
     BPContinue,//Tell's breakpoint to leave breakState
     MonitorDump, //Dump's all Monitors
     setHookEnable,
-    getVariable
+    getVariable,
+    getCurrentCode //While in breakState returns full preproced code of last Instructions script file
 };
 
 enum class NC_OutgoingCommandType {
     invalid,
     BreakpointHalt,
-    ContinueExecution
+    ContinueExecution,
+    VariableReturn //returning from getVariable
 };
 
 class NetworkController {

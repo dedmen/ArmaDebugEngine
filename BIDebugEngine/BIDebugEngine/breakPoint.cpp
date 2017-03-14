@@ -66,6 +66,85 @@ void BreakPoint::Serialize(JsonArchive& ar) {
 
 }
 
+bool BreakPoint::trigger(Debugger* dbg, const DebuggerInstructionInfo& instructionInfo) {
+    if (condition && !condition->isMatching(dbg, this, instructionInfo)) return false;
+    hitcount++;
+
+
+
+    /*
+    JsonArchive varArchive;
+    JsonArchive nsArchive[4];
+    auto func = [](JsonArchive& nsArchive, const GameDataNamespace* var) {
+    var->_variables.forEach([&nsArchive](const GameVariable& var) {
+
+    JsonArchive variableArchive;
+
+    auto name = var._name;
+    if (var._value.isNull()) {
+    variableArchive.Serialize("type", "nil");
+    nsArchive.Serialize(name.data(), variableArchive);
+    return;
+    }
+    auto value = var._value._data;
+    const auto type = value->getTypeString();
+
+    variableArchive.Serialize("type", type);
+    if (strcmp(type, "array") == 0) {
+    variableArchive.Serialize("value", value->getArray());
+    } else {
+    variableArchive.Serialize("value", value->getAsString());
+    }
+    nsArchive.Serialize(name.data(), variableArchive);
+
+    });
+    };
+
+    std::thread _1([&]() {func(nsArchive[0], instructionInfo.gs->_namespaces.get(0)); });
+    std::thread _2([&]() {func(nsArchive[1], instructionInfo.gs->_namespaces.get(1)); });
+    std::thread _3([&]() {func(nsArchive[2], instructionInfo.gs->_namespaces.get(2)); });
+    std::thread _4([&]() {func(nsArchive[3], instructionInfo.gs->_namespaces.get(3)); });
+
+
+    if (_1.joinable()) _1.join();
+    varArchive.Serialize(instructionInfo.gs->_namespaces.get(0)->_name.data(), nsArchive[0]);
+    if (_2.joinable()) _2.join();
+    varArchive.Serialize(instructionInfo.gs->_namespaces.get(1)->_name.data(), nsArchive[1]);
+    if (_3.joinable()) _3.join();
+    varArchive.Serialize(instructionInfo.gs->_namespaces.get(2)->_name.data(), nsArchive[2]);
+    if (_4.joinable()) _4.join();
+    varArchive.Serialize(instructionInfo.gs->_namespaces.get(3)->_name.data(), nsArchive[3]);
+
+    auto text = varArchive.to_string();
+    std::ofstream f("P:\\AllVars.json", std::ios::out | std::ios::binary);
+    f.write(text.c_str(), text.length());
+    f.close();
+
+
+
+    */
+
+
+
+
+    executeActions(dbg, instructionInfo);
+
+    //JsonArchive ar;
+    //instructionInfo.context->Serialize(ar);
+    //auto text = ar.to_string();
+    //std::ofstream f("P:\\break.json", std::ios::out | std::ios::binary);
+    //f.write(text.c_str(), text.length());
+    //f.close();
+    //std::ofstream f2("P:\\breakScript.json", std::ios::out | std::ios::binary);
+    //f2.write(instructionInfo.instruction->_scriptPos._content.data(), instructionInfo.instruction->_scriptPos._content.length());
+    //f2.close();
+    return true;
+}
+
+void BreakPoint::executeActions(Debugger* dbg, const DebuggerInstructionInfo& instructionInfo) {
+    if (action) action->execute(dbg, this, instructionInfo); //#TODO move into breakPoint::executeActions 
+}
+
 bool BPCondition_Code::isMatching(Debugger*, BreakPoint*, const DebuggerInstructionInfo& info) {
     auto rtn = info.context->callStack.back()->EvaluateExpression(code.c_str(), 10);
     if (rtn.isNull())  return false; //#TODO this is code error.

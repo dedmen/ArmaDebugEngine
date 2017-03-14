@@ -248,9 +248,9 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
             commandContinue(StepType::STContinue);
         }
         auto level = instructionInfo.context->callStack.count();
-        if (level <= stepInfo.stepLevel && 
+        if (level <= stepInfo.stepLevel &&
             //Prevent stepOver from triggering in the same Line
-            (stepInfo.stepType == StepType::STOver ? stepInfo.stepLine != instructionInfo.instruction->_scriptPos._sourceLine : true) 
+            (stepInfo.stepType == StepType::STOver ? stepInfo.stepLine != instructionInfo.instruction->_scriptPos._sourceLine : true)
             ) {
             BPAction_Halt hAction;
             hAction.execute(this, nullptr, instructionInfo);
@@ -263,79 +263,8 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     auto &found = breakPoints.get(instructionInfo.instruction->_scriptPos._sourceFile.data());
     if (breakPoints.isNull(found) || found.empty()) return;
     for (auto& bp : found) {
-        if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine) {//#TODO move into breakPoint::trigger that returns bool if it triggered
-            if (bp.condition && !bp.condition->isMatching(this, &bp, instructionInfo)) continue;
-            bp.hitcount++;
-
-
-
-            /*
-                 JsonArchive varArchive;
-                 JsonArchive nsArchive[4];
-                 auto func = [](JsonArchive& nsArchive, const GameDataNamespace* var) {
-                     var->_variables.forEach([&nsArchive](const GameVariable& var) {
-
-                         JsonArchive variableArchive;
-
-                         auto name = var._name;
-                         if (var._value.isNull()) {
-                             variableArchive.Serialize("type", "nil");
-                             nsArchive.Serialize(name.data(), variableArchive);
-                             return;
-                         }
-                         auto value = var._value._data;
-                         const auto type = value->getTypeString();
-
-                         variableArchive.Serialize("type", type);
-                         if (strcmp(type, "array") == 0) {
-                             variableArchive.Serialize("value", value->getArray());
-                         } else {
-                             variableArchive.Serialize("value", value->getAsString());
-                         }
-                         nsArchive.Serialize(name.data(), variableArchive);
-
-                     });
-                 };
-
-                 std::thread _1([&]() {func(nsArchive[0], instructionInfo.gs->_namespaces.get(0)); });
-                 std::thread _2([&]() {func(nsArchive[1], instructionInfo.gs->_namespaces.get(1)); });
-                 std::thread _3([&]() {func(nsArchive[2], instructionInfo.gs->_namespaces.get(2)); });
-                 std::thread _4([&]() {func(nsArchive[3], instructionInfo.gs->_namespaces.get(3)); });
-
-
-                 if (_1.joinable()) _1.join();
-                 varArchive.Serialize(instructionInfo.gs->_namespaces.get(0)->_name.data(), nsArchive[0]);
-                 if (_2.joinable()) _2.join();
-                 varArchive.Serialize(instructionInfo.gs->_namespaces.get(1)->_name.data(), nsArchive[1]);
-                 if (_3.joinable()) _3.join();
-                 varArchive.Serialize(instructionInfo.gs->_namespaces.get(2)->_name.data(), nsArchive[2]);
-                 if (_4.joinable()) _4.join();
-                 varArchive.Serialize(instructionInfo.gs->_namespaces.get(3)->_name.data(), nsArchive[3]);
-
-                 auto text = varArchive.to_string();
-                 std::ofstream f("P:\\AllVars.json", std::ios::out | std::ios::binary);
-                 f.write(text.c_str(), text.length());
-                 f.close();
-
-
-
-                 */
-
-
-
-
-            if (bp.action) bp.action->execute(this, &bp, instructionInfo); //#TODO move into breakPoint::executeActions 
-
-            //JsonArchive ar;
-            //instructionInfo.context->Serialize(ar);
-            //auto text = ar.to_string();
-            //std::ofstream f("P:\\break.json", std::ios::out | std::ios::binary);
-            //f.write(text.c_str(), text.length());
-            //f.close();
-            //std::ofstream f2("P:\\breakScript.json", std::ios::out | std::ios::binary);
-            //f2.write(instructionInfo.instruction->_scriptPos._content.data(), instructionInfo.instruction->_scriptPos._content.length());
-            //f2.close();
-        }
+        if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine)
+            bp.trigger(this, instructionInfo);
     }
 }
 
@@ -356,7 +285,7 @@ void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructio
     breakStateInfo.instruction = &instructionInfo;
 
     JsonArchive ar;
-    ar.Serialize("command", 1); //#TODO make enum for this
+    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::BreakpointHalt));
     instructionInfo.context->Serialize(ar); //Set's callstack
 
     //#TODO add GameState variables
@@ -421,38 +350,92 @@ void Debugger::commandContinue(StepType stepType) {
     nController.sendMessage("{\"command\":2}");
 }
 
-const GameVariable * Debugger::getVariable(VariableScope scope, std::string varName) {
-    if (state != DebuggerState::breakState) return nullptr; //#TODO make global NS getVar work without breakstate
-    std::transform(varName.begin(), varName.end(), varName.begin(), ::tolower); //Has to be tolowered before
-    if (scope & VariableScope::callstack) {
-        auto var = breakStateInfo.instruction->context->getVariable(varName);
-        if (var) return var;
+std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, std::vector<std::string>& varNames) const {
+    std::vector<Debugger::VariableInfo> output;
+    if (state != DebuggerState::breakState) return output; //#TODO make global NS getVar work without breakstate
+
+    for (auto& varName : varNames) {
+        std::transform(varName.begin(), varName.end(), varName.begin(), ::tolower); //Has to be tolowered before
+        bool found = false;
+        if (varName.front() == '_') {
+            if (false && scope & VariableScope::callstack) {
+                //Only get's variable from last available scope
+                auto var = breakStateInfo.instruction->context->getVariable(varName);
+                if (var) {
+                    output.emplace_back(var, VariableScope::callstack);
+                    found = true;
+                }
+
+                //Use this to get the variable from all scopes
+                //const GameVariable* value = nullptr;
+                //breakStateInfo.instruction->context->callStack.forEachBackwards([&](const Ref<CallStackItem>& item) {
+                //    auto var = item->_varSpace.getVariable(varName);
+                //    if (var) {
+                //        output.emplace_back(var, VariableScope::callstack);
+                //        found = true;
+                //        return false;
+                //    }
+                //    return false;
+                //});
+            }
+            if (scope & VariableScope::local || scope & VariableScope::callstack) {
+                if (breakStateInfo.instruction->gs->GEval->local) {
+                    auto var = breakStateInfo.instruction->gs->GEval->local->getVariable(varName);
+                    if (var) {
+                        output.emplace_back(var, VariableScope::local);
+                        found = true;
+                    }
+                }
+            }
+        } else {
+            if (scope & VariableScope::missionNamespace) {
+                auto& varSpace = breakStateInfo.instruction->gs->_namespaces[3]->_variables;
+                //std::ofstream v("P:\\vars");
+                //varSpace.forEach([&varName, &v](const GameVariable& it) {
+                //    if (it._name == varName.c_str()) __debugbreak();
+                //    v << it._name.data() << "\n";
+                //});
+                //v.close();
+                auto &var = varSpace.get(varName.c_str());
+                if (!varSpace.isNull(var)) {
+                    output.emplace_back(&var, VariableScope::missionNamespace);
+                    found = true;
+                }
+
+            }
+            if (scope & VariableScope::uiNamespace) {
+                auto& varSpace = breakStateInfo.instruction->gs->_namespaces[1]->_variables;
+                auto &var = varSpace.get(varName.c_str());
+                if (!varSpace.isNull(var)) {
+                    output.emplace_back(&var, VariableScope::uiNamespace);
+                    found = true;
+                }
+            }
+        }
+        //if (!found) {
+        //    output.emplace_back(varName);
+        //}
     }
-    if (scope & VariableScope::local) {
-        auto var = breakStateInfo.instruction->gs;
+
+    return output;
+}
+
+void Debugger::grabCurrentCode(JsonArchive& answer) const {
+    if (state != DebuggerState::breakState) {
+        answer.Serialize("exception", "getCurrentCode: Not in breakState!");
+        return;
     }
-    if (scope & VariableScope::missionNamespace) {
-        auto& varSpace = breakStateInfo.instruction->gs->_namespaces[3]->_variables;
-        std::ofstream v("P:\\vars");
-        varSpace.forEach([&varName, &v](const GameVariable& it) {
-            if (it._name == varName.c_str()) __debugbreak();
-            v << it._name.data() << "\n";
-        });
-        v.close();
-        auto &var = varSpace.get(varName.c_str());
-        if (!varSpace.isNull(var))
-            return &var;
+    answer.Serialize("code", breakStateInfo.instruction->instruction->_scriptPos._content);
+    answer.Serialize("fileName", breakStateInfo.instruction->instruction->_scriptPos._sourceFile);
+}
+
+void Debugger::VariableInfo::Serialize(JsonArchive& ar) const {
+    if (!var) {
+        ar.Serialize("type", "void");
+        ar.Serialize("name", notFoundName);
+    } else {
+        ar.Serialize("name", var->_name);
+        var->_value.Serialize(ar);
+        ar.Serialize("ns", static_cast<int>(ns));
     }
-    if (scope & VariableScope::uiNamespace) {
-        auto& varSpace = breakStateInfo.instruction->gs->_namespaces[1]->_variables;
-        auto &var = varSpace.get(varName.c_str());
-        if (!varSpace.isNull(var))
-            return &var;
-    }
-
-
-
-
-
-    return nullptr;
 }

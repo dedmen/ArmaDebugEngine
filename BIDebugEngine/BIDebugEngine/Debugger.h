@@ -56,14 +56,24 @@ public:
     void clear();
     std::shared_ptr<VMContext> getVMContext(RV_VMContext* vm);
     void writeFrameToFile(uint32_t frameCounter);
-    void onInstruction(DebuggerInstructionInfo& instructionInfo);//#TODO add gameState
+    void onInstruction(DebuggerInstructionInfo& instructionInfo);
     void checkForBreakpoint(DebuggerInstructionInfo& instructionInfo);
     void onShutdown();
     void onStartup();
     void onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& info); //Breakpoint is halting engine
     void onContinue(); //Breakpoint has stopped halting
     void commandContinue(StepType stepType); //Tells Breakpoint in breakState to Stop halting
-    const GameVariable* getVariable(VariableScope, std::string varName);
+    struct VariableInfo {
+        VariableInfo() {}
+        VariableInfo(const GameVariable* _var, VariableScope _ns) : var(_var), ns(_ns) {};
+        VariableInfo(std::string _name) : var(nullptr), ns(VariableScope::invalid), notFoundName(std::move(_name)){};
+        const GameVariable* var;
+        VariableScope ns;
+        std::string notFoundName;  //#TODO use RString
+        void Serialize(JsonArchive& ar) const;
+    };
+    std::vector<VariableInfo> getVariables(VariableScope, std::vector<std::string>& varName) const;
+    void grabCurrentCode(JsonArchive& answer) const;
     std::map<uintptr_t, std::shared_ptr<VMContext>> VMPtrToScript;
     //std::map<std::string, std::vector<BreakPoint>> breakPoints; //#TODO use MapStringToClass case insensitive
     class breakPointList : public std::vector<BreakPoint> {

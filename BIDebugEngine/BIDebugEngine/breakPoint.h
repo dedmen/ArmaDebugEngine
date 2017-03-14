@@ -108,6 +108,8 @@ public:
     }
     ~BreakPoint();
     void Serialize(JsonArchive& ar);
+    bool trigger(Debugger*, const DebuggerInstructionInfo&);
+    void executeActions(Debugger*, const DebuggerInstructionInfo&);
     RString filename;
     uint16_t line{ 0 };
     uint16_t hitcount{ 0 };

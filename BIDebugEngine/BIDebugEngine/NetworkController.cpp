@@ -102,19 +102,20 @@ void NetworkController::incomingMessage(const std::string& message) {
 
                 JsonArchive ar(packet["data"]);
                 uint16_t scope;
-                std::string variableName;
+                std::vector<std::string> variableNames;
                 ar.Serialize("scope", scope);
-                ar.Serialize("name", variableName);
-                auto var = GlobalDebugger.getVariable(static_cast<VariableScope>(scope), variableName);
+                ar.Serialize("name", variableNames);
+                auto var = GlobalDebugger.getVariables(static_cast<VariableScope>(scope), variableNames);
 
                 JsonArchive answer;
+                answer.Serialize("data", var);
+                answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::VariableReturn));
 
-                if (!var) {
-                    answer.Serialize("type", "nil");
-                } else {
-                    answer.Serialize("name", var->_name);
-                    var->_value.Serialize(answer);
-                }
+                sendMessage(answer.to_string());
+            } break;
+            case NC_CommandType::getCurrentCode: {
+                JsonArchive answer;
+                GlobalDebugger.grabCurrentCode(answer);
                 sendMessage(answer.to_string());
             } break;
         }
