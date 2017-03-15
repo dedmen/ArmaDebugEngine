@@ -19,9 +19,20 @@
 
 *.sdf
 *.opendb
-/BIDebugEngine/BIDebugEngine/Release
-BIDebugEngine/BIDebugEngine/Debug/
-/BIDebugEngine/Release
-/BIDebugEngine/Debug
-/build-DisplayTest-Qt_5_5_MSVC2015x86-Release
-/build-DisplayTest-Qt_5_5_MSVC2015x86-Debug
+BIDebugEngine/BIDebugEngine/Release
+BIDebugEngine/BIDebugEngine/Debug
+BIDebugEngine/BIDebugEngine/Release141
+BIDebugEngine/BIDebugEngine/Debug141
+BIDebugEngine/BIDebugEngine/x64
+BIDebugEngine/Release
+BIDebugEngine/Debug
+BIDebugEngine/Release141
+BIDebugEngine/Debug141
+BIDebugEngine/x64
+
+BIDebugEngine/.vs
+
+build-DisplayTest-Qt_5_5_MSVC2015x86-Release
+build-DisplayTest-Qt_5_5_MSVC2015x86-Debug
+
+build-NamedPipeTester-Qt_5_5_MSVC2015x86-Debug

@@ -53,7 +53,7 @@ class rv_allocator : std::allocator<Type> {
     };
 public:
     static void deallocate(Type* _Ptr, size_t) {
-        //#TODO assert when _ptr is not 32/64bit aligned
+        //TODO assert when _ptr is not 32/64bit aligned
         // deallocate object at _Ptr
         uintptr_t allocatorBase = engineAlloc;
         MemTableFunctions* alloc = (MemTableFunctions*) allocatorBase;
@@ -127,7 +127,7 @@ class compact_array : public RefCountBaseT {
     static_assert(std::is_literal_type<Type>::value, "Type must be a literal type");
 public:
 
-    int size() const { return _size; }
+    size_t size() const { return _size; }
     Type *data() { return &_data; }
     const Type *data() const { return &_data; }
 
@@ -139,7 +139,7 @@ public:
         return ret;
     }
 
-    static compact_array* create(int number_of_elements_) {
+    static compact_array* create(size_t number_of_elements_) {
         size_t size = sizeof(compact_array) + sizeof(Type)*(number_of_elements_ - 1);//-1 because we already have one element in compact_array
         compact_array* buffer = reinterpret_cast<compact_array*>(Allocator::allocate(size));
         new (buffer) compact_array(number_of_elements_);
@@ -383,7 +383,7 @@ public:
 private:
     Ref<compact_array<char>> _ref;
 
-    static compact_array<char> *create(const char *str, int len) {
+    static compact_array<char> *create(const char *str, size_t len) {
         if (len == 0 || *str == 0) return nullptr;
         compact_array<char> *string = compact_array<char>::create(len + 1);
         strncpy_s(string->data(), string->size(), str, len);
@@ -391,7 +391,7 @@ private:
         return string;
     }
 
-    static compact_array<char> *create(int len) {
+    static compact_array<char> *create(size_t len) {
         if (len == 0) return nullptr;
         compact_array<char> *string = compact_array<char>::create(len + 1);
         string->data()[0] = 0;

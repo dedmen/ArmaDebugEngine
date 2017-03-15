@@ -151,7 +151,7 @@ public:
     typename std::enable_if<!has_Serialize<Type>::value>::type
         Serialize(const char* key, Type& value) {
         if (isReading) {
-            value = (*pJson)[key];
+            value = (*pJson)[key].get<Type>();
         } else {
             (*pJson)[key] = value;
         }

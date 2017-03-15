@@ -7,7 +7,7 @@
 #include <thread>
 static DllInterface dllIface;
 static EngineInterface* engineIface;
-extern EngineHook GlobalEngineHook;
+extern "C" EngineHook GlobalEngineHook;
 
 uintptr_t engineAlloc;
 

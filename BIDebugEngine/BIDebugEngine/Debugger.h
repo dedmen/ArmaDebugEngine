@@ -77,7 +77,7 @@ public:
     std::vector<VariableInfo> getVariables(VariableScope, std::vector<std::string>& varName) const;
     void grabCurrentCode(JsonArchive& answer) const;
     std::map<uintptr_t, std::shared_ptr<VMContext>> VMPtrToScript;
-    //std::map<std::string, std::vector<BreakPoint>> breakPoints; //#TODO use MapStringToClass case insensitive
+    //std::map<std::string, std::vector<BreakPoint>> breakPoints;
     class breakPointList : public std::vector<BreakPoint> {
     public:
         breakPointList() {}

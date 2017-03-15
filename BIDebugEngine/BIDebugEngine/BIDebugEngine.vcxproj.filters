@@ -126,4 +126,12 @@
   <ItemGroup>
     <Natvis Include="BIDebugEngine.natvis" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="EngineHookfncx64.asm">
+      <Filter>Source Files\BIDebugEngine</Filter>
+    </MASM>
+    <MASM Include="EngineHookfncx86.asm">
+      <Filter>Source Files\BIDebugEngine</Filter>
+    </MASM>
+  </ItemGroup>
 </Project>

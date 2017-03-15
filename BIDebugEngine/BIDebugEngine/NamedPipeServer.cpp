@@ -45,7 +45,7 @@ void NamedPipeServer::writeMessage(std::string message) {
     auto fSuccess = WriteFile(
         pipe,                  // pipe handle 
         message.c_str(),             // message 
-        message.length(),              // message length 
+        static_cast<DWORD>(message.length()),              // message length 
         &cbWritten,             // bytes written 
         &pipeOverlap);                  // not overlapped 
     if (!fSuccess) {
@@ -73,7 +73,7 @@ std::string NamedPipeServer::readMessageBlocking() {
     auto fSuccess = ReadFile(
         pipe,    // pipe handle 
         recvBuffer.data(),    // buffer to receive reply 
-        recvBuffer.size() * sizeof(char),  // size of buffer 
+        static_cast<DWORD>(recvBuffer.size() * sizeof(char)),  // size of buffer 
         &cbRead,  // number of bytes read 
         &pipeOverlap);    // not overlapped 
     if (!fSuccess) {
@@ -102,7 +102,7 @@ std::string NamedPipeServer::readMessageBlocking() {
                         fSuccess = ReadFile(
                             pipe,    // pipe handle 
                             recvBuffer.data(),    // buffer to receive reply 
-                            recvBuffer.size() * sizeof(char),  // size of buffer 
+                            static_cast<DWORD>(recvBuffer.size() * sizeof(char)),  // size of buffer 
                             &cbRead,  // number of bytes read 
                             &pipeOverlap);    // not overlapped
                         if (cbRead != 0)
@@ -129,7 +129,7 @@ void NamedPipeServer::transactMessage(char* output, int outputSize, const char* 
     OVERLAPPED pipeOverlap{ 0 };
     pipeOverlap.hEvent = waitForDataEvent;
     DWORD errorCode = ERROR_SUCCESS;
-    if (!TransactNamedPipe(pipe, (void*) input, strlen(input), output, outputSize, &written, &pipeOverlap)) {
+    if (!TransactNamedPipe(pipe, (void*) input, static_cast<DWORD>(strlen(input)), output, outputSize, &written, &pipeOverlap)) {
         errorCode = GetLastError();
         if (errorCode == ERROR_IO_PENDING)//Handle overlapped datatransfer
         {
@@ -205,7 +205,6 @@ void NamedPipeServer::closePipe() {
 }
 
 void NamedPipeServer::queueRead() {
-    DWORD cbRead;
     struct overlappedCarrier {
         OVERLAPPED pipeOverlap{ 0 };
         NamedPipeServer* _this;
@@ -217,7 +216,7 @@ void NamedPipeServer::queueRead() {
     auto fSuccess = ReadFileEx(
         pipe,
         recvBuffer.data(),
-        recvBuffer.size() * sizeof(recvBuffer),
+        static_cast<DWORD>(recvBuffer.size() * sizeof(recvBuffer)),
         &overlapCarry.pipeOverlap,
         [](DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
         auto ob = reinterpret_cast<overlappedCarrier *>(lpOverlapped);

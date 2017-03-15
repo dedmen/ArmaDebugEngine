@@ -38,8 +38,8 @@ void NetworkController::init() {
 
     });
 }
-extern uintptr_t hookEnabled_Instruction;
-extern uintptr_t hookEnabled_Simulate;
+extern "C" uintptr_t hookEnabled_Instruction;
+extern "C" uintptr_t hookEnabled_Simulate;
 void NetworkController::incomingMessage(const std::string& message) {
 
     try {

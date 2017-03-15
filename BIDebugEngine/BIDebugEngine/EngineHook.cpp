@@ -8,6 +8,7 @@
 #include "Serialize.h"
 
 bool inScriptVM;
+extern "C" EngineHook GlobalEngineHook;
 EngineHook GlobalEngineHook;
 Debugger GlobalDebugger;
 std::chrono::high_resolution_clock::time_point globalTime; //This is the total time NOT spent inside the debugger
@@ -33,6 +34,7 @@ EngineHook::EngineHook() {
 
 EngineHook::~EngineHook() {}
 
+extern "C" {
 uintptr_t scriptVMConstructorJmpBack;
 uintptr_t scriptVMSimulateStartJmpBack;
 uintptr_t instructionBreakpointJmpBack;
@@ -43,171 +45,29 @@ uintptr_t worldMissionEventEndJmpBack;
 uintptr_t hookEnabled_Instruction{ 1 };
 uintptr_t hookEnabled_Simulate{ 1 };
 uintptr_t scriptVM;
+uintptr_t currentScriptVM;
+}
+
+
 
 EngineAlive* EngineAliveFnc;
 EngineEnableMouse* EngineEnableMouseFnc;
 
+//x64 assembly http://lallouslab.net/2016/01/11/introduction-to-writing-x64-assembly-in-visual-studio/
 
-_declspec(naked) void scriptVMConstructor() {
-    __asm {
-        push edi; //scriptVM Pointer
-        mov ecx, offset GlobalEngineHook;
-        call EngineHook::_scriptLoaded;
-        //_return:
-        push    1; //Fixup
-        lea eax, [edi + 0x298];
-        jmp scriptVMConstructorJmpBack;
-    }
-}
-uintptr_t currentScriptVM;
-//#define passSimulateScriptVMPtr  // This is too crashy right now. Don't know why. Registers look alright
+//#define passSimulateScriptVMPtr  // This is too crashy right now. Don't know why. Registers look alright ### Need to define this in masm preproc
 #ifdef  passSimulateScriptVMPtr
 #error "hookEnabled_Simulate may kill engine if it's disabled after simulateStart and before simulateEnd"
 #endif
-_declspec(naked) void scriptVMSimulateStart() {
-    __asm {
-#ifndef passSimulateScriptVMPtr
-        mov currentScriptVM, ecx; // use this in case of scriptVM ptr not being easilly accessible in SimEnd
-#endif
-        push    eax;
-        push    ecx;
 
-        mov     eax, hookEnabled_Simulate;//Skip if hook is disabled
-        test    eax, eax;
-        jz      _return;
+extern "C" void scriptVMConstructor();
+extern "C" void scriptVMSimulateStart();
+extern "C" void scriptVMSimulateEnd();
+extern "C" void instructionBreakpoint();
+extern "C" void worldSimulate();
+extern "C" void worldMissionEventStart();
+extern "C" void worldMissionEventEnd();
 
-        push    ecx; //_scriptEntered arg
-        mov     ecx, offset GlobalEngineHook;
-        call    EngineHook::_scriptEntered;
-    _return:
-        pop     ecx;
-        pop     eax;
-        sub     esp, 34h; //Fixup
-        push    edi;
-        mov     edi, ecx;
-#ifdef passSimulateScriptVMPtr
-        cmp     byte ptr[edi + 0x2A0], 0;//if !Loaded we exit right away and never hit scriptVMSimulateEnd
-        jz _skipVMPush;
-        push edi; //scriptVM to receive again in scriptVMSimulateEnd
-    _skipVMPush:
-#endif
-        jmp scriptVMSimulateStartJmpBack;
-    }
-}
-
-_declspec(naked) void scriptVMSimulateEnd() {
-    __asm {
-        push    eax;
-        push    ecx;
-        push    edx;
-
-        mov     ecx, hookEnabled_Simulate;//Skip if hook is disabled
-        test    ecx, ecx;
-        jz      _return;
-
-        //prepare arguments for func call
-#ifdef passSimulateScriptVMPtr
-        mov     edi, [esp + 0xC + 0x4/*I added push edx*/]; //Retrieve out pushed scriptVM ptr
-#else
-        mov     edi, currentScriptVM; //use this in case of scriptVM ptr not being easilly accessible 
-#endif
-        push    edi; //scriptVM
-        mov     ecx, offset GlobalEngineHook;
-        test    al, al;//al == done
-        jz      short _notDone;//script is not Done  
-        call    EngineHook::_scriptTerminated;//script is Done
-        jmp     short _return;
-    _notDone:
-        call    EngineHook::_scriptLeft;
-    _return:
-        pop     edx;
-        pop     ecx; //These are probably not needed. But I can't guarantee that the compiler didn't expect these to stay unchanged
-        pop     eax;
-#ifdef passSimulateScriptVMPtr
-        pop     edi; //Remove our pushed scriptVM ptr
-#endif
-        pop     ebp;//Fixup
-        pop     edi;
-        add     esp, 34h;
-        retn    8;
-    }
-}
-
-_declspec(naked) void instructionBreakpoint() {
-    __asm {
-        //mov instructionBP_gameState, ebp;
-        //mov instructionBP_VMContext, edi;
-        //mov instructionBP_Instruction, ebx;
-        //push    eax; don't need to keep because get's overwritten by fixup
-        push    ecx;
-        mov     ecx, hookEnabled_Instruction;//Skip if hook is disabled
-        test    ecx, ecx;
-        jz      _return;
-        mov     eax, [esp + 0x14C]; //instructionBP_IDebugScript
-        push    eax;//instructionBP_IDebugScript
-        push    ebp; //instructionBP_gameState
-        push    edi; //instructionBP_VMContext
-        push    ebx; //instructionBP_Instruction
-        mov     ecx, offset GlobalEngineHook;
-        call    EngineHook::_scriptInstruction;
-    _return:
-        pop     ecx;
-        //pop     eax;
-        mov     eax, [ebx + 14h];//fixup
-        lea     edx, [ebx + 14h];
-        jmp instructionBreakpointJmpBack;
-    }
-}
-
-_declspec(naked) void worldSimulate() {
-    __asm {
-        push ecx;
-        push eax;
-        mov     ecx, offset GlobalEngineHook;
-        call    EngineHook::_worldSimulate;
-        pop     eax; //Don't know if eax will be modified but it's likely
-        pop     ecx;
-        sub     esp, 0x3D8;//fixup
-        jmp worldSimulateJmpBack;
-    }
-}
-
-_declspec(naked) void worldMissionEventStart() {
-    __asm {
-        push ecx;
-        push eax;
-
-        push eax; //_world_OnMissionEventStart argument
-        mov     ecx, offset GlobalEngineHook;
-        call    EngineHook::_world_OnMissionEventStart;
-        pop     eax; //Don't know if eax will be modified but it's likely
-        pop     ecx;
-
-        push    ebx;  //fixup
-        mov     ebx, ecx;
-        push    esi;
-        lea     esi, [eax + eax * 4];
-        jmp worldMissionEventStartJmpBack;
-    }
-}
-
-_declspec(naked) void worldMissionEventEnd() {
-    __asm {
-        push ecx;
-        push eax;
-        mov     ecx, offset GlobalEngineHook;
-        call    EngineHook::_world_OnMissionEventEnd;
-        pop     eax; //Don't know if eax will be modified but it's likely
-        pop     ecx;
-
-        pop     edi;   //fixup
-        pop     esi;
-        pop     ebx;
-        mov     esp, ebp;
-        pop     ebp;
-        jmp worldMissionEventEndJmpBack;
-    }
-}
 
 scriptExecutionContext currentContext = scriptExecutionContext::Invalid;
 MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create some invalid handler type
@@ -253,6 +113,22 @@ void EngineHook::placeHooks() {
     EngineEnableMouseFnc = reinterpret_cast<EngineEnableMouse*>(engineBase + 0x1159250);
 
     //To yield scriptVM and let engine run while breakPoint hit. 0103C5BB overwrite eax to Yield
+
+
+
+
+
+
+
+
+
+	/*
+	
+	 char** to product version string
+	x????xxx?x????xx????xxxx?xxx????xxxx?xxxxx?xxxxxxxxxxx?xxxxxxxx?xx????xxxxx?
+\x68\x00\x00\x00\x00\x8d\x44\x24\x00\x68\x00\x00\x00\x00\x50\xe8\x00\x00\x00\x00\x50\x8d\x44\x24\x00\x57\x50\xe8\x00\x00\x00\x00\x8b\x17\x83\xc4\x00\x8b\x08\x85\xc9\x74\x00\x8b\xc3\xf0\x0f\xc1\x01\x89\x0f\x85\xd2\x74\x00\x8b\xc6\xf0\x0f\xc1\x02\x48\x75\x00\x8b\x0d\x00\x00\x00\x00\x52\x8b\x01\xff\x50\x00
+	*/
+
 
 }
 
