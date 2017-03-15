@@ -123,4 +123,7 @@
       <Filter>Header Files\Debugger</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="BIDebugEngine.natvis" />
+  </ItemGroup>
 </Project>

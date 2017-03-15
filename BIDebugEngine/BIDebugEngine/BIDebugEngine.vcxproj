@@ -195,6 +195,9 @@
     <ClInclude Include="SignalSlot.h" />
     <ClInclude Include="VMContext.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="BIDebugEngine.natvis" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

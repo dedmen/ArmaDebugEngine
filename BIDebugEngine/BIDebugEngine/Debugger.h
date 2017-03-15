@@ -36,7 +36,9 @@ enum class VariableScope { //This is a bitflag
     callstack = 1,
     local = 2,
     missionNamespace = 4,
-    uiNamespace = 8
+    uiNamespace = 8,
+    profileNamespace = 16,
+    parsingNamespace = 32
 };
 inline VariableScope operator | (VariableScope lhs, VariableScope rhs) {
     return static_cast<VariableScope>(static_cast<std::underlying_type_t<VariableScope>>(lhs) | static_cast<std::underlying_type_t<VariableScope>>(rhs));

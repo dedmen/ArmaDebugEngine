@@ -262,6 +262,7 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     //    __debugbreak();
     auto &found = breakPoints.get(instructionInfo.instruction->_scriptPos._sourceFile.data());
     if (breakPoints.isNull(found) || found.empty()) return;
+    //#TODO put RWLock around breakPoints!
     for (auto& bp : found) {
         if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine)
             bp.trigger(this, instructionInfo);
@@ -411,6 +412,20 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
                     found = true;
                 }
             }
+
+            if (scope & VariableScope::profileNamespace) {
+                
+            }
+
+            if (scope & VariableScope::parsingNamespace) {
+                auto& varSpace = breakStateInfo.instruction->gs->_namespaces[2]->_variables;
+                auto &var = varSpace.get(varName.c_str());
+                if (!varSpace.isNull(var)) {
+                    output.emplace_back(&var, VariableScope::parsingNamespace);
+                    found = true;
+                }
+            }
+
         }
         //if (!found) {
         //    output.emplace_back(varName);

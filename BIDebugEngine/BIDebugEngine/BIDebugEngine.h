@@ -269,7 +269,7 @@ public:
     MapStringToClass<void*, AutoArray<void*>> _3; //operators
     MapStringToClass<void*, AutoArray<void*>> _4; //nulars  //#TODO add DebugBreak script nular. Check Visor
     char _5[0x114];
-    GameEvaluator* GEval;
+    Ref<GameEvaluator> GEval;
     Ref<GameDataNamespace> _globalNamespace; //Can change by https://community.bistudio.com/wiki/with
     /*
     default,
@@ -277,5 +277,5 @@ public:
     parsing,
     mission
     */
-    AutoArray<GameDataNamespace *> _namespaces; //Contains missionNamespace and uiNamespace
+    AutoArray<Ref<GameDataNamespace>> _namespaces; //Contains missionNamespace and uiNamespace
 };
