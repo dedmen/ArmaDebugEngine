@@ -16,6 +16,45 @@ enum class hookTypes {
     End
 };
 
+
+class HookManager {
+public:
+
+    struct Pattern {
+        const char* mask;
+        const char* pattern;
+        uintptr_t offset{ 0 };
+    };
+
+
+    HookManager();
+    bool placeHook(hookTypes, const Pattern& pat, uintptr_t jmpTo, uintptr_t& jmpBackRef, uint8_t jmpBackOffset = 0);
+    bool placeHook(hookTypes, const Pattern& pat, uintptr_t jmpTo);
+    uintptr_t placeHook(uintptr_t offset, uintptr_t jmpTo, uint8_t jmpBackOffset = 0);
+    uintptr_t placeHookTotalOffs(uintptr_t offset, uintptr_t jmpTo);
+    bool MatchPattern(uintptr_t addr, const char* pattern, const char* mask);
+    uintptr_t findPattern(const char* pattern, const char* mask, uintptr_t offset = 0);
+    uintptr_t findPattern(const Pattern& pat, uintptr_t offset = 0);
+    
+
+    struct PlacedHook {
+        std::vector<unsigned char> originalInstructions;
+        uint8_t originalInstructionsCount;
+        uintptr_t startAddr;
+        uintptr_t jumpBack;
+    };
+
+    std::array<PlacedHook,static_cast<size_t>(hookTypes::End)> placedHooks;
+    uintptr_t engineBase;
+    uintptr_t engineSize;
+};
+
+
+
+
+
+
+
 //This manages all Hooks into Engine code
 class EngineHook {
 public:
@@ -37,14 +76,7 @@ public:
     void _world_OnMissionEventEnd();
     void onShutdown();
     void onStartup();
-private:
 
-
-
-    uintptr_t placeHook(uintptr_t offset, uintptr_t jmpTo) const;
-    std::map<hookTypes, std::pair<uintptr_t, std::vector<char>>> _unhookData; //Storing binary data to undo the hook later on
-    uintptr_t engineBase;
-    std::array<char, static_cast<int>(hookTypes::End)> _hooks; //#TODO find a more elegant way.. I don't like to static cast everytime
 };
 
 

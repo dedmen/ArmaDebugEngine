@@ -20,12 +20,12 @@ _TEXT    SEGMENT
 
 	;JmpBacks
 
-	EXTERN _instructionBreakpointJmpBack:					PROC
-	EXTERN _scriptVMSimulateStartJmpBack:					PROC
-	EXTERN _worldSimulateJmpBack:							PROC
-	EXTERN _worldMissionEventStartJmpBack:					PROC
-	EXTERN _worldMissionEventEndJmpBack:					PROC
-	EXTERN _scriptVMConstructorJmpBack:						PROC
+	EXTERN _instructionBreakpointJmpBack:					dword
+	EXTERN _scriptVMSimulateStartJmpBack:					dword
+	EXTERN _worldSimulateJmpBack:							dword
+	EXTERN _worldMissionEventStartJmpBack:					dword
+	EXTERN _worldMissionEventEndJmpBack:					dword
+	EXTERN _scriptVMConstructorJmpBack:						dword
 
 	;misc
 	EXTERN _GlobalEngineHook:								dword
@@ -56,7 +56,7 @@ _TEXT    SEGMENT
 		;pop     eax;
 		mov     eax, [ebx + 14h];								fixup
 		lea     edx, [ebx + 14h];
-		jmp _instructionBreakpointJmpBack;
+		jmp		_instructionBreakpointJmpBack;
 
 	_instructionBreakpoint ENDP
 
@@ -64,13 +64,13 @@ _TEXT    SEGMENT
 	PUBLIC _scriptVMConstructor
 	_scriptVMConstructor PROC
 
-		push edi;												scriptVM Pointer
-        mov ecx, offset _GlobalEngineHook;
-        call ?_scriptLoaded@EngineHook@@QAEXI@Z;				EngineHook::_scriptLoaded;
+		push	edi;												scriptVM Pointer
+        mov		ecx, offset _GlobalEngineHook;
+        call	?_scriptLoaded@EngineHook@@QAEXI@Z;				EngineHook::_scriptLoaded;
         ;_return:
         push    1;												Fixup
-        lea eax, [edi + 298h];
-        jmp _scriptVMConstructorJmpBack;
+        lea		eax, [edi + 298h];
+        jmp		_scriptVMConstructorJmpBack;
 
 	_scriptVMConstructor ENDP
 
@@ -88,8 +88,8 @@ _TEXT    SEGMENT
         push    ecx;
 		
 	IFNDEF passSimulateScriptVMPtr
-		mov eax, offset _currentScriptVM;
-        mov [eax], ecx;								use this in case of scriptVM ptr not being easilly accessible in SimEnd
+		mov		eax, offset _currentScriptVM;
+        mov		[eax], ecx;								use this in case of scriptVM ptr not being easilly accessible in SimEnd
 	ENDIF
        
         mov     eax, _hookEnabled_Simulate;						Skip if hook is disabled
@@ -175,8 +175,8 @@ _TEXT    SEGMENT
 	PUBLIC _worldMissionEventStart
 	_worldMissionEventStart PROC
 
-        push ecx;
-        push eax;
+        push	ecx;
+        push	eax;
 
         push	eax;												_world_OnMissionEventStart argument
         mov     ecx, offset _GlobalEngineHook;
@@ -196,8 +196,8 @@ _TEXT    SEGMENT
 	PUBLIC _worldMissionEventEnd
 	_worldMissionEventEnd PROC
 
-        push ecx;
-        push eax;
+        push	ecx;
+        push	eax;
         mov     ecx, offset _GlobalEngineHook;
         call    ?_world_OnMissionEventEnd@EngineHook@@QAEXXZ;	EngineHook::_world_OnMissionEventEnd;
         pop     eax;											Don't know if eax will be modified but it's likely

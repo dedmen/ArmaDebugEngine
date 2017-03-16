@@ -47,8 +47,8 @@ void DllInterface::DebugEngineLog(const char *str) {
 }
 
 DllInterface* Connect(EngineInterface *engineInt) {
-    WAIT_FOR_DEBUGGER_ATTACHED
-        engineIface = engineInt;
+    WAIT_FOR_DEBUGGER_ATTACHED;
+    engineIface = engineInt;
     return &dllIface;
 }
 char VarBuffer[1024];

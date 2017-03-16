@@ -11,16 +11,16 @@ BOOL APIENTRY DllMain(HMODULE hModule,
     DWORD  ul_reason_for_call,
     LPVOID lpReserved
 ) {
-    WAIT_FOR_DEBUGGER_ATTACHED
+    WAIT_FOR_DEBUGGER_ATTACHED;
 
 
-        switch (ul_reason_for_call) {
-            case DLL_PROCESS_ATTACH:
-            case DLL_THREAD_ATTACH:
-            case DLL_THREAD_DETACH:
-            case DLL_PROCESS_DETACH:
-                break;
-        }
+    switch (ul_reason_for_call) {
+        case DLL_PROCESS_ATTACH:
+        case DLL_THREAD_ATTACH:
+        case DLL_THREAD_DETACH:
+        case DLL_PROCESS_DETACH:
+            break;
+    }
 
     return TRUE;
 }
@@ -35,13 +35,13 @@ BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason, LPVOID) {
     if (reason != DLL_PROCESS_ATTACH) return TRUE;
     //Post entry point and pre DllMain
 
-    WAIT_FOR_DEBUGGER_ATTACHED
+    WAIT_FOR_DEBUGGER_ATTACHED;
 
 
-        //Get engine allocator - From my Intercept fork
-        //Find the allocator base
-        //This has to happen pre CRTInit because static/global Variables may need to alloc in Engine
-        MODULEINFO modInfo = { 0 };
+    //Get engine allocator - From my Intercept fork
+    //Find the allocator base
+    //This has to happen pre CRTInit because static/global Variables may need to alloc in Engine
+    MODULEINFO modInfo = { 0 };
     HMODULE hModule = GetModuleHandleA(nullptr);
     GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
 
@@ -88,9 +88,9 @@ extern "C" BOOL WINAPI _DllPreAttach(
     LPVOID    const reserved
 ) {
     //Entry point
-    WAIT_FOR_DEBUGGER_ATTACHED
+    WAIT_FOR_DEBUGGER_ATTACHED;
 
-        return _DllMainCRTStartup(instance, reason, reserved);
+    return _DllMainCRTStartup(instance, reason, reserved);
 };
 
 //kju asked for this in discord Feb, 18 2017 #tools_makers
