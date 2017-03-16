@@ -69,7 +69,14 @@ extern "C" void worldSimulate();
 extern "C" void worldMissionEventStart();
 extern "C" void worldMissionEventEnd();
 
-
+#ifdef X64
+//x64
+HookManager::Pattern pat_instructionBreakpoint{
+    "xxxx?xxxx?xxxxxxxx????xxxxxxxxxxxx????xxxxxxxxxxxxxxx",
+    "\x49\x8B\x44\x24\x00\x49\x8D\x54\x24\x00\x48\x85\xC0\x74\x22\x48\x8D\x0D\x00\x00\x00\x00\x48\x83\xC0\x10\x48\x3B\xC1\x74\x12\x48\x8B\x8F\x00\x00\x00\x00\x48\x85\xC9\x74\x06\x48\x8B\x01\xFF\x50\x08\x49\x8B\x04\x24",
+    -0x3C
+};
+#else
 HookManager::Pattern pat_productType{//01827340
     "x????xxx?x????xx????xxxx?xxx????xxxx?xxxxx?xxxxxxxxxxx?xxxxxxxx?xx????xxxxx?xxx?xxx?xxxxxxxx?",
     "\x68\x00\x00\x00\x00\x8d\x44\x24\x00\x68\x00\x00\x00\x00\x50\xe8\x00\x00\x00\x00\x50\x8d\x44\x24\x00\x57\x50\xe8\x00\x00\x00\x00\x8b\x17\x83\xc4\x00\x8b\x08\x85\xc9\x74\x00\x8b\xc3\xf0\x0f\xc1\x01\x89\x0f\x85\xd2\x74\x00\x8b\xc6\xf0\x0f\xc1\x02\x48\x75\x00\x8b\x0d\x00\x00\x00\x00\x52\x8b\x01\xff\x50\x00\x8b\x54\x24\x00\x85\xd2\x74\x00\x8b\xc6\xf0\x0f\xc1\x02\x48\x75\x00"
@@ -88,14 +95,7 @@ HookManager::Pattern pat_IsDebuggerAttached{//0206F310
 HookManager::Pattern pat_EngineAliveFnc{//010454B0
     "xx????xxxxxxxxxxxx????xxx?xxxx?x",
     //\xCC 's are custom
-    "\x8B\x0D\x00\x00\x00\x00\x8B\x01\xFF\x20\xCC\xCC\xCC\xCC\xCC\xCC\x8b\x0d\x00\x00\x00\x00\xff\x74\x24\x00\x8b\x01\xff\x50\x00\xc3" 
-
-    /*
-    
-    
-    
-    */
-
+    "\x8B\x0D\x00\x00\x00\x00\x8B\x01\xFF\x20\xCC\xCC\xCC\xCC\xCC\xCC\x8b\x0d\x00\x00\x00\x00\xff\x74\x24\x00\x8b\x01\xff\x50\x00\xc3"
 };
 
 HookManager::Pattern pat_EngineEnableMouseFnc{//1159250 PROF only!!! This is 2 functions in nonProf. See 1.66.139.586 EnableMouseMovement DisableMosueMovement
@@ -139,8 +139,12 @@ HookManager::Pattern pat_worldMissionEventStart{//00B19E5C PROF ONLY
 HookManager::Pattern pat_worldMissionEventEnd{//00B1A0AB
     "xxx?xxx?xxxxxx?xx????xxxxx?xxxxxxx",
     "\x8b\x54\x24\x00\x85\xd2\x74\x00\xf0\x0f\xc1\x3a\x4f\x75\x00\x8b\x0d\x00\x00\x00\x00\x52\x8b\x01\xff\x50\x00\x5f\x5e\x5b\x8b\xe5\x5d\xc2",
-    0x00B1A0AB  - 0x00B1A090
+    0x00B1A0AB - 0x00B1A090
 };
+#endif
+
+
+
 
 scriptExecutionContext currentContext = scriptExecutionContext::Invalid;
 MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create some invalid handler type
@@ -148,20 +152,30 @@ MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create s
 void EngineHook::placeHooks() {
     WAIT_FOR_DEBUGGER_ATTACHED;
 
-    char** productType = (char**) (GlobalHookManager.findPattern(pat_productType) + 1);
-    char** productVersion = (char**) (GlobalHookManager.findPattern(pat_productVersion) + 1);
-    OutputDebugStringA("Product Type: ");
-    OutputDebugStringA(*productType);
-    OutputDebugStringA("\t\tVersion: ");
-    OutputDebugStringA(*productVersion);
-    OutputDebugStringA("\n");
-    productType;
+    //char** productType = (char**) (GlobalHookManager.findPattern(pat_productType) + 1);
+    //char** productVersion = (char**) (GlobalHookManager.findPattern(pat_productVersion) + 1);
+    //OutputDebugStringA("Product Type: ");
+    //OutputDebugStringA(*productType);
+    //OutputDebugStringA("\t\tVersion: ");
+    //OutputDebugStringA(*productVersion);
+    //OutputDebugStringA("\n");
+    //productType;
 
-    bool* isDebuggerAttached = *reinterpret_cast<bool**>((GlobalHookManager.findPattern(pat_IsDebuggerAttached) + 1));
-    *isDebuggerAttached = false; //Small hack to keep RPT logging while Debugger is attached
+    //bool* isDebuggerAttached = *reinterpret_cast<bool**>((GlobalHookManager.findPattern(pat_IsDebuggerAttached) + 1));
+    //*isDebuggerAttached = false; //Small hack to keep RPT logging while Debugger is attached
                                  //Could also patternFind and patch (profv3 0107144F) to unconditional jmp
 
+#ifdef X64
+    //GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
+    //GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 1);
+    //GlobalHookManager.placeHook(hookTypes::scriptVMSimulateEnd, pat_scriptVMSimulateEnd, reinterpret_cast<uintptr_t>(scriptVMSimulateEnd));
+    GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
+    //has to jmpback 13CF0B6 wants 0x00000000013cf0af
+    //GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
+    //GlobalHookManager.placeHook(hookTypes::worldMissionEventStart, pat_worldMissionEventStart, reinterpret_cast<uintptr_t>(worldMissionEventStart), worldMissionEventStartJmpBack, 2);
+    //GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
 
+#else
     GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
     GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 1);
     GlobalHookManager.placeHook(hookTypes::scriptVMSimulateEnd, pat_scriptVMSimulateEnd, reinterpret_cast<uintptr_t>(scriptVMSimulateEnd));
@@ -169,16 +183,13 @@ void EngineHook::placeHooks() {
     GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
     GlobalHookManager.placeHook(hookTypes::worldMissionEventStart, pat_worldMissionEventStart, reinterpret_cast<uintptr_t>(worldMissionEventStart), worldMissionEventStartJmpBack, 2);
     GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
+#endif
 
-
-
-
-
-    EngineAliveFnc = reinterpret_cast<EngineAlive*>(GlobalHookManager.findPattern(pat_EngineAliveFnc));
+    //EngineAliveFnc = reinterpret_cast<EngineAlive*>(GlobalHookManager.findPattern(pat_EngineAliveFnc));
     //Find by searching for.  "XML parsing error: cannot read the source file". function call right after start of while loop
 
     //#TODO don't call EngineEnableMouseFnc if nullptr
-    EngineEnableMouseFnc = reinterpret_cast<EngineEnableMouse*>(GlobalHookManager.findPattern(pat_EngineEnableMouseFnc));
+    //EngineEnableMouseFnc = reinterpret_cast<EngineEnableMouse*>(GlobalHookManager.findPattern(pat_EngineEnableMouseFnc));
 
     //To yield scriptVM and let engine run while breakPoint hit. 0103C5BB overwrite eax to Yield
 
@@ -332,14 +343,39 @@ uintptr_t HookManager::placeHook(uintptr_t offset, uintptr_t jmpTo, uint8_t jmpB
 
 uintptr_t HookManager::placeHookTotalOffs(uintptr_t totalOffset, uintptr_t jmpTo) {
     DWORD dwVirtualProtectBackup;
+
+
+    /*
+    32bit
+        jmp 0x123122
+        0:  e9 1e 31 12 00          jmp    123123 <_main+0x123123>
+    64bit
+        FF 25 64bit relative 
+    */
+#ifdef X64
+    //auto distance = std::max(totalOffset, jmpTo) - std::min(totalOffset, jmpTo);
+    // if distance < 2GB (2147483648) we could use the 32bit relative jmp
+    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 10u, 0x40u, &dwVirtualProtectBackup);
+    auto jmpInstr = reinterpret_cast<unsigned char*>(totalOffset);
+    auto addrOffs = reinterpret_cast<uint32_t*>(totalOffset + 1);
+    *jmpInstr = 0x68; //push DWORD
+    *addrOffs = jmpTo /*- totalOffset - 6*/;//offset
+    *reinterpret_cast<uint32_t*>(totalOffset + 5) = 0x042444C7; //MOV [RSP+4],
+    *reinterpret_cast<uint32_t*>(totalOffset + 9) = ((uint64_t) jmpTo) >> 32;//DWORD
+    *reinterpret_cast<unsigned char*>(totalOffset + 13) = 0xc3;//ret
+    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 10u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
+    return totalOffset + 14;
+#else
     VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 5u, 0x40u, &dwVirtualProtectBackup);
     auto jmpInstr = reinterpret_cast<unsigned char *>(totalOffset);
     auto addrOffs = reinterpret_cast<unsigned int *>(totalOffset + 1);
     *jmpInstr = 0xE9;
     *addrOffs = jmpTo - totalOffset - 5;
     VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 5u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
-
     return totalOffset + 5;
+#endif
+    
+
 }
 
 

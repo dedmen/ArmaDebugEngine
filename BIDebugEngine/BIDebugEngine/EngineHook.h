@@ -21,6 +21,8 @@ class HookManager {
 public:
 
     struct Pattern {
+        Pattern(const char* _mask, const char* _pattern) : mask(_mask), pattern(_pattern) {}
+        Pattern(const char* _mask, const char* _pattern, int64_t _offset) : mask(_mask),pattern(_pattern),offset(_offset) {}
         const char* mask;
         const char* pattern;
         uintptr_t offset{ 0 };

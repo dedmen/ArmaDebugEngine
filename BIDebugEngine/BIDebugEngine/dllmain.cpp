@@ -61,18 +61,25 @@ BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason, LPVOID) {
         return 0;
     };
 
-    auto getRTTIName = [](uintptr_t vtable) -> const char* {
-        uintptr_t typeBase = *((uintptr_t*) (vtable - 4));
-        uintptr_t type = *((uintptr_t*) (typeBase + 0xC));
-        return (char*) (type + 9);
+    auto getRTTIName = [](uintptr_t* vtable) -> const char* {
+        class v1 {
+            virtual void doStuff(){}
+        };
+        class v2 : public v1 {
+            virtual void doStuff(){}
+        };
+        v2* v = (v2*) vtable;
+        auto& typex = typeid(*v);
+        auto test = typex.name();
+        return test;
     };
 
 
 
     uintptr_t stringOffset = findInMemory("tbb4malloc_bi", 13);
 
-    uintptr_t allocatorVtablePtr = (findInMemory((char*) &stringOffset, 4) - 4);
-    const char* test = getRTTIName(*reinterpret_cast<uintptr_t*>(allocatorVtablePtr));
+    uintptr_t allocatorVtablePtr = (findInMemory((char*) &stringOffset, sizeof(uintptr_t)) - sizeof(uintptr_t));
+    const char* test = getRTTIName(reinterpret_cast<uintptr_t*>(allocatorVtablePtr));
     engineAlloc = allocatorVtablePtr;
 
     return TRUE;

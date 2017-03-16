@@ -1,66 +1,86 @@
 option casemap :none
 
 _TEXT    SEGMENT
-
+	;https://msdn.microsoft.com/en-us/library/windows/hardware/ff561499(v=vs.85).aspx
 
 	;mangled functions
-	EXTERN ?_scriptEntered@EngineHook@@QAEXI@Z:				PROC;	EngineHook::_scriptEntered
-	EXTERN ?_scriptInstruction@EngineHook@@QAEXIIII@Z:		PROC;	EngineHook::_scriptInstruction
-	EXTERN ?_scriptLeft@EngineHook@@QAEXI@Z:				PROC;	EngineHook::_scriptLeft
-	EXTERN ?_scriptLoaded@EngineHook@@QAEXI@Z:				PROC;	EngineHook::_scriptLoaded
-	EXTERN ?_scriptTerminated@EngineHook@@QAEXI@Z:			PROC;	EngineHook::_scriptTerminated
-	EXTERN ?_world_OnMissionEventStart@EngineHook@@QAEXI@Z: PROC;	EngineHook::_world_OnMissionEventStart
-	EXTERN ?_world_OnMissionEventEnd@EngineHook@@QAEXXZ:	PROC;	EngineHook::_world_OnMissionEventEnd
-	EXTERN ?_worldSimulate@EngineHook@@QAEXXZ:				PROC;	EngineHook::_worldSimulate
+	EXTERN ?_scriptEntered@EngineHook@@QEAAX_K@Z:				PROC;	EngineHook::_scriptEntered
+	EXTERN ?_scriptInstruction@EngineHook@@QEAAX_K000@Z:		PROC;	EngineHook::_scriptInstruction
+	EXTERN ?_scriptLeft@EngineHook@@QEAAX_K@Z:					PROC;	EngineHook::_scriptLeft
+	EXTERN ?_scriptLoaded@EngineHook@@QEAAX_K@Z:				PROC;	EngineHook::_scriptLoaded
+	EXTERN ?_scriptTerminated@EngineHook@@QEAAX_K@Z:			PROC;	EngineHook::_scriptTerminated
+	EXTERN ?_world_OnMissionEventStart@EngineHook@@QEAAX_K@Z:	PROC;	EngineHook::_world_OnMissionEventStart
+	EXTERN ?_world_OnMissionEventEnd@EngineHook@@QEAAXXZ:		PROC;	EngineHook::_world_OnMissionEventEnd
+	EXTERN ?_worldSimulate@EngineHook@@QEAAXXZ:					PROC;	EngineHook::_worldSimulate
 
 	;hool Enable fields
-	EXTERN _hookEnabled_Instruction:						dword
-	EXTERN _hookEnabled_Simulate:							dword
+	EXTERN hookEnabled_Instruction:						qword
+	EXTERN hookEnabled_Simulate:							qword
 
 	;JmpBacks
 
-	EXTERN _instructionBreakpointJmpBack:					PROC
-	EXTERN _scriptVMSimulateStartJmpBack:					PROC
-	EXTERN _worldSimulateJmpBack:							PROC
-	EXTERN _worldMissionEventStartJmpBack:					PROC
-	EXTERN _worldMissionEventEndJmpBack:					PROC
-	EXTERN _scriptVMConstructorJmpBack:						PROC
+	EXTERN instructionBreakpointJmpBack:					qword
+	EXTERN scriptVMSimulateStartJmpBack:					qword
+	EXTERN worldSimulateJmpBack:							qword
+	EXTERN worldMissionEventStartJmpBack:					qword
+	EXTERN worldMissionEventEndJmpBack:					qword
+	EXTERN scriptVMConstructorJmpBack:						qword
 
 	;misc
-	EXTERN _GlobalEngineHook:								dword
-	EXTERN _scriptVM:										dword
-	EXTERN _currentScriptVM:								dword
+	EXTERN GlobalEngineHook:								qword
+	EXTERN scriptVM:										qword
+	EXTERN currentScriptVM:								qword
 
 	;##########
 	;1.69.140.875 000000000133F0A0
-	PUBLIC _instructionBreakpoint
-	_instructionBreakpoint PROC
+	PUBLIC instructionBreakpoint
+	instructionBreakpoint PROC
 
 		;mov instructionBP_gameState, ebp;
 		;mov instructionBP_VMContext, edi;
 		;mov instructionBP_Instruction, ebx;
 		;push    eax;											don't need to keep because get's overwritten by fixup
-		push    ecx;
-		mov     ecx, _hookEnabled_Instruction;					Skip if hook is disabled
-		test    ecx, ecx;
+		;push    ecx;
+		push rcx;
+		push rdx;
+		push r8;
+		push r9;
+
+		mov     rcx, hookEnabled_Instruction;					Skip if hook is disabled
+		test    rcx, rcx;
 		jz      _return;
-		mov     eax, [esp + 14Ch]; instructionBP_IDebugScript  ; I think this is in r9
-		push    rcx; instructionBP_IDebugScript					;I think rcx is Ptr to IDebugScript*
-		push    rbx; instructionBP_gameState
-		push    rdi; instructionBP_VMContext
-		push    r12; instructionBP_Instruction
-		.ERR <"ecx is definetly wrong is probably rcx or rdi">
-		mov     ecx, offset _GlobalEngineHook;
-		call    ?_scriptInstruction@EngineHook@@QAEXIIII@Z;		EngineHook::_scriptInstruction
+		;mov     eax, [esp + 14Ch]; instructionBP_IDebugScript  ; I think this is in r9
+		;mov    rcx; instructionBP_IDebugScript					;I think rcx is Ptr to IDebugScript*
+		mov		r9, rbx; instructionBP_gameState
+		mov     r8, [rbp+0A0h]; instructionBP_VMContext
+		mov    rdx, r12; instructionBP_Instruction
+		;.ERR <"ecx is definetly wrong is probably rcx or rdi">
+
+		mov     rcx, offset GlobalEngineHook;
+		; _scriptInstruction( rcx (this), rdx(instructionBP_Instruction), r8(instructionBP_VMContext), r9(instructionBP_gameState))  ;,instructionBP_IDebugScript was optimized out
+
+		call    ?_scriptInstruction@EngineHook@@QEAAX_K000@Z;		EngineHook::_scriptInstruction
 	_return:
-		pop     ecx;
-		;pop     eax;
-		mov     eax, [ebx + 14h];								fixup
-		lea     edx, [ebx + 14h];
-		jmp _instructionBreakpointJmpBack;
 
-	_instructionBreakpoint ENDP
 
+
+		pop     r9;
+		pop     r8;
+		pop     rdx;
+		pop     rcx;
+
+		mov     rax, [r13+8]; fixup
+		mov     rdx, [rbp+0A0h]
+		mov     rcx, r12
+		;mov     rdi, [rdi+rax]
+		;mov     rax, [r12]
+		;mov     esi, [rdx+288h]
+
+		jmp instructionBreakpointJmpBack;
+
+	instructionBreakpoint ENDP
+	COMMENT ü
+	
 	;##########
 	PUBLIC _scriptVMConstructor
 	_scriptVMConstructor PROC
@@ -213,7 +233,7 @@ _TEXT    SEGMENT
 
 	_worldMissionEventEnd ENDP
 
-
+	ü;
 
 
 

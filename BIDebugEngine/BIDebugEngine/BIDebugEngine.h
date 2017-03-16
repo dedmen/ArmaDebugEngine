@@ -260,7 +260,27 @@ public:
     RString _errorMessage;
     SourceDocPos _errorPosition;
 };
-
+#ifdef X64
+class GameState {
+public:
+    virtual void _NOU() {} //GameState has vtable
+    uint64_t _1;
+    uint64_t _11;
+    MapStringToClass<void*, AutoArray<void*>> _2; //functions  Should consult Intercept on these. 
+    MapStringToClass<void*, AutoArray<void*>> _3; //operators
+    MapStringToClass<void*, AutoArray<void*>> _4; //nulars  //#TODO add DebugBreak script nular. Check Visor
+    char _5[0x220];
+    Ref<GameEvaluator> GEval;
+    Ref<GameDataNamespace> _globalNamespace; //Can change by https://community.bistudio.com/wiki/with
+                                             /*
+                                             default,
+                                             ui,
+                                             parsing,
+                                             mission
+                                             */
+    AutoArray<Ref<GameDataNamespace>> _namespaces; //Contains missionNamespace and uiNamespace
+};
+#else
 class GameState {
 public:
     virtual void _NOU() {} //GameState has vtable
@@ -271,11 +291,12 @@ public:
     char _5[0x114];
     Ref<GameEvaluator> GEval;
     Ref<GameDataNamespace> _globalNamespace; //Can change by https://community.bistudio.com/wiki/with
-    /*
-    default,
-    ui,
-    parsing,
-    mission
-    */
+                                             /*
+                                             default,
+                                             ui,
+                                             parsing,
+                                             mission
+                                             */
     AutoArray<Ref<GameDataNamespace>> _namespaces; //Contains missionNamespace and uiNamespace
 };
+#endif

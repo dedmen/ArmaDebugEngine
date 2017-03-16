@@ -546,7 +546,7 @@ class MapStringToClass {
 protected:
     Container* _table;
     int _tableCount{ 0 };
-    int _count{ 0 };
+    int _count{ 0 };  //#X64 don't have _count anymore. _count == counts of all tables
     static Type _nullEntry;
 public:
     MapStringToClass() {}
