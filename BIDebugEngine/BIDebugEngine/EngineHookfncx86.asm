@@ -69,7 +69,7 @@ _TEXT    SEGMENT
         call	?_scriptLoaded@EngineHook@@QAEXI@Z;				EngineHook::_scriptLoaded;
         ;_return:
         push    1;												Fixup
-        lea		eax, [edi + 298h];
+        lea		eax, [edi + 29Ch];
         jmp		_scriptVMConstructorJmpBack;
 
 	_scriptVMConstructor ENDP
@@ -103,8 +103,8 @@ _TEXT    SEGMENT
         pop     ecx;
         pop     eax;
         sub     esp, 34h;										Fixup
-        push    edi;
-        mov     edi, ecx;
+        push    ebp;
+        mov     ebp, ecx;
 	IFDEF passSimulateScriptVMPtr
         cmp     byte ptr[edi + 2A0h], 0;						if !Loaded we exit right away and never hit scriptVMSimulateEnd
         jz		_skipVMPush;
@@ -129,7 +129,7 @@ _TEXT    SEGMENT
 
         ;prepare arguments for func call
 	IFDEF passSimulateScriptVMPtr
-        mov     edi, [esp + Ch + 4h/*I added push edx*/];		Retrieve out pushed scriptVM ptr
+        mov     edi, [esp + Ch + 4h/*I added push edx*/];		Retrieve our pushed scriptVM ptr
 	ELSE
         mov     edi, _currentScriptVM;							use this in case of scriptVM ptr not being easilly accessible 
 	ENDIF
@@ -148,8 +148,8 @@ _TEXT    SEGMENT
 	IFDEF passSimulateScriptVMPtr
         pop     edi;											Remove our pushed scriptVM ptr
 	ENDIF
-        pop     ebp;											Fixup
-        pop     edi;
+        pop     ebx;											Fixup
+        pop     ebp;
         add     esp, 34h;
         retn    8;
 

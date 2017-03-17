@@ -109,15 +109,15 @@ HookManager::Pattern pat_scriptVMConstructor{//10448BE
     0x010448BE - 0x010448A8
 };
 
-HookManager::Pattern pat_scriptVMSimulateStart{//1044E80
+HookManager::Pattern pat_scriptVMSimulateStart{//1044E80 PROF ONLY
     "xx?xxxxx?????x?xxxxx?x",
-    "\x83\xec\x00\x57\x8b\xf9\x80\xbf\x00\x00\x00\x00\x00\x75\x00\x32\xc0\x5f\x83\xc4\x00\xc2"
+    "\x83\xec\x00\x55\x8b\xe9\x80\xbd\x00\x00\x00\x00\x00\x75\x00\x32\xc0\x5d\x83\xc4\x00\xc2"
 };
 
 HookManager::Pattern pat_scriptVMSimulateEnd{//10451A3
-    "xxx?xxx?x????xx?xxx?????xxx?xxx????xxx?xxxx?x",
-    "\xff\x74\x24\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x83\xc4\x00\xc7\x44\x24\x00\x00\x00\x00\x00\x8d\x4c\x24\x00\xdd\xd8\xe8\x00\x00\x00\x00\x8a\x44\x24\x00\x5d\x5f\x83\xc4\x00\xc2",
-    0x10451A3 - 0x0104517C
+    "xxx?xxx?x????xx?xxx?????xxx?xxx????xxx?xxxx?x??",
+    "\xff\x74\x24\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x83\xc4\x00\xc7\x44\x24\x00\x00\x00\x00\x00\x8d\x4c\x24\x00\xdd\xd8\xe8\x00\x00\x00\x00\x8a\x44\x24\x00\x5b\x5d\x83\xc4\x00\xc2\x00\x00",
+    0x0107EB67 - 0x0107EB40
 };
 
 HookManager::Pattern pat_instructionBreakpoint{//103C610
@@ -152,17 +152,17 @@ MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create s
 void EngineHook::placeHooks() {
     WAIT_FOR_DEBUGGER_ATTACHED;
 
-    //char** productType = (char**) (GlobalHookManager.findPattern(pat_productType) + 1);
-    //char** productVersion = (char**) (GlobalHookManager.findPattern(pat_productVersion) + 1);
-    //OutputDebugStringA("Product Type: ");
-    //OutputDebugStringA(*productType);
-    //OutputDebugStringA("\t\tVersion: ");
+    char** productType = (char**) (GlobalHookManager.findPattern(pat_productType) + 1);
+    char** productVersion = (char**) (GlobalHookManager.findPattern(pat_productVersion) + 1);
+    OutputDebugStringA("Product Type: ");
+    OutputDebugStringA(*productType);
+    OutputDebugStringA("\t\tVersion: ");
     //OutputDebugStringA(*productVersion);
-    //OutputDebugStringA("\n");
-    //productType;
+    OutputDebugStringA("\n");
+    productType;
 
-    //bool* isDebuggerAttached = *reinterpret_cast<bool**>((GlobalHookManager.findPattern(pat_IsDebuggerAttached) + 1));
-    //*isDebuggerAttached = false; //Small hack to keep RPT logging while Debugger is attached
+    bool* isDebuggerAttached = *reinterpret_cast<bool**>((GlobalHookManager.findPattern(pat_IsDebuggerAttached) + 1));
+    *isDebuggerAttached = false; //Small hack to keep RPT logging while Debugger is attached
                                  //Could also patternFind and patch (profv3 0107144F) to unconditional jmp
 
 #ifdef X64
@@ -185,11 +185,11 @@ void EngineHook::placeHooks() {
     GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
 #endif
 
-    //EngineAliveFnc = reinterpret_cast<EngineAlive*>(GlobalHookManager.findPattern(pat_EngineAliveFnc));
+    EngineAliveFnc = reinterpret_cast<EngineAlive*>(GlobalHookManager.findPattern(pat_EngineAliveFnc));
     //Find by searching for.  "XML parsing error: cannot read the source file". function call right after start of while loop
 
     //#TODO don't call EngineEnableMouseFnc if nullptr
-    //EngineEnableMouseFnc = reinterpret_cast<EngineEnableMouse*>(GlobalHookManager.findPattern(pat_EngineEnableMouseFnc));
+    EngineEnableMouseFnc = reinterpret_cast<EngineEnableMouse*>(GlobalHookManager.findPattern(pat_EngineEnableMouseFnc));
 
     //To yield scriptVM and let engine run while breakPoint hit. 0103C5BB overwrite eax to Yield
 

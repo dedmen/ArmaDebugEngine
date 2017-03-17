@@ -70,7 +70,7 @@ BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason, LPVOID) {
         };
         v2* v = (v2*) vtable;
         auto& typex = typeid(*v);
-        auto test = typex.name();
+        auto test = typex.raw_name();
         return test;
     };
 

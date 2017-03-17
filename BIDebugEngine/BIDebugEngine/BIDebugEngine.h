@@ -283,7 +283,7 @@ public:
 #else
 class GameState {
 public:
-    virtual void _NOU() {} //GameState has vtable
+   // virtual void _NOU() {} //GameState has no vtable since 1.68 (it had one in 1.66)
     AutoArray<void*> _1;
     MapStringToClass<void*, AutoArray<void*>> _2; //functions  Should consult Intercept on these. 
     MapStringToClass<void*, AutoArray<void*>> _3; //operators
