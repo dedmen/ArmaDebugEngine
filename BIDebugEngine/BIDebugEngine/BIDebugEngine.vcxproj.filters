@@ -122,6 +122,9 @@
     <ClInclude Include="Monitor.h">
       <Filter>Header Files\Debugger</Filter>
     </ClInclude>
+    <ClInclude Include="version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="BIDebugEngine.natvis" />
@@ -133,5 +136,10 @@
     <MASM Include="EngineHookfncx86.asm">
       <Filter>Source Files\BIDebugEngine</Filter>
     </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
