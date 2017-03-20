@@ -46,7 +46,7 @@ void BreakPoint::Serialize(JsonArchive& ar) {
                 } break;
                 default: break;
                 case BPAction_types::Halt: {
-                    action = std::make_unique<BPAction_Halt>();
+                    action = std::make_unique<BPAction_Halt>(BPAction_Halt::haltType::breakpoint);
                     JsonArchive actJsonAr(actJson);
                     action->Serialize(actJsonAr);
                 } break;

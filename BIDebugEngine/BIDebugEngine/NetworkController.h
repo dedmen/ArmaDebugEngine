@@ -4,6 +4,7 @@
 
 enum class NC_CommandType {
     invalid,
+    getVersionInfo,
     addBreakpoint,
     delBreakpoint,
     BPContinue,//Tell's breakpoint to leave breakState
@@ -15,7 +16,11 @@ enum class NC_CommandType {
 
 enum class NC_OutgoingCommandType {
     invalid,
-    BreakpointHalt,
+    versionInfo,
+    halt_breakpoint,
+    halt_step,
+    halt_error,
+    halt_placeholder,
     ContinueExecution,
     VariableReturn //returning from getVariable
 };

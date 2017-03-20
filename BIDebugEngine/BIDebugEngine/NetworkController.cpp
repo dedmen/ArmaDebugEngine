@@ -4,6 +4,7 @@
 #include "Serialize.h"
 #include "BreakPoint.h"
 #include "Debugger.h"
+#include "version.h"
 
 
 using nlohmann::json;
@@ -118,6 +119,22 @@ void NetworkController::incomingMessage(const std::string& message) {
                 GlobalDebugger.grabCurrentCode(answer);
                 sendMessage(answer.to_string());
             } break;
+            case NC_CommandType::getVersionInfo: {
+                JsonArchive answer;
+                answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::versionInfo));
+                answer.Serialize("build", DBG_BUILD);
+                answer.Serialize("version", DBG_VERSION);
+#ifdef X64
+                answer.Serialize("arch", "X64");
+#else
+                answer.Serialize("arch", "X86");
+#endif
+            
+                GlobalDebugger.productInfo.Serialize(answer);
+                sendMessage(answer.to_string());
+            } break;
+
+
         }
     }
     catch (std::exception &ex) {

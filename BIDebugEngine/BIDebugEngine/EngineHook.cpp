@@ -262,6 +262,7 @@ void EngineHook::placeHooks() {
     OutputDebugStringA(productVersion);
     OutputDebugStringA("\n");
     productType;
+    GlobalDebugger.setGameVersion(productType, productVersion);
 
     bool* isDebuggerAttached = reinterpret_cast<bool*>(GlobalHookManager.findPattern(pat_IsDebuggerAttached));
     *isDebuggerAttached = false; //Small hack to keep RPT logging while Debugger is attached

@@ -244,10 +244,8 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 void Debugger::onScriptError(GameState * gs) {
 	
 
-	BPAction_Halt hAction;
+	BPAction_Halt hAction(BPAction_Halt::haltType::error);
 	hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,gs->_context ,gs});
-
-
 
 }
 
@@ -263,7 +261,7 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
             //Prevent stepOver from triggering in the same Line
             (stepInfo.stepType == StepType::STOver ? stepInfo.stepLine != instructionInfo.instruction->_scriptPos._sourceLine : true)
             ) {
-            BPAction_Halt hAction;
+            BPAction_Halt hAction(BPAction_Halt::haltType::step);
             hAction.execute(this, nullptr, instructionInfo);
             return; //We already halted here. Don't care if there are more breakpoints here.
         }
@@ -297,7 +295,26 @@ void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructio
     breakStateInfo.instruction = &instructionInfo;
 
     JsonArchive ar;
-    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::BreakpointHalt));
+    BPAction_Halt* halt;
+    if (bp->action && ((halt = dynamic_cast<BPAction_Halt*>(bp->action.get())))) {
+            switch (halt->type) {
+                case BPAction_Halt::haltType::breakpoint: 
+                    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_breakpoint));
+                    break;
+                case BPAction_Halt::haltType::step: 
+                    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_step));
+                    break;
+                case BPAction_Halt::haltType::error:
+                    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_error));
+                    break;
+                default: break;
+            }
+    } else {
+        __debugbreak();
+        ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_breakpoint));
+    }
+
+    
     instructionInfo.context->Serialize(ar); //Set's callstack
 
     //#TODO add GameState variables
@@ -369,6 +386,11 @@ void Debugger::commandContinue(StepType stepType) {
     ResetEvent(breakStateContinueEvent);
     SetEvent(breakStateContinueEvent);
     nController.sendMessage("{\"command\":2}");
+}
+
+void Debugger::setGameVersion(const char* productType, const char* productVersion) {
+    productInfo.gameType = productType;
+    productInfo.gameVersion = productVersion;
 }
 
 std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, std::vector<std::string>& varNames) const {
@@ -473,4 +495,8 @@ void Debugger::VariableInfo::Serialize(JsonArchive& ar) const {
         var->_value.Serialize(ar);
         ar.Serialize("ns", static_cast<int>(ns));
     }
+}
+
+void Debugger::productInfoStruct::Serialize(JsonArchive &ar) {
+    ar.Serialize("gameType", gameType); ar.Serialize("gameVersion", gameVersion);
 }

@@ -66,6 +66,8 @@ public:
     void onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& info); //Breakpoint is halting engine
     void onContinue(); //Breakpoint has stopped halting
     void commandContinue(StepType stepType); //Tells Breakpoint in breakState to Stop halting
+    void setGameVersion(const char* productType, const char* productVersion);
+
     struct VariableInfo {
         VariableInfo() {}
         VariableInfo(const GameVariable* _var, VariableScope _ns) : var(_var), ns(_ns) {};
@@ -111,5 +113,10 @@ public:
         uint8_t stepLevel;
         RV_VMContext* context;
     } stepInfo;
+    struct productInfoStruct {
+        RString gameType;
+        RString gameVersion;
+        void Serialize(JsonArchive &ar);
+    } productInfo;
 };
 

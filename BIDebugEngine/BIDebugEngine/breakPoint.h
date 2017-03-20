@@ -52,11 +52,19 @@ private:
 
 class BPAction_Halt : public IBreakPointAction { //This freezes the Engine till further commands
 public:
-    BPAction_Halt() {}
+
+    enum class haltType {
+        breakpoint,
+        step,
+        error
+    };
+
+    BPAction_Halt(haltType _type) : type(_type) {}
     virtual ~BPAction_Halt() {};
 
     void execute(Debugger*, BreakPoint*, const DebuggerInstructionInfo&) override;
     void Serialize(JsonArchive& ar) override;
+    haltType type;
 };
 
 class BPAction_LogCallstack : public IBreakPointAction { //Logs callstack to file
