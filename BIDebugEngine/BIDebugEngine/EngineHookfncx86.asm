@@ -13,6 +13,7 @@ _TEXT    SEGMENT
 	EXTERN ?_world_OnMissionEventStart@EngineHook@@QAEXI@Z: PROC;	EngineHook::_world_OnMissionEventStart
 	EXTERN ?_world_OnMissionEventEnd@EngineHook@@QAEXXZ:	PROC;	EngineHook::_world_OnMissionEventEnd
 	EXTERN ?_worldSimulate@EngineHook@@QAEXXZ:				PROC;	EngineHook::_worldSimulate
+	EXTERN ?_onScriptError@EngineHook@@QAEXI@Z:				PROC;	EngineHook::_onScriptError
 
 	;hool Enable fields
 	EXTERN _hookEnabled_Instruction:						dword
@@ -26,7 +27,8 @@ _TEXT    SEGMENT
 	EXTERN _worldMissionEventStartJmpBack:					dword
 	EXTERN _worldMissionEventEndJmpBack:					dword
 	EXTERN _scriptVMConstructorJmpBack:						dword
-
+	EXTERN _onScriptErrorJmpBack:							dword
+	
 	;misc
 	EXTERN _GlobalEngineHook:								dword
 	EXTERN _scriptVM:										dword
@@ -192,7 +194,7 @@ _TEXT    SEGMENT
 
 	_worldMissionEventStart ENDP
 
-		;##########
+	;##########
 	PUBLIC _worldMissionEventEnd
 	_worldMissionEventEnd PROC
 
@@ -203,7 +205,7 @@ _TEXT    SEGMENT
         pop     eax;											Don't know if eax will be modified but it's likely
         pop     ecx;
 
-        pop     edi;											fixup
+        pop     edi;											Fixup
         pop     esi;
         pop     ebx;
         mov     esp, ebp;
@@ -213,7 +215,26 @@ _TEXT    SEGMENT
 	_worldMissionEventEnd ENDP
 
 
+	;##########
+	PUBLIC _onScriptError
+	_onScriptError PROC
 
+        push	ecx;
+		push	eax;
+        push	ecx;											gameState ptr
+        mov     ecx, offset _GlobalEngineHook;
+        call    ?_onScriptError@EngineHook@@QAEXI@Z;			EngineHook::_world_OnMissionEventEnd;
+        pop     eax;											Don't know if eax will be modified but it's likely
+        pop     ecx;
+
+        push    ebx;											Fixup
+		push    esi
+		mov     esi, [edx+28h]
+		;push    edi
+		;test    esi, esi
+        jmp _onScriptErrorJmpBack;
+
+	_onScriptError ENDP
 
 
 

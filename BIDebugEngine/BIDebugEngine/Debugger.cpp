@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <windows.h>
 #include <unordered_map>
+#include "version.h"
 //std::array<const char*, 710> files{};
 Debugger::Debugger() {
     //BreakPoint bp(8);
@@ -240,6 +241,16 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 
 }
 
+void Debugger::onScriptError(GameState * gs) {
+	
+
+	BPAction_Halt hAction;
+	hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,gs->_context ,gs});
+
+
+
+}
+
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
 
     if (state == DebuggerState::stepState) {
@@ -291,22 +302,31 @@ void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructio
 
     //#TODO add GameState variables
 
-    JsonArchive instructionAr;
-    instructionInfo.instruction->Serialize(instructionAr);
-    ar.Serialize("instruction", instructionAr);
+	if (instructionInfo.instruction) {
+		JsonArchive instructionAr;
+		instructionInfo.instruction->Serialize(instructionAr);
+		ar.Serialize("instruction", instructionAr);
+	} else {
+		JsonArchive errorAr;
+		instructionInfo.gs->GEval->SerializeError(errorAr);
+		ar.Serialize("error", errorAr);
+	}
+
+	
+
 
 
     auto text = ar.to_string();
     nController.sendMessage(text);
 
-
+#ifndef isCI
     std::ofstream f("P:\\break.json", std::ios::out | std::ios::binary);
     f.write(text.c_str(), text.length());
     f.close();
     std::ofstream f2("P:\\breakScript.json", std::ios::out | std::ios::binary);
     f2.write(instructionInfo.instruction->_scriptPos._content.data(), instructionInfo.instruction->_scriptPos._content.length());
     f2.close();
-
+#endif
 
 
 

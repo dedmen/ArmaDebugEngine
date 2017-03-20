@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <array>
+#include <functional>
 
 enum class hookTypes {
     worldSimulate,   //FrameEnd/FrameStart
@@ -13,6 +14,7 @@ enum class hookTypes {
     scriptVMSimulateEnd,     //ScriptTerminated/ScriptLeft
     worldMissionEventStart,
     worldMissionEventEnd,
+    onScriptError,
     End
 };
 
@@ -22,10 +24,12 @@ public:
 
     struct Pattern {
         Pattern(const char* _mask, const char* _pattern) : mask(_mask), pattern(_pattern) {}
-        Pattern(const char* _mask, const char* _pattern, int64_t _offset) : mask(_mask),pattern(_pattern),offset(static_cast<uintptr_t>(_offset)) {}
+        Pattern(const char* _mask, const char* _pattern, int64_t _offset) : mask(_mask), pattern(_pattern), offset(static_cast<uintptr_t>(_offset)) {}
+        Pattern(const char* _mask, const char* _pattern, std::function<uintptr_t(uintptr_t)> _offset) : mask(_mask), pattern(_pattern), offsetFunc(_offset) {}
         const char* mask;
         const char* pattern;
         uintptr_t offset{ 0 };
+        std::function<uintptr_t(uintptr_t)> offsetFunc;
     };
 
 
@@ -37,7 +41,7 @@ public:
     bool MatchPattern(uintptr_t addr, const char* pattern, const char* mask);
     uintptr_t findPattern(const char* pattern, const char* mask, uintptr_t offset = 0);
     uintptr_t findPattern(const Pattern& pat, uintptr_t offset = 0);
-    
+
 
     struct PlacedHook {
         std::vector<unsigned char> originalInstructions;
@@ -46,7 +50,7 @@ public:
         uintptr_t jumpBack;
     };
 
-    std::array<PlacedHook,static_cast<size_t>(hookTypes::End)> placedHooks;
+    std::array<PlacedHook, static_cast<size_t>(hookTypes::End)> placedHooks;
     uintptr_t engineBase;
     uintptr_t engineSize;
 };
@@ -76,6 +80,7 @@ public:
     void _scriptInstruction(uintptr_t instructionBP_Instruction, uintptr_t instructionBP_VMContext, uintptr_t instructionBP_gameState, uintptr_t instructionBP_IDebugScript);
     void _world_OnMissionEventStart(uintptr_t eventType);
     void _world_OnMissionEventEnd();
+    void _onScriptError(uintptr_t gameSate);
     void onShutdown();
     void onStartup();
 

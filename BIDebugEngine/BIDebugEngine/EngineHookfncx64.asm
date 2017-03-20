@@ -79,21 +79,33 @@ _TEXT    SEGMENT
 		jmp instructionBreakpointJmpBack;
 
 	instructionBreakpoint ENDP
-	COMMENT ü
+	
 	
 	;##########
-	PUBLIC _scriptVMConstructor
-	_scriptVMConstructor PROC
+	PUBLIC scriptVMConstructor
+	scriptVMConstructor PROC
 
-		push edi;												scriptVM Pointer
-        mov ecx, offset _GlobalEngineHook;
-        call ?_scriptLoaded@EngineHook@@QAEXI@Z;				EngineHook::_scriptLoaded;
+		push	rcx;
+		push	rdx;
+		mov		rdx, rdi;										scriptVM Pointer
+        mov		rcx, offset GlobalEngineHook;
+        call	?_scriptLoaded@EngineHook@@QEAAX_K@Z;			EngineHook::_scriptLoaded;
         ;_return:
-        push    1;												Fixup
-        lea eax, [edi + 298h];
-        jmp _scriptVMConstructorJmpBack;
 
-	_scriptVMConstructor ENDP
+		pop		rdx;
+		pop		rcx;
+		mov     rax, rdi;										Fixup
+		add     rsp, 60h
+		pop     r15
+		pop     r14
+		pop     r13
+		pop     rdi
+		pop     rsi
+		pop     rbp
+		pop     rbx
+        jmp scriptVMConstructorJmpBack;
+
+	scriptVMConstructor ENDP
 
 
 
@@ -102,96 +114,96 @@ _TEXT    SEGMENT
 	ENDIF
 
 	;##########
-	PUBLIC _scriptVMSimulateStart
-	_scriptVMSimulateStart PROC
+	PUBLIC scriptVMSimulateStart
+	scriptVMSimulateStart PROC
 
-		push    eax;
-        push    ecx;
+		push    rax;
 		
-	IFNDEF passSimulateScriptVMPtr
-		mov eax, offset _currentScriptVM;
-        mov [eax], ecx;								use this in case of scriptVM ptr not being easilly accessible in SimEnd
-	ENDIF
-       
-        mov     eax, _hookEnabled_Simulate;						Skip if hook is disabled
-        test    eax, eax;
+
+        mov     rax, hookEnabled_Simulate;						Skip if hook is disabled
+        test    rax, rax;
         jz      _return;
+	
+		push    rcx;
+		push    rdx;
 
-        push    ecx;											_scriptEntered arg
-        mov     ecx, offset _GlobalEngineHook;
-        call    ?_scriptEntered@EngineHook@@QAEXI@Z;												EngineHook::_scriptEntered;
-    _return:
-        pop     ecx;
-        pop     eax;
-        sub     esp, 34h;										Fixup
-        push    edi;
-        mov     edi, ecx;
-	IFDEF passSimulateScriptVMPtr
-        cmp     byte ptr[edi + 2A0h], 0;						if !Loaded we exit right away and never hit scriptVMSimulateEnd
-        jz		_skipVMPush;
-        push	edi;											scriptVM to receive again in scriptVMSimulateEnd
-    _skipVMPush:
-	ENDIF
-        jmp		_scriptVMSimulateStartJmpBack;
-	_scriptVMSimulateStart ENDP
+		mov		rdx, rcx;										_scriptEntered arg
+		mov     rcx, offset GlobalEngineHook;
+		call    ?_scriptEntered@EngineHook@@QEAAX_K@Z;			EngineHook::_scriptEntered;
+	
+	
+		pop		rdx;
+		pop		rcx;
+
+	_return:
+
+		
+		pop		rax;
 
 
+		push    rbp;											Fixup
+		push    r14
+		lea     rbp, [rsp-4Fh]
+		sub     rsp, 98h
+        jmp		scriptVMSimulateStartJmpBack;
+	scriptVMSimulateStart ENDP
+
+	
 	;##########
-	PUBLIC _scriptVMSimulateEnd
-	_scriptVMSimulateEnd PROC
+	PUBLIC scriptVMSimulateEnd
+	scriptVMSimulateEnd PROC
 
-        push    eax;
-        push    ecx;
-        push    edx;
+        push rcx;												scriptVM is at [rsp+10h]
+        
 
-        mov     ecx, _hookEnabled_Simulate;						Skip if hook is disabled
-        test    ecx, ecx;
+        mov     rcx, hookEnabled_Simulate;						Skip if hook is disabled
+        test    rcx, rcx;
         jz      _return;
 
-        ;prepare arguments for func call
-	IFDEF passSimulateScriptVMPtr
-        mov     edi, [esp + Ch + 4h/*I added push edx*/];		Retrieve out pushed scriptVM ptr
-	ELSE
-        mov     edi, _currentScriptVM;							use this in case of scriptVM ptr not being easilly accessible 
-	ENDIF
-        push    edi;											scriptVM
-        mov     ecx, offset _GlobalEngineHook;
-        test    al, al;											al == done
-        jz      short _notDone;									script is not Done  
-        call	?_scriptTerminated@EngineHook@@QAEXI@Z;			EngineHook::_scriptTerminated;	script is Done
-        jmp     short _return;
+		push	rdx;
+        mov		rdx, [rsp + 10h + 10h];							scriptVM
+        mov     rcx, offset GlobalEngineHook;
+
+        test    rdi, rdi;										rdi == done
+        jz      _notDone;										script is not Done  
+        call	?_scriptTerminated@EngineHook@@QEAAX_K@Z;		EngineHook::_scriptTerminated;	script is Done
+        jmp     _returnPostCall;
     _notDone:
-        call    ?_scriptLeft@EngineHook@@QAEXI@Z;				EngineHook::_scriptLeft;
+        call    ?_scriptLeft@EngineHook@@QEAAX_K@Z;				EngineHook::_scriptLeft;
+
+	_returnPostCall:
+		pop		rdx;
+
     _return:
-        pop     edx;
-        pop     ecx;											These are probably not needed. But I can't guarantee that the compiler didn't expect these to stay unchanged
-        pop     eax;
-	IFDEF passSimulateScriptVMPtr
-        pop     edi;											Remove our pushed scriptVM ptr
-	ENDIF
-        pop     ebp;											Fixup
-        pop     edi;
-        add     esp, 34h;
-        retn    8;
+        pop		rcx;
 
-	_scriptVMSimulateEnd ENDP
-
+		movaps  xmm6, [rsp+98h+28h]
+		movzx   eax, r14b
+		add     rsp, 98h
+		pop     r14
+		pop     rbp
+		ret
+	scriptVMSimulateEnd ENDP
+	
 	;##########
-	PUBLIC _worldSimulate
-	_worldSimulate PROC
+	PUBLIC worldSimulate
+	worldSimulate PROC
+		//rcx is worldPtr!
+        push	rcx;
 
-        push	ecx;
-        push	eax;
-        mov     ecx, offset _GlobalEngineHook;
-        call    ?_worldSimulate@EngineHook@@QAEXXZ;												EngineHook::_worldSimulate;
-        pop     eax;											Don't know if eax will be modified but it's likely
-        pop     ecx;
-        sub     esp, 3D8h;										fixup
-        jmp _worldSimulateJmpBack;
+        mov     rcx, offset GlobalEngineHook;
+        call    ?_worldSimulate@EngineHook@@QEAAXXZ;				EngineHook::_worldSimulate;
 
-	_worldSimulate ENDP
+        pop     rcx;
+        mov     rax, rsp;											Fixup
+		mov     [rax+20h], r9
+		mov     [rax+18h], r8
+		mov     [rax+8h], rcx; //This is worldPtr!									
+        jmp worldSimulateJmpBack;
 
+	worldSimulate ENDP
 
+	COMMENT ü
 	;##########
 	PUBLIC _worldMissionEventStart
 	_worldMissionEventStart PROC

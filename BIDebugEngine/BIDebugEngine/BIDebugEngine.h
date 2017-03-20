@@ -234,11 +234,16 @@ public:
 
 
 
-    char pad_0x0000[0xC]; //0x0000
+    char pad_0x0000[3 * sizeof(uintptr_t)]; //0x0000
     RV_VMContext _context;
+#ifdef X64
+    char pad_0x0018[0x220]; //0x0018
+#else
     char pad_0x0018[0x114]; //0x0018
+#endif
     SourceDoc _doc; //0x0130 _doc
-    SourceDocPos _docpos; //0x013C 
+    SourceDocPos _docpos; //0x013C
+    //#TODO X64 for vars below here
     char pad_0x0150[280]; //0x0150
     RString _displayName;
     bool _canSuspend;
@@ -259,13 +264,13 @@ public:
     uint32_t _errorType;
     RString _errorMessage;
     SourceDocPos _errorPosition;
+    void SerializeError(JsonArchive& ar);
 };
 #ifdef X64
 class GameState {
 public:
-    virtual void _NOU() {} //GameState has vtable
-    uint64_t _1;
-    uint64_t _11;
+    //virtual void _NOU() {} //GameState has no vtable since 1.68 (it had one in 1.66)
+    AutoArray<void*> _1;
     MapStringToClass<void*, AutoArray<void*>> _2; //functions  Should consult Intercept on these. 
     MapStringToClass<void*, AutoArray<void*>> _3; //operators
     MapStringToClass<void*, AutoArray<void*>> _4; //nulars  //#TODO add DebugBreak script nular. Check Visor
@@ -281,9 +286,18 @@ public:
     AutoArray<Ref<GameDataNamespace>> _namespaces; //Contains missionNamespace and uiNamespace
 };
 #else
+class GameState;
+class callStackItemCreator {
+public:
+    callStackItemCreator() {}
+
+    CallStackItem*(*createFunction)(CallStackItem* parent, GameVarSpace* parentVariables, const GameState* gs, bool serialization) { nullptr };
+    RString type;
+};
+
 class GameState {
 public:
-   // virtual void _NOU() {} //GameState has no vtable since 1.68 (it had one in 1.66)
+    //virtual void _NOU() {} //GameState has no vtable since 1.68 (it had one in 1.66)
     AutoArray<void*> _1;
     MapStringToClass<void*, AutoArray<void*>> _2; //functions  Should consult Intercept on these. 
     MapStringToClass<void*, AutoArray<void*>> _3; //operators
@@ -298,5 +312,12 @@ public:
                                              mission
                                              */
     AutoArray<Ref<GameDataNamespace>> _namespaces; //Contains missionNamespace and uiNamespace
+
+
+    bool _6;
+    bool _showScriptErrors; //-showScriptErrors start parameter
+
+    RV_VMContext *_context;	//Current context
+    AutoArray<callStackItemCreator> _callStackItems;
 };
 #endif

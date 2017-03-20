@@ -42,6 +42,7 @@ extern "C" {
     uintptr_t worldSimulateJmpBack;
     uintptr_t worldMissionEventStartJmpBack;
     uintptr_t worldMissionEventEndJmpBack;
+    uintptr_t onScriptErrorJmpBack;
 
     uintptr_t hookEnabled_Instruction{ 1 };
     uintptr_t hookEnabled_Simulate{ 1 };
@@ -68,28 +69,123 @@ extern "C" void instructionBreakpoint();
 extern "C" void worldSimulate();
 extern "C" void worldMissionEventStart();
 extern "C" void worldMissionEventEnd();
+extern "C" void onScriptError();
 
 #ifdef X64
-//x64
+
+HookManager::Pattern pat_productType{
+    "xxx????xxx????xxxxx????xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx????xxxxxxxxxxx",
+    "\x4C\x8D\x05\x00\x00\x00\x00\x48\x8D\x15\x00\x00\x00\x00\x48\x8D\x4D\x98\xE8\x00\x00\x00\x00\x48\x8B\x10\x48\x85\xD2\x74\x06\x48\x83\xC2\x10\xEB\x03\x49\x8B\xD6\x48\x8B\x06\x48\x8D\x48\x10\x48\x85\xC0\x75\x03\x49\x8B\xCE\xE8\x00\x00\x00\x00\x48\x8B\xD8\x48\x85\xC0\x74\x03\xF0\xFF\x00",
+     [](uintptr_t found) -> uintptr_t {
+    uint32_t ptr = *reinterpret_cast<uint32_t*>(found + 0x3);
+    uintptr_t xx = found + ptr + 7;
+    return xx;
+}
+
+};
+
+HookManager::Pattern pat_productVersion{
+    "xxx????xxxx?xxxxxxxxx?????xx????xxxxxxx????x????xxx????x????x????xxx????xxxx????x????xxx????xx????????xxxxxxxx",
+    "\x48\x8D\x0D\x00\x00\x00\x00\x48\x89\x4C\x24\x00\x44\x0F\xB7\xC0\x8B\xCF\xC7\x44\x24\x00\x00\x00\x00\x00\xFF\x15\x00\x00\x00\x00\x84\xC0\x75\x1D\x48\x8D\x0D\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x8D\x0D\x00\x00\x00\x00\xE8\x00\x00\x00\x00\xE9\x00\x00\x00\x00\x48\x8D\x0D\x00\x00\x00\x00\x4C\x89\xB4\x24\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x8B\x8E\x00\x00\x00\x00\xC7\x86\x00\x00\x00\x00\x00\x00\x00\x00\x48\x85\xC9\x74\x0B\x48\x8B\x01",
+    [](uintptr_t found) -> uintptr_t {
+    uint32_t ptr = *reinterpret_cast<uint32_t*>(found + 0x3);
+    uintptr_t xx = found + ptr + 7;
+    return xx;
+}
+};
+
+HookManager::Pattern pat_IsDebuggerAttached{ //PROF ONLY
+    "xxx????x????xxxx????xxxxxxx????xxxx?xxxx????xxxxxxxxxxxxxxxxxxx????xxxx?xxxxxxxx????xxxxxx",
+    "\x48\x8D\x0D\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x8B\x8C\x24\x00\x00\x00\x00\x4D\x8B\x16\x48\x8D\x84\x24\x00\x00\x00\x00\x48\x89\x4C\x24\x00\x48\x8D\x94\x24\x00\x00\x00\x00\x83\xCE\xFF\x49\x8B\xCE\x4C\x8B\xCB\x45\x8B\xC4\x89\x7C\x24\x28\x89\xB4\x24\x00\x00\x00\x00\x48\x89\x44\x24\x00\x41\xFF\x52\x20\x4C\x8B\xBC\x24\x00\x00\x00\x00\x83\xCF\xFF\x4D\x85\xFF",
+    [](uintptr_t found) -> uintptr_t {
+    uint32_t ptr = *reinterpret_cast<uint32_t*>(found + 0x3);
+    uintptr_t xx = found + ptr + 7;
+    return xx;
+}
+
+};
+
+//\x48\x8B\x0D\x00\x00\x00\x00\x48\x8B\x01\x48\xFF\x20 xxx????xxxxxx
+//\xCC\xCC\xCC	xxx								    
+//\x48\x8B\xD1\x48\x8B\x0D\x00\x00\x00\x00\x48\x8B\x01\x48\xFF\x60\x08 xxxxxx????xxxxxxx
+HookManager::Pattern pat_EngineAliveFnc{
+    "xxx????xxxxxxxxxxxxxxx????xxxxxxx",
+    //\xCC 's are custom
+    "\x48\x8B\x0D\x00\x00\x00\x00\x48\x8B\x01\x48\xFF\x20\xCC\xCC\xCC\x48\x8B\xD1\x48\x8B\x0D\x00\x00\x00\x00\x48\x8B\x01\x48\xFF\x60\x08"
+};
+
+
+HookManager::Pattern pat_EngineEnableMouseFnc{//PROF only!!!
+    "xxxxxxxx????xxxxx????xx????xxxx?xxxxxxx?xxxx?xxxxxxxxxx????????xx????xx????xx?????xxx????xxx????xxx????xxx????",
+    "\x40\x57\x48\x83\xEC\x50\x38\x0D\x00\x00\x00\x00\x0F\xB6\xF9\x0F\x84\x00\x00\x00\x00\x8B\x05\x00\x00\x00\x00\x48\x89\x5C\x24\x00\x83\xCB\xFF\x48\x89\x74\x24\x00\x4C\x89\x74\x24\x00\xA8\x01\x75\x1A\x83\xC8\x01\x48\xC7\x05\x00\x00\x00\x00\x00\x00\x00\x00\x89\x1D\x00\x00\x00\x00\x89\x05\x00\x00\x00\x00\x80\x3D\x00\x00\x00\x00\x00\x4C\x8D\x35\x00\x00\x00\x00\x75\x46\xE8\x00\x00\x00\x00\x48\x8D\x15\x00\x00\x00\x00\x4C\x8D\x05\x00\x00\x00\x00"
+};
+
+HookManager::Pattern pat_scriptVMConstructor{
+    "xxxxxxxx????xxx????xxxxx????xxx????xxx????xxxxxxxx????xxxxxxxxxxxxxxxxxx",
+    "\x48\x8D\x4F\x20\x48\x8B\xD6\xE8\x00\x00\x00\x00\x48\x8D\x15\x00\x00\x00\x00\x48\x8D\x4E\x20\xE8\x00\x00\x00\x00\x4C\x8D\x87\x00\x00\x00\x00\x48\x8D\x15\x00\x00\x00\x00\x48\x8D\x4E\x20\x41\xB1\x01\xE8\x00\x00\x00\x00\x48\x8B\xC7\x48\x83\xC4\x60\x41\x5F\x41\x5E\x41\x5D\x5F\x5E\x5D\x5B\xC3",
+    0x00000000013AD34E - 0x00000000013AD318
+};
+
+HookManager::Pattern pat_scriptVMSimulateStart{//PROF ONLY
+    "xxxxxxxx?xxx????xx?????xxxx?xxxxxxxxxxxxxx?xxx????xxxxxx????xxxx????xxxx????xxxx????xxxx????xxxx????xxxxxxxx",
+    "\x40\x55\x41\x56\x48\x8D\x6C\x24\x00\x48\x81\xEC\x00\x00\x00\x00\x80\xB9\x00\x00\x00\x00\x00\x0F\x29\x74\x24\x00\x4C\x8B\xF1\x0F\x28\xF2\x75\x12\x32\xC0\x0F\x28\x74\x24\x00\x48\x81\xC4\x00\x00\x00\x00\x41\x5E\x5D\xC3\x8B\x05\x00\x00\x00\x00\x48\x89\x9C\x24\x00\x00\x00\x00\x48\x89\xB4\x24\x00\x00\x00\x00\x48\x89\xBC\x24\x00\x00\x00\x00\x4C\x89\xA4\x24\x00\x00\x00\x00\x4C\x89\xBC\x24\x00\x00\x00\x00\x45\x33\xFF\x83\xCF\xFF\xA8\x01"
+};
+
+
+HookManager::Pattern pat_scriptVMSimulateEnd{
+    "xxxxxxxx????xxxxxxxxxxxxx????xxxxxxxxxx????xxxx?xxxxxxx????xxxx",
+    "\x48\x8B\x55\x1F\x4C\x8B\xA4\x24\x00\x00\x00\x00\x48\x85\xD2\x74\x12\xF0\xFF\x0A\x75\x0D\x48\x8B\x0D\x00\x00\x00\x00\x48\x8B\x01\xFF\x50\x18\x48\x8B\xBC\x24\x00\x00\x00\x00\x0F\x28\x74\x24\x00\x41\x0F\xB6\xC6\x48\x81\xC4\x00\x00\x00\x00\x41\x5E\x5D\xC3",
+    0x00000000013ADF49 - 0x00000000013ADF1E
+};
+
 HookManager::Pattern pat_instructionBreakpoint{
     "xxxx?xxxx?xxxxxxxx????xxxxxxxxxxxx????xxxxxxxxxxxxxxx",
     "\x49\x8B\x44\x24\x00\x49\x8D\x54\x24\x00\x48\x85\xC0\x74\x22\x48\x8D\x0D\x00\x00\x00\x00\x48\x83\xC0\x10\x48\x3B\xC1\x74\x12\x48\x8B\x8F\x00\x00\x00\x00\x48\x85\xC9\x74\x06\x48\x8B\x01\xFF\x50\x08\x49\x8B\x04\x24",
     -0x3C
 };
+
+HookManager::Pattern pat_worldSimulate{//PROF ONLY
+    "xxxxxxxxxxxxxxxxxxxxxx????xxx????xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx?xxxx????xxxxxxxxxxxxxxxxxxxx????xxxx????xxxx????xxxx????xxxxxx????xxxx",
+    "\x48\x8B\xC4\x4C\x89\x48\x20\x4C\x89\x40\x18\x48\x89\x48\x08\x55\x53\x41\x55\x48\x8D\xA8\x00\x00\x00\x00\x48\x81\xEC\x00\x00\x00\x00\x48\x89\x70\xE0\x48\x89\x78\xD8\x4C\x89\x60\xD0\x4C\x89\x70\xC8\x4C\x89\x78\xC0\x48\x8B\xF9\x0F\x29\x78\x98\x44\x0F\x29\x40\x00\x44\x0F\x29\x88\x00\x00\x00\x00\x33\xC9\x41\x83\xCD\xFF\x49\x8B\xF1\x49\x8B\xD8\x89\x4C\x24\x5C\x44\x0F\x29\x90\x00\x00\x00\x00\x44\x0F\x29\x98\x00\x00\x00\x00\x44\x0F\x29\xA0\x00\x00\x00\x00\x44\x0F\x29\xA8\x00\x00\x00\x00\x44\x0F\x28\xC1\x8B\x05\x00\x00\x00\x00\xA8\x01\x75\x17"
+};
+
+//#TODO this onMissionEvent func only works for events without args. Need the other ones
+
+//HookManager::Pattern pat_worldMissionEventStart{//00B19E5C PROF ONLY
+//	"xxxxx?xx?xx?xxxxxxxxxxx??xxx?xx????x????x?x?xx?xx????????x????xx",
+//	"\x55\x8b\xec\x83\xe4\x00\x83\xec\x00\x8b\x45\x00\x53\x8b\xd9\x56\x8d\x34\x80\x57\x83\x7c\xb3\x00\x00\x89\x74\x24\x00\x0f\x8e\x00\x00\x00\x00\xa1\x00\x00\x00\x00\xa8\x00\x75\x00\x83\xc8\x00\xc7\x05\x00\x00\x00\x00\x00\x00\x00\x00\xa3\x00\x00\x00\x00\xc7\x05",
+//	0x00B19E5C - 0x00B19E50
+//};
+//
+//HookManager::Pattern pat_worldMissionEventEnd{//00B1A0AB
+//	"xxx?xxx?xxxxxx?xx????xxxxx?xxxxxxx",
+//	"\x8b\x54\x24\x00\x85\xd2\x74\x00\xf0\x0f\xc1\x3a\x4f\x75\x00\x8b\x0d\x00\x00\x00\x00\x52\x8b\x01\xff\x50\x00\x5f\x5e\x5b\x8b\xe5\x5d\xc2",
+//	0x00B1A0AB - 0x00B1A090
+//};
+
 #else
 HookManager::Pattern pat_productType{//01827340
     "x????xxx?x????xx????xxxx?xxx????xxxx?xxxxx?xxxxxxxxxxx?xxxxxxxx?xx????xxxxx?xxx?xxx?xxxxxxxx?",
-    "\x68\x00\x00\x00\x00\x8d\x44\x24\x00\x68\x00\x00\x00\x00\x50\xe8\x00\x00\x00\x00\x50\x8d\x44\x24\x00\x57\x50\xe8\x00\x00\x00\x00\x8b\x17\x83\xc4\x00\x8b\x08\x85\xc9\x74\x00\x8b\xc3\xf0\x0f\xc1\x01\x89\x0f\x85\xd2\x74\x00\x8b\xc6\xf0\x0f\xc1\x02\x48\x75\x00\x8b\x0d\x00\x00\x00\x00\x52\x8b\x01\xff\x50\x00\x8b\x54\x24\x00\x85\xd2\x74\x00\x8b\xc6\xf0\x0f\xc1\x02\x48\x75\x00"
+    "\x68\x00\x00\x00\x00\x8d\x44\x24\x00\x68\x00\x00\x00\x00\x50\xe8\x00\x00\x00\x00\x50\x8d\x44\x24\x00\x57\x50\xe8\x00\x00\x00\x00\x8b\x17\x83\xc4\x00\x8b\x08\x85\xc9\x74\x00\x8b\xc3\xf0\x0f\xc1\x01\x89\x0f\x85\xd2\x74\x00\x8b\xc6\xf0\x0f\xc1\x02\x48\x75\x00\x8b\x0d\x00\x00\x00\x00\x52\x8b\x01\xff\x50\x00\x8b\x54\x24\x00\x85\xd2\x74\x00\x8b\xc6\xf0\x0f\xc1\x02\x48\x75\x00",
+    [](uintptr_t found) -> uintptr_t {
+    return *reinterpret_cast<uintptr_t*>(found + 0x1);
+}
 };
 
 HookManager::Pattern pat_productVersion{//01827340
-    "x????x?xxxx????xxxxx????xx?xxx?x????x????xx?xxxx?x",
-    "\x68\x00\x00\x00\x00\x6a\x00\x50\x0f\xb7\x87\x00\x00\x00\x00\x51\x50\x56\xff\x15\x00\x00\x00\x00\x83\xc4\x00\x84\xc0\x75\x00\x68\x00\x00\x00\x00\xe8\x00\x00\x00\x00\x83\xc4\x00\x5e\x5f\x83\xc4\x00\xc3"
+    "x????x?xxxx????xxxxx????xx?xxx?x????x????x????x????xx?xxxx?x",
+    "\x68\x00\x00\x00\x00\x6a\x00\x50\x0f\xb7\x87\x00\x00\x00\x00\x51\x50\x56\xff\x15\x00\x00\x00\x00\x83\xc4\x00\x84\xc0\x75\x00\x68\x00\x00\x00\x00\xe8\x00\x00\x00\x00\x68\x00\x00\x00\x00\xe8\x00\x00\x00\x00\x83\xc4\x00\x5e\x5f\x83\xc4\x00\xc3",
+    [](uintptr_t found) -> uintptr_t {
+    return *reinterpret_cast<uintptr_t*>(found + 0x1);
+}
 };
 
 HookManager::Pattern pat_IsDebuggerAttached{//0206F310
     "x????x????xxxxx????xxxxx?xxxxxxx?xx?xxx?xx??x?xx????xxxx????xxx?xx??x",
-    "\xb9\x00\x00\x00\x00\xe8\x00\x00\x00\x00\x5e\x5b\x5f\x81\xc4\x00\x00\x00\x00\xc3\xf3\x0f\x10\x47\x00\x0f\x57\xc9\x0f\x2f\xc1\x76\x00\x8b\x47\x00\x85\xc0\x74\x00\x80\x78\x00\x00\x74\x00\x8b\x0d\x00\x00\x00\x00\x8b\x01\xff\x90\x00\x00\x00\x00\x85\xc0\x75\x00\x83\x7f\x00\x00\x74"
+    "\xb9\x00\x00\x00\x00\xe8\x00\x00\x00\x00\x5e\x5b\x5f\x81\xc4\x00\x00\x00\x00\xc3\xf3\x0f\x10\x47\x00\x0f\x57\xc9\x0f\x2f\xc1\x76\x00\x8b\x47\x00\x85\xc0\x74\x00\x80\x78\x00\x00\x74\x00\x8b\x0d\x00\x00\x00\x00\x8b\x01\xff\x90\x00\x00\x00\x00\x85\xc0\x75\x00\x83\x7f\x00\x00\x74",
+    [](uintptr_t found) -> uintptr_t {
+    return *reinterpret_cast<uintptr_t*>(found + 0x1);
+}
 };
 
 HookManager::Pattern pat_EngineAliveFnc{//010454B0
@@ -141,10 +237,16 @@ HookManager::Pattern pat_worldMissionEventEnd{//00B1A0AB
     "\x8b\x54\x24\x00\x85\xd2\x74\x00\xf0\x0f\xc1\x3a\x4f\x75\x00\x8b\x0d\x00\x00\x00\x00\x52\x8b\x01\xff\x50\x00\x5f\x5e\x5b\x8b\xe5\x5d\xc2",
     0x00B1A0AB - 0x00B1A090
 };
+
+HookManager::Pattern pat_onScriptError{//0106A590 1.68.140.940
+    "xx?xxxxx?xx????xxx?xx?xxxx????xx?xx????xxxx?xxxx?xx?x",
+    "\x83\xec\x00\x8b\xc1\x89\x44\x24\x00\x8b\x90\x00\x00\x00\x00\x89\x54\x24\x00\x8b\x42\x00\x85\xc0\x0f\x84\x00\x00\x00\x00\x83\xf8\x00\x0f\x84\x00\x00\x00\x00\x53\x56\x8b\x72\x00\x57\x85\xf6\x74\x00\x83\xc6\x00\xeb",
+    0x0106A5B7 - 0x0106A590
+};
 #endif
 
-
-
+//#TODO onVariableChanged event
+//#TODO hook https://community.bistudio.com/wiki/halt https://community.bistudio.com/wiki/echo https://community.bistudio.com/wiki/assert
 
 scriptExecutionContext currentContext = scriptExecutionContext::Invalid;
 MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create some invalid handler type
@@ -152,26 +254,26 @@ MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create s
 void EngineHook::placeHooks() {
     WAIT_FOR_DEBUGGER_ATTACHED;
 
-    char** productType = (char**) (GlobalHookManager.findPattern(pat_productType) + 1);
-    char** productVersion = (char**) (GlobalHookManager.findPattern(pat_productVersion) + 1);
+    char* productType = reinterpret_cast<char*>(GlobalHookManager.findPattern(pat_productType));
+    char* productVersion = reinterpret_cast<char*>(GlobalHookManager.findPattern(pat_productVersion));
     OutputDebugStringA("Product Type: ");
-    OutputDebugStringA(*productType);
+    OutputDebugStringA(productType);
     OutputDebugStringA("\t\tVersion: ");
-    //OutputDebugStringA(*productVersion);
+    OutputDebugStringA(productVersion);
     OutputDebugStringA("\n");
     productType;
 
-    bool* isDebuggerAttached = *reinterpret_cast<bool**>((GlobalHookManager.findPattern(pat_IsDebuggerAttached) + 1));
+    bool* isDebuggerAttached = reinterpret_cast<bool*>(GlobalHookManager.findPattern(pat_IsDebuggerAttached));
     *isDebuggerAttached = false; //Small hack to keep RPT logging while Debugger is attached
                                  //Could also patternFind and patch (profv3 0107144F) to unconditional jmp
 
 #ifdef X64
-    //GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
-    //GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 1);
-    //GlobalHookManager.placeHook(hookTypes::scriptVMSimulateEnd, pat_scriptVMSimulateEnd, reinterpret_cast<uintptr_t>(scriptVMSimulateEnd));
+    GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
+    GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 2);
+    GlobalHookManager.placeHook(hookTypes::scriptVMSimulateEnd, pat_scriptVMSimulateEnd, reinterpret_cast<uintptr_t>(scriptVMSimulateEnd));
     GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
     //has to jmpback 13CF0B6 wants 0x00000000013cf0af
-    //GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
+    GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
     //GlobalHookManager.placeHook(hookTypes::worldMissionEventStart, pat_worldMissionEventStart, reinterpret_cast<uintptr_t>(worldMissionEventStart), worldMissionEventStartJmpBack, 2);
     //GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
 
@@ -183,6 +285,7 @@ void EngineHook::placeHooks() {
     GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
     GlobalHookManager.placeHook(hookTypes::worldMissionEventStart, pat_worldMissionEventStart, reinterpret_cast<uintptr_t>(worldMissionEventStart), worldMissionEventStartJmpBack, 2);
     GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
+    GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 0);
 #endif
 
     EngineAliveFnc = reinterpret_cast<EngineAlive*>(GlobalHookManager.findPattern(pat_EngineAliveFnc));
@@ -327,6 +430,11 @@ void EngineHook::_world_OnMissionEventEnd() {
     currentContext = scriptExecutionContext::Invalid;
 }
 
+void EngineHook::_onScriptError(uintptr_t gameSate) {
+    auto gs = reinterpret_cast<GameState *>(gameSate);
+    GlobalDebugger.onScriptError(gs);
+}
+
 void EngineHook::onShutdown() {
     GlobalDebugger.onShutdown();
 }
@@ -350,12 +458,12 @@ uintptr_t HookManager::placeHookTotalOffs(uintptr_t totalOffset, uintptr_t jmpTo
         jmp 0x123122
         0:  e9 1e 31 12 00          jmp    123123 <_main+0x123123>
     64bit
-        FF 25 64bit relative 
+        FF 25 64bit relative
     */
 #ifdef X64
     //auto distance = std::max(totalOffset, jmpTo) - std::min(totalOffset, jmpTo);
     // if distance < 2GB (2147483648) we could use the 32bit relative jmp
-    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 10u, 0x40u, &dwVirtualProtectBackup);
+    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 14u, 0x40u, &dwVirtualProtectBackup);
     auto jmpInstr = reinterpret_cast<unsigned char*>(totalOffset);
     auto addrOffs = reinterpret_cast<uint32_t*>(totalOffset + 1);
     *jmpInstr = 0x68; //push DWORD
@@ -363,7 +471,7 @@ uintptr_t HookManager::placeHookTotalOffs(uintptr_t totalOffset, uintptr_t jmpTo
     *reinterpret_cast<uint32_t*>(totalOffset + 5) = 0x042444C7; //MOV [RSP+4],
     *reinterpret_cast<uint32_t*>(totalOffset + 9) = ((uint64_t) jmpTo) >> 32;//DWORD
     *reinterpret_cast<unsigned char*>(totalOffset + 13) = 0xc3;//ret
-    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 10u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
+    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 14u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
     return totalOffset + 14;
 #else
     VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 5u, 0x40u, &dwVirtualProtectBackup);
@@ -374,7 +482,7 @@ uintptr_t HookManager::placeHookTotalOffs(uintptr_t totalOffset, uintptr_t jmpTo
     VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 5u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
     return totalOffset + 5;
 #endif
-    
+
 
 }
 
@@ -442,5 +550,12 @@ uintptr_t HookManager::findPattern(const char* pattern, const char* mask, uintpt
 }
 
 uintptr_t HookManager::findPattern(const Pattern & pat, uintptr_t offset) {
+    if (pat.offsetFunc) {
+        auto found = findPattern(pat.pattern, pat.mask, pat.offset + offset);
+        if (found)
+            return pat.offsetFunc(found);
+        return found;
+    }
+
     return findPattern(pat.pattern, pat.mask, pat.offset + offset);
 }

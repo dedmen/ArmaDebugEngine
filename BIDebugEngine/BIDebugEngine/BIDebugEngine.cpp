@@ -211,3 +211,22 @@ const GameVariable* GameVarSpace::getVariable(const std::string& varName) const 
     }
     return nullptr;
 }
+
+void GameEvaluator::SerializeError(JsonArchive& ar) {
+
+
+	const char* curOffs = _errorPosition._content.data() + _errorPosition._pos;
+	int lineOffset = 0;
+	while (*curOffs != '\n') {
+		curOffs--;
+		lineOffset++;
+	}
+
+
+	ar.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, lineOffset - 1 });
+
+	ar.Serialize("type", _errorType);
+	ar.Serialize("message", _errorMessage);
+	ar.Serialize("filename", _errorPosition._sourceFile);
+	ar.Serialize("content", _errorPosition._content);
+}
