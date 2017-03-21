@@ -15,6 +15,7 @@ enum class hookTypes {
     worldMissionEventStart,
     worldMissionEventEnd,
     onScriptError,
+    scriptPreprocessorConstructor,
     End
 };
 

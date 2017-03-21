@@ -52,7 +52,7 @@ class rv_allocator : std::allocator<Type> {
         char* arr[6]{ "tbb4malloc_bi","tbb3malloc_bi","jemalloc_bi","tcmalloc_bi","nedmalloc_bi","custommalloc_bi" };
     };
 public:
-    static void deallocate(Type* _Ptr, size_t) {
+    static void deallocate(Type* _Ptr, size_t = 0) {
         //TODO assert when _ptr is not 32/64bit aligned
         // deallocate object at _Ptr
         uintptr_t allocatorBase = engineAlloc;
@@ -546,7 +546,7 @@ class MapStringToClass {
 protected:
     Container* _table;
     int _tableCount{ 0 };
-    int _count{ 0 };  //#X64 don't have _count anymore. _count == counts of all tables #Not really sure anymore
+    int _count{ 0 };
     static Type _nullEntry;
 public:
     MapStringToClass() {}
@@ -760,3 +760,12 @@ protected:
 
 template<class Type, class Container, class Traits>
 Type MapStringToClassNonRV<Type, Container, Traits>::_nullEntry;
+
+
+inline char* rv_strdup(const char* in) {
+    auto len = strlen(in);
+    char* newMem = rv_allocator<char>::allocate(len + 1);
+    memcpy_s(newMem, len + 1, in, len);
+    newMem[len] = 0;
+    return newMem;
+}

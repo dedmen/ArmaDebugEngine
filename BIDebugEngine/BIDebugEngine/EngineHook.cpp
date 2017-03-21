@@ -43,6 +43,11 @@ extern "C" {
     uintptr_t worldMissionEventStartJmpBack;
     uintptr_t worldMissionEventEndJmpBack;
     uintptr_t onScriptErrorJmpBack;
+    uintptr_t scriptPreprocessorConstructorJmpBack;
+    uintptr_t scriptPreprocessorDefineDefine;
+
+    const char* preprocMacroName = "DEBUG";
+    const char* preprocMacroValue = "true";
 
     uintptr_t hookEnabled_Instruction{ 1 };
     uintptr_t hookEnabled_Simulate{ 1 };
@@ -70,6 +75,7 @@ extern "C" void worldSimulate();
 extern "C" void worldMissionEventStart();
 extern "C" void worldMissionEventEnd();
 extern "C" void onScriptError();
+extern "C" void scriptPreprocessorConstructor();
 
 #ifdef X64
 
@@ -243,6 +249,17 @@ HookManager::Pattern pat_onScriptError{//0106A590 1.68.140.940
     "\x83\xec\x00\x8b\xc1\x89\x44\x24\x00\x8b\x90\x00\x00\x00\x00\x89\x54\x24\x00\x8b\x42\x00\x85\xc0\x0f\x84\x00\x00\x00\x00\x83\xf8\x00\x0f\x84\x00\x00\x00\x00\x53\x56\x8b\x72\x00\x57\x85\xf6\x74\x00\x83\xc6\x00\xeb",
     0x0106A5B7 - 0x0106A590
 };
+
+HookManager::Pattern pat_scriptPreprocessorConstructor{//001DEE33 1.68.140.940
+    "xx?xx????xx????????xx????????xx????????xxxxx?xxxxx",
+    "\x8a\x42\x00\x88\x86\x00\x00\x00\x00\xc7\x86\x00\x00\x00\x00\x00\x00\x00\x00\xc7\x86\x00\x00\x00\x00\x00\x00\x00\x00\xc7\x86\x00\x00\x00\x00\x00\x00\x00\x00\x8b\x3a\x85\xff\x74\x00\x8b\x17\x85\xd2\x74"
+};
+
+HookManager::Pattern pat_scriptPreprocessorDefineDefine{//0108F780 1.68.140.940
+    "xx?xxxx?xxxxx?xxx?x????xxx?xxx?x????xxx?xx?x????xx?xxx?xxx?xxx?xxx?xxx?xxx?xx",
+    "\x83\xec\x00\x56\xff\x74\x24\x00\x8b\xf1\x8d\x4c\x24\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x8d\x44\x24\x00\x50\x8d\x4e\x00\xe8\x00\x00\x00\x00\xff\x74\x24\x00\x8d\x4e\x00\xe8\x00\x00\x00\x00\x8b\x48\x00\x85\xc9\x7e\x00\x49\x89\x48\x00\x8b\x44\x24\x00\x85\xc0\x74\x00\xff\x74\x24\x00\x8d\x4c\x24\x00\x50\xe8"
+};
+
 #endif
 
 //#TODO onVariableChanged event
@@ -287,6 +304,12 @@ void EngineHook::placeHooks() {
     GlobalHookManager.placeHook(hookTypes::worldMissionEventStart, pat_worldMissionEventStart, reinterpret_cast<uintptr_t>(worldMissionEventStart), worldMissionEventStartJmpBack, 2);
     GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
     GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 0);
+    
+    scriptPreprocessorDefineDefine = GlobalHookManager.findPattern(pat_scriptPreprocessorDefineDefine);
+    
+    
+     if (scriptPreprocessorDefineDefine) //else report error
+        GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 4);
 #endif
 
     EngineAliveFnc = reinterpret_cast<EngineAlive*>(GlobalHookManager.findPattern(pat_EngineAliveFnc));
