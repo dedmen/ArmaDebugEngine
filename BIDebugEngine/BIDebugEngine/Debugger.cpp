@@ -242,11 +242,18 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 }
 
 void Debugger::onScriptError(GameState * gs) {
-	
-
-	BPAction_Halt hAction(BPAction_Halt::haltType::error);
+	BPAction_Halt hAction(haltType::error);
 	hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,gs->_context ,gs});
+}
 
+void Debugger::onScriptAssert(GameState* gs) {
+    BPAction_Halt hAction(haltType::assert);
+    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,gs->_context ,gs });
+}
+
+void Debugger::onScriptHalt(GameState* gs) {
+    BPAction_Halt hAction(haltType::halt);
+    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,gs->_context ,gs });
 }
 
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
@@ -261,7 +268,7 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
             //Prevent stepOver from triggering in the same Line
             (stepInfo.stepType == StepType::STOver ? stepInfo.stepLine != instructionInfo.instruction->_scriptPos._sourceLine : true)
             ) {
-            BPAction_Halt hAction(BPAction_Halt::haltType::step);
+            BPAction_Halt hAction(haltType::step);
             hAction.execute(this, nullptr, instructionInfo);
             return; //We already halted here. Don't care if there are more breakpoints here.
         }
@@ -288,32 +295,31 @@ void Debugger::onStartup() {
     state = DebuggerState::running;
 }
 
-void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo) {
+void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo, haltType type) {
     breakStateContinueEvent = waitEvent;
     state = DebuggerState::breakState;
     breakStateInfo.bp = bp;
     breakStateInfo.instruction = &instructionInfo;
 
     JsonArchive ar;
-    BPAction_Halt* halt;
-    if (bp->action && ((halt = dynamic_cast<BPAction_Halt*>(bp->action.get())))) {
-            switch (halt->type) {
-                case BPAction_Halt::haltType::breakpoint: 
-                    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_breakpoint));
-                    break;
-                case BPAction_Halt::haltType::step: 
-                    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_step));
-                    break;
-                case BPAction_Halt::haltType::error:
-                    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_error));
-                    break;
-                default: break;
-            }
-    } else {
-        __debugbreak();
-        ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_breakpoint));
+    switch (type) {
+        case haltType::breakpoint:
+            ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_breakpoint));
+            break;
+        case haltType::step:
+            ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_step));
+            break;
+        case haltType::error:
+            ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_error));
+            break;
+        case haltType::assert:
+            ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_scriptAssert));
+            break;
+        case haltType::halt:
+            ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::halt_scriptHalt));
+            break;
+        default: break;
     }
-
     
     instructionInfo.context->Serialize(ar); //Set's callstack
 
@@ -323,10 +329,28 @@ void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructio
 		JsonArchive instructionAr;
 		instructionInfo.instruction->Serialize(instructionAr);
 		ar.Serialize("instruction", instructionAr);
-	} else {
+	} else if (type == haltType::error) {
 		JsonArchive errorAr;
 		instructionInfo.gs->GEval->SerializeError(errorAr);
 		ar.Serialize("error", errorAr);
+	} else if(type == haltType::assert || type == haltType::halt) {
+        JsonArchive assertAr;
+
+        auto& _errorPosition = instructionInfo.context->_lastInstructionPos;
+        const char* curOffs = _errorPosition._content.data() + _errorPosition._pos;
+        int lineOffset = 0;
+        while (*curOffs != '\n' && curOffs > _errorPosition._content.data()) {
+            curOffs--;
+            lineOffset++;
+        }
+
+
+        assertAr.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, std::max(lineOffset - 1,0) });
+        assertAr.Serialize("filename", _errorPosition._sourceFile);
+        assertAr.Serialize("content", _errorPosition._content);
+
+
+        ar.Serialize("assert", assertAr);
 	}
 
 	
@@ -335,13 +359,18 @@ void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructio
 
     auto text = ar.to_string();
     nController.sendMessage(text);
+    if (!nController.isClientConnected()) commandContinue(StepType::STContinue);
 
 #ifndef isCI
     std::ofstream f("P:\\break.json", std::ios::out | std::ios::binary);
     f.write(text.c_str(), text.length());
     f.close();
     std::ofstream f2("P:\\breakScript.json", std::ios::out | std::ios::binary);
-    f2.write(instructionInfo.instruction->_scriptPos._content.data(), instructionInfo.instruction->_scriptPos._content.length());
+    if (instructionInfo.instruction) {
+        f2.write(instructionInfo.instruction->_scriptPos._content.data(), instructionInfo.instruction->_scriptPos._content.length());
+    } else {
+        f2.write(instructionInfo.gs->GEval->_errorPosition._content.data(), instructionInfo.gs->GEval->_errorPosition._content.length());
+    }
     f2.close();
 #endif
 

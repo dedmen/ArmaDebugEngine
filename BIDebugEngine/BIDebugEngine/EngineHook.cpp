@@ -45,6 +45,8 @@ extern "C" {
     uintptr_t onScriptErrorJmpBack;
     uintptr_t scriptPreprocessorConstructorJmpBack;
     uintptr_t scriptPreprocessorDefineDefine;
+    uintptr_t scriptAssertJmpBack;
+    uintptr_t scriptHaltJmpBack;
 
     const char* preprocMacroName = "DEBUG";
     const char* preprocMacroValue = "true";
@@ -76,6 +78,8 @@ extern "C" void worldMissionEventStart();
 extern "C" void worldMissionEventEnd();
 extern "C" void onScriptError();
 extern "C" void scriptPreprocessorConstructor();
+extern "C" void onScriptAssert();
+extern "C" void onScriptHalt();
 
 #ifdef X64
 
@@ -260,6 +264,17 @@ HookManager::Pattern pat_scriptPreprocessorDefineDefine{//0108F780 1.68.140.940
     "\x83\xec\x00\x56\xff\x74\x24\x00\x8b\xf1\x8d\x4c\x24\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x8d\x44\x24\x00\x50\x8d\x4e\x00\xe8\x00\x00\x00\x00\xff\x74\x24\x00\x8d\x4e\x00\xe8\x00\x00\x00\x00\x8b\x48\x00\x85\xc9\x7e\x00\x49\x89\x48\x00\x8b\x44\x24\x00\x85\xc0\x74\x00\xff\x74\x24\x00\x8d\x4c\x24\x00\x50\xe8"
 };
 
+HookManager::Pattern pat_onScriptAssert{//01052790 1.68.140.940
+    "xxxxx?xxx?xxx?xxxx?xxxxx?x?xxx?x????xx?xxx?xx????xx?????xx",
+    "\x53\x56\x8b\x74\x24\x00\x57\x8b\x4e\x00\x85\xc9\x74\x00\x8b\x01\x8b\x40\x00\xff\xd0\x84\xc0\x75\x00\x6a\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x83\xc4\x00\x8b\x7c\x24\x00\xc7\x07\x00\x00\x00\x00\xc7\x47\x00\x00\x00\x00\x00\x8b\x56"
+};
+
+HookManager::Pattern pat_onScriptHalt{//01050B10 1.68.140.940
+    "x?xxx?x????xxx?xx?x?x????xxx?x",
+    "\x6a\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x8b\x4c\x24\x00\x83\xc4\x00\x6a\x00\xe8\x00\x00\x00\x00\x8b\x44\x24\x00\xc3"
+};
+
+
 #endif
 
 //#TODO onVariableChanged event
@@ -310,6 +325,11 @@ void EngineHook::placeHooks() {
     
      if (scriptPreprocessorDefineDefine) //else report error
         GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 4);
+     GlobalHookManager.placeHook(hookTypes::onScriptAssert, pat_onScriptAssert, reinterpret_cast<uintptr_t>(onScriptAssert), scriptAssertJmpBack, 0xB7 - 0x95);
+     GlobalHookManager.placeHook(hookTypes::onScriptHalt, pat_onScriptHalt, reinterpret_cast<uintptr_t>(onScriptHalt), scriptHaltJmpBack, 1 + 0xE);
+
+     
+
 #endif
 
     EngineAliveFnc = reinterpret_cast<EngineAlive*>(GlobalHookManager.findPattern(pat_EngineAliveFnc));
@@ -368,9 +388,9 @@ void EngineHook::_scriptEntered(uintptr_t scrVMPtr) {
     currentContext = scriptExecutionContext::scriptVM;
 
     auto context = GlobalDebugger.getVMContext(&scVM->_context);
-    auto script = context->getScriptByContent(scVM->_doc._content);
-    if (!scVM->_doc._fileName.isNull() || !scVM->_docpos._sourceFile.isNull())
-        script->_fileName = scVM->_doc._fileName.isNull() ? scVM->_docpos._sourceFile : scVM->_doc._fileName;
+    auto script = context->getScriptByContent(scVM->_context._doc._content);
+    if (!scVM->_context._doc._fileName.isNull() || !scVM->_context._lastInstructionPos._sourceFile.isNull())
+        script->_fileName = scVM->_context._doc._fileName.isNull() ? scVM->_context._lastInstructionPos._sourceFile : scVM->_context._doc._fileName;
     context->dbg_EnterContext();
 }
 
@@ -457,6 +477,16 @@ void EngineHook::_world_OnMissionEventEnd() {
 void EngineHook::_onScriptError(uintptr_t gameSate) {
     auto gs = reinterpret_cast<GameState *>(gameSate);
     GlobalDebugger.onScriptError(gs);
+}
+
+void EngineHook::_onScriptAssert(uintptr_t gameSate) {
+    auto gs = reinterpret_cast<GameState *>(gameSate);
+    GlobalDebugger.onScriptAssert(gs);
+}
+
+void EngineHook::_onScriptHalt(uintptr_t gameSate) {
+    auto gs = reinterpret_cast<GameState *>(gameSate);
+    GlobalDebugger.onScriptHalt(gs);
 }
 
 void EngineHook::onShutdown() {

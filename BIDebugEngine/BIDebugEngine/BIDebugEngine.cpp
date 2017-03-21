@@ -100,7 +100,7 @@ std::string IDebugScope::allVariablesToString() {
 
 void RV_ScriptVM::debugPrint(std::string prefix) {
     std::string title = _displayName;
-    std::string filename = _doc._fileName.isNull() ? _docpos._sourceFile : _doc._fileName;
+    std::string filename = _context._doc._fileName.isNull() ? _context._lastInstructionPos._sourceFile : _context._doc._fileName;
     std::string data;// = _doc._content.data();
     OutputDebugStringA((prefix + " " + title + "F " + filename + " " + data + "\n").c_str());
 }
@@ -217,15 +217,52 @@ void GameEvaluator::SerializeError(JsonArchive& ar) {
 
 	const char* curOffs = _errorPosition._content.data() + _errorPosition._pos;
 	int lineOffset = 0;
-	while (*curOffs != '\n') {
+	while (*curOffs != '\n' && curOffs > _errorPosition._content.data()) {
 		curOffs--;
 		lineOffset++;
 	}
 
 
-	ar.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, lineOffset - 1 });
+	ar.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, std::max(lineOffset - 1,0) });
 
 	ar.Serialize("type", _errorType);
+      //#TODO errorType enum
+     /*
+     "OK"
+.rdata:01853BD0 aGen            db 'GEN',0              ; DATA XREF: sub_D78D0:loc_D79D5o
+.rdata:01853BD4 aExpo           db 'EXPO',0
+.rdata:01853BDC aNum            db 'NUM',0              ; DATA XREF: sub_D78D0:loc_D7BB9o
+.rdata:01853BE0 aVar_0          db 'VAR',0              ; DATA XREF: sub_D78D0:loc_D7CADo
+.rdata:01853BE4 aBad_var        db 'BAD_VAR',0          ; DATA XREF: sub_D78D0:loc_D7DA1o
+.rdata:01853BEC aDiv_zero       db 'DIV_ZERO',0         ; DATA XREF: sub_D78D0+5C8o
+.rdata:01853BF8 aTg90           db 'TG90',0             ; DATA XREF: sub_D78D0+61Eo
+.rdata:01853C00 aOpenb          db 'OPENB',0            ; DATA XREF: sub_D78D0+674o
+.rdata:01853C08 aCloseb         db 'CLOSEB',0           ; DATA XREF: sub_D78D0+6CAo
+.rdata:01853C10 aOpen_brackets  db 'OPEN_BRACKETS',0    ; DATA XREF: sub_D78D0+720o
+.rdata:01853C20 aClose_brackets db 'CLOSE_BRACKETS',0   ; DATA XREF: sub_D78D0+776o
+.rdata:01853C30 aOpen_braces    db 'OPEN_BRACES',0      ; DATA XREF: sub_D78D0+7CCo
+.rdata:01853C3C aClose_braces   db 'CLOSE_BRACES',0     ; DATA XREF: sub_D78D0+822o
+.rdata:01853C4C aEqu            db 'EQU',0              ; DATA XREF: sub_D78D0+872o
+.rdata:01853C50 aSemicolon      db 'SEMICOLON',0        ; DATA XREF: sub_D78D0+8C8o
+.rdata:01853C5C aQuote          db 'QUOTE',0            ; DATA XREF: sub_D78D0+91Eo
+.rdata:01853C64 aSingle_quote   db 'SINGLE_QUOTE',0     ; DATA XREF: sub_D78D0+974o
+.rdata:01853C74 aLine_long      db 'LINE_LONG',0        ; DATA XREF: sub_D78D0+A20o
+.rdata:01853C80 aNamespace_0    db 'NAMESPACE',0        ; DATA XREF: sub_D78D0+AC9o
+.rdata:01853C8C aDim            db 'DIM',0              ; DATA XREF: sub_D78D0+B1Fo
+.rdata:01853C90 aUnexpected_clo db 'UNEXPECTED_CLOSEB',0 ; DATA XREF: sub_D78D0+B75o
+.rdata:01853CA4 aAssertation_fa db 'ASSERTATION_FAILED',0 ; DATA XREF: sub_D78D0+BCBo
+.rdata:01853CB8 aHalt_function  db 'HALT_FUNCTION',0    ; DATA XREF: sub_D78D0+C21o
+.rdata:01853CC8 aForeign        db 'FOREIGN',0          ; DATA XREF: sub_D78D0+C77o
+.rdata:01853CD0 aScope_name_def db 'SCOPE_NAME_DEFINED_TWICE',0 ; DATA XREF: sub_D78D0+CCCo
+.rdata:01853CEC aScope_not_foun db 'SCOPE_NOT_FOUND',0  ; DATA XREF: sub_D78D0+D1Fo
+.rdata:01853CFC aInvalid_try_bl db 'INVALID_TRY_BLOCK',0 ; DATA XREF: sub_D78D0+D72o
+.rdata:01853D10 aUnhandled_exce db 'UNHANDLED_EXCEPTION',0 ; DATA XREF: sub_D78D0+DC5o
+.rdata:01853D24 aStack_overflow db 'STACK_OVERFLOW',0   ; DATA XREF: sub_D78D0+E18o
+.rdata:01853D34 aHandled        db 'HANDLED',0
+     */
+
+
+
 	ar.Serialize("message", _errorMessage);
 	ar.Serialize("filename", _errorPosition._sourceFile);
 	ar.Serialize("content", _errorPosition._content);

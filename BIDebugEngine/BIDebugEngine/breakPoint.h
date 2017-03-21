@@ -52,13 +52,6 @@ private:
 
 class BPAction_Halt : public IBreakPointAction { //This freezes the Engine till further commands
 public:
-
-    enum class haltType {
-        breakpoint,
-        step,
-        error
-    };
-
     BPAction_Halt(haltType _type) : type(_type) {}
     virtual ~BPAction_Halt() {};
 

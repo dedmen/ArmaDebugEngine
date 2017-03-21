@@ -16,6 +16,8 @@ enum class hookTypes {
     worldMissionEventEnd,
     onScriptError,
     scriptPreprocessorConstructor,
+    onScriptAssert,
+    onScriptHalt,
     End
 };
 
@@ -82,6 +84,8 @@ public:
     void _world_OnMissionEventStart(uintptr_t eventType);
     void _world_OnMissionEventEnd();
     void _onScriptError(uintptr_t gameSate);
+    void _onScriptAssert(uintptr_t gameSate);
+    void _onScriptHalt(uintptr_t gameSate);
     void onShutdown();
     void onStartup();
 

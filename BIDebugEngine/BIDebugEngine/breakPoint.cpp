@@ -46,7 +46,7 @@ void BreakPoint::Serialize(JsonArchive& ar) {
                 } break;
                 default: break;
                 case BPAction_types::Halt: {
-                    action = std::make_unique<BPAction_Halt>(BPAction_Halt::haltType::breakpoint);
+                    action = std::make_unique<BPAction_Halt>(haltType::breakpoint);
                     JsonArchive actJsonAr(actJson);
                     action->Serialize(actJsonAr);
                 } break;
@@ -191,7 +191,7 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
         NULL);   // unnamed event object
 
     EngineEnableMouseFnc(false); //Free mouse from Arma
-    dbg->onHalt(waitEvent, bp, info);
+    dbg->onHalt(waitEvent, bp, info, type);
     bool halting = true;
     while (halting) {
         DWORD waitResult = WaitForSingleObject(waitEvent, 3000);

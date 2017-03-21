@@ -762,10 +762,10 @@ template<class Type, class Container, class Traits>
 Type MapStringToClassNonRV<Type, Container, Traits>::_nullEntry;
 
 
-inline char* rv_strdup(const char* in) {
-    auto len = strlen(in);
-    char* newMem = rv_allocator<char>::allocate(len + 1);
-    memcpy_s(newMem, len + 1, in, len);
-    newMem[len] = 0;
-    return newMem;
-}
+//inline char* rv_strdup(const char* in) {
+//    auto len = strlen(in);
+//    char* newMem = rv_allocator<char>::allocate(len + 1);
+//    memcpy_s(newMem, len + 1, in, len);
+//    newMem[len] = 0;
+//    return newMem;
+//}

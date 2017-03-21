@@ -223,6 +223,14 @@ public:
 struct RV_VMContext {
     uintptr_t vtable;
     Array<Ref<CallStackItem>> callStack; //max 64 items
+#ifdef X64
+    char pad_0x0018[0x220]; //0x0018
+#else
+    char pad_0x0018[0x114]; //0x0018
+#endif
+    SourceDoc _doc;
+    SourceDocPos _lastInstructionPos;
+
     const GameVariable* getVariable(std::string varName);
     void Serialize(JsonArchive& ar);
 };
@@ -236,13 +244,6 @@ public:
 
     char pad_0x0000[3 * sizeof(uintptr_t)]; //0x0000
     RV_VMContext _context;
-#ifdef X64
-    char pad_0x0018[0x220]; //0x0018
-#else
-    char pad_0x0018[0x114]; //0x0018
-#endif
-    SourceDoc _doc; //0x0130 _doc
-    SourceDocPos _docpos; //0x013C
     //#TODO X64 for vars below here
     char pad_0x0150[280]; //0x0150
     RString _displayName;

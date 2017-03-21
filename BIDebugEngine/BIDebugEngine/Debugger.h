@@ -60,10 +60,13 @@ public:
     void writeFrameToFile(uint32_t frameCounter);
 	void onInstruction(DebuggerInstructionInfo& instructionInfo);
 	void onScriptError(GameState* gs);
+    void onScriptAssert(GameState* gs);
+    void onScriptHalt(GameState* gs);
     void checkForBreakpoint(DebuggerInstructionInfo& instructionInfo);
     void onShutdown();
     void onStartup();
-    void onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& info); //Breakpoint is halting engine
+
+    void onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& info, haltType type); //Breakpoint is halting engine
     void onContinue(); //Breakpoint has stopped halting
     void commandContinue(StepType stepType); //Tells Breakpoint in breakState to Stop halting
     void setGameVersion(const char* productType, const char* productVersion);

@@ -31,8 +31,13 @@ void NetworkController::init() {
         while (true) {//#TODO make exitable :u add onShutdown thingy
             auto msg = server.readMessageBlocking();
 
-            if (!msg.empty())
+            if (!msg.empty()) {
+                clientConnected = true;
                 incomingMessage(msg);
+            } else {
+                clientConnected = false;
+            }
+                
             //server.messageRead(msg);
             //pServer->writeMessage(/*msg+*/"teeest");
         }

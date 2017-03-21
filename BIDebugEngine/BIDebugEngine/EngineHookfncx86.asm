@@ -14,6 +14,8 @@ _TEXT    SEGMENT
     EXTERN ?_world_OnMissionEventEnd@EngineHook@@QAEXXZ:    PROC;    EngineHook::_world_OnMissionEventEnd
     EXTERN ?_worldSimulate@EngineHook@@QAEXXZ:              PROC;    EngineHook::_worldSimulate
     EXTERN ?_onScriptError@EngineHook@@QAEXI@Z:             PROC;    EngineHook::_onScriptError
+    EXTERN ?_onScriptAssert@EngineHook@@QAEXI@Z:            PROC;    EngineHook::_onScriptAssert
+    EXTERN ?_onScriptHalt@EngineHook@@QAEXI@Z:              PROC;    EngineHook::_onScriptHalt
 
     ;hool Enable fields
     EXTERN _hookEnabled_Instruction:                        dword
@@ -29,14 +31,16 @@ _TEXT    SEGMENT
     EXTERN _scriptVMConstructorJmpBack:                     dword
     EXTERN _onScriptErrorJmpBack:                           dword
     EXTERN _scriptPreprocessorConstructorJmpBack:           dword
-    EXTERN _scriptPreprocessorDefineDefine:                 dword
-    EXTERN _preprocMacroName:                               dword
-    EXTERN _preprocMacroValue:                              dword
+    EXTERN _scriptAssertJmpBack:                            dword
+    EXTERN _scriptHaltJmpBack:                              dword
     
     ;misc
     EXTERN _GlobalEngineHook:                               dword
     EXTERN _scriptVM:                                       dword
     EXTERN _currentScriptVM:                                dword
+    EXTERN _scriptPreprocessorDefineDefine:                 dword
+    EXTERN _preprocMacroName:                               dword
+    EXTERN _preprocMacroValue:                              dword
 
     ;##########
     PUBLIC _instructionBreakpoint
@@ -225,9 +229,13 @@ _TEXT    SEGMENT
 
         push    ecx;
         push    eax;
+        push    edx;
+
         push    ecx;                                                gameState ptr
         mov     ecx, offset _GlobalEngineHook;
         call    ?_onScriptError@EngineHook@@QAEXI@Z;                EngineHook::_world_OnMissionEventEnd;
+        
+        pop     edx;
         pop     eax;                                                Don't know if eax will be modified but it's likely
         pop     ecx;
 
@@ -246,18 +254,72 @@ _TEXT    SEGMENT
     PUBLIC _scriptPreprocessorConstructor
     _scriptPreprocessorConstructor PROC
 
-        
+        push    eax;
+        push    edx;
+
         mov     ecx, _preprocMacroValue;
         push    ecx;
         mov     ecx, _preprocMacroName;
         push    ecx;
         mov     ecx, esi;                                           this*
-        call    _scriptPreprocessorDefineDefine
+        mov     eax, _scriptPreprocessorDefineDefine;
+        call    eax;
+
+        pop     edx;
+        pop     eax;
+
         mov     al, [edx+4];                                        Fixup
         mov     [esi+0B0h], al
         jmp     _scriptPreprocessorConstructorJmpBack;
 
     _scriptPreprocessorConstructor ENDP
+
+    ;##########
+    PUBLIC _onScriptAssert
+    _onScriptAssert PROC
+
+        push    ebx
+        push    esi
+        mov     esi, [esp+14h]
+        push    edi
+        mov     ecx, [esi+4]
+        test    ecx, ecx
+        jz      short _error;
+        mov     eax, [ecx]
+        mov     eax, [eax+10h]
+        call    eax;                                                GameValue::getAsBool
+        test    al, al
+        jnz     short _return;
+    _error:
+        push    [esp+10h+4h];                                       GameState*
+        mov     ecx, offset _GlobalEngineHook;
+        call    ?_onScriptAssert@EngineHook@@QAEXI@Z;               EngineHook::_onScriptAssert;
+    _return:
+        jmp     _scriptAssertJmpBack;
+
+    _onScriptAssert ENDP
+
+    ;##########
+    PUBLIC _onScriptHalt
+    _onScriptHalt PROC
+
+        ;gameState on [esp+8]
+
+        
+
+
+        push    [esp+8];
+        mov     ecx, offset _GlobalEngineHook;
+        call    ?_onScriptHalt@EngineHook@@QAEXI@Z;                 EngineHook::_onScriptHalt;
+    _return:
+        mov     ecx, [esp+4];                                     Orig function will create a Nil value on ecx and return it
+        ;add     esp, 8
+        push    0
+        jmp     _scriptHaltJmpBack;
+
+    _onScriptHalt ENDP
+
+
 
 _TEXT    ENDS
 END

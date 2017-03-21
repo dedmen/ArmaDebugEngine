@@ -12,12 +12,12 @@ void RV_GameInstruction::Serialize(JsonArchive& ar) {
     //Get offset from start of the line
     const char* curOffs = _scriptPos._content.data() + _scriptPos._pos;
     int lineOffset = 0;
-    while (*curOffs != '\n') {
+    while (*curOffs != '\n' && curOffs > _scriptPos._content.data()) {
         curOffs--;
         lineOffset++;
     }
 
 
-    ar.Serialize("fileOffset", { _scriptPos._sourceLine, _scriptPos._pos, lineOffset - 1 });
+    ar.Serialize("fileOffset", { _scriptPos._sourceLine, _scriptPos._pos, std::max(lineOffset - 1,0) });
 
 }

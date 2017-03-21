@@ -75,6 +75,13 @@ enum class scriptExecutionContext {
     EventHandler = 2
 };
 
+enum class haltType {
+    breakpoint,
+    step,
+    error,
+    assert,
+    halt
+};
 
 #ifdef _DEBUG
 #define WAIT_FOR_DEBUGGER_ATTACHED while (!IsDebuggerPresent()) Sleep(1);
