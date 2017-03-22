@@ -190,13 +190,17 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
         FALSE,    // initial state = signaled 
         NULL);   // unnamed event object
 
+#ifndef X64 //#TODO crashy bashy
     EngineEnableMouseFnc(false); //Free mouse from Arma
+#endif
     dbg->onHalt(waitEvent, bp, info, type);
     bool halting = true;
     while (halting) {
         DWORD waitResult = WaitForSingleObject(waitEvent, 3000);
 
+#ifndef X64 //#TODO crashy bashy
         EngineAliveFnc();
+#endif
         if (waitResult != WAIT_TIMEOUT) {
             halting = false;
             //EngineEnableMouseFnc(true); Causes mouse to jump to bottom right screen corner

@@ -174,6 +174,35 @@ HookManager::Pattern pat_worldSimulate{//PROF ONLY
 //	0x00B1A0AB - 0x00B1A090
 //};
 
+
+
+HookManager::Pattern pat_onScriptError{
+    "xxxxxxxxxxxxxxx????xxx????xxxxxx?????xx????xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "\x48\x8B\xC4\x48\x89\x48\x08\x55\x48\x8D\x68\xA1\x48\x81\xEC\x00\x00\x00\x00\x48\x8B\x91\x00\x00\x00\x00\x48\x89\x55\x07\xF7\x42\x00\x00\x00\x00\x00\x0F\x84\x00\x00\x00\x00\x48\x89\x58\xF0\x48\x89\x70\xE8\x48\x89\x78\xE0\x48\x8B\x7A\x48\x4C\x89\x60\xD8\x4C\x89\x68\xD0\x4C\x89\x70\xC8"
+};
+
+HookManager::Pattern pat_scriptPreprocessorConstructor{// this is Preproc not FilePreproc!
+    "xxxx?xxxxxxxx????xxxxxxxxxxxxxxx?????xxx????xxx????x????xxx????xxxxxxxxxxx????xxxxxxxxxxxxx????xxxxxxxxxxxxxxxxxxx????????xxxxxxx?xxxxxx",
+    "\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8D\x05\x00\x00\x00\x00\x33\xFF\x48\x8B\xD9\x48\x89\x01\x48\x89\x79\x18\x48\xC7\x41\x00\x00\x00\x00\x00\x48\x89\xB9\x00\x00\x00\x00\x48\x8D\x0D\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x8B\x93\x00\x00\x00\x00\x48\x85\xC0\x74\x03\xF0\xFF\x00\x48\x89\x83\x00\x00\x00\x00\x48\x85\xD2\x74\x12\xF0\xFF\x0A\x75\x0D\x48\x8B\x0D\x00\x00\x00\x00\x48\x8B\x01\xFF\x50\x18\x48\x89\x7B\x08\x48\x89\x7B\x28\x89\x7B\x10\xC7\x83\x00\x00\x00\x00\x00\x00\x00\x00\x48\x8B\xC3\x48\x8B\x5C\x24\x00\x48\x83\xC4\x20\x5F\xC3",
+    0x00000000013C39C5 - 0x00000000013C3960
+};
+
+HookManager::Pattern pat_scriptPreprocessorDefineDefine{
+    "xxxx?xxxxxxxxxxxx?xxxx????xxxx?xxxxx????xxxxxxxx????xxxxxxxxxxxxxxxx?xxxxxxxxx?",
+    "\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x50\x48\x8B\xD9\x48\x8D\x4C\x24\x00\x48\x8B\xFA\xE8\x00\x00\x00\x00\x48\x8D\x54\x24\x00\x48\x8D\x4B\x18\xE8\x00\x00\x00\x00\x48\x8D\x4B\x18\x48\x8B\xD7\xE8\x00\x00\x00\x00\x8B\x48\x28\x85\xC9\x7E\x05\xFF\xC9\x89\x48\x28\x48\x8B\x54\x24\x00\x48\x85\xD2\x74\x0F\x44\x8B\x44\x24\x00"
+};
+
+HookManager::Pattern pat_onScriptAssert{//01052790 1.68.140.940
+    "xxxxx?xxx?xxx?xxxx?xxxxx?x?xxx?x????xx?xxx?xx????xx?????xx",
+    "\x53\x56\x8b\x74\x24\x00\x57\x8b\x4e\x00\x85\xc9\x74\x00\x8b\x01\x8b\x40\x00\xff\xd0\x84\xc0\x75\x00\x6a\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x83\xc4\x00\x8b\x7c\x24\x00\xc7\x07\x00\x00\x00\x00\xc7\x47\x00\x00\x00\x00\x00\x8b\x56"
+};
+
+HookManager::Pattern pat_onScriptHalt{//01050B10 1.68.140.940
+    "x?xxx?x????xxx?xx?x?x????xxx?x",
+    "\x6a\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x8b\x4c\x24\x00\x83\xc4\x00\x6a\x00\xe8\x00\x00\x00\x00\x8b\x44\x24\x00\xc3"
+};
+
+
 #else
 HookManager::Pattern pat_productType{//01827340
     "x????xxx?x????xx????xxxx?xxx????xxxx?xxxxx?xxxxxxxxxxx?xxxxxxxx?xx????xxxxx?xxx?xxx?xxxxxxxx?",
@@ -330,7 +359,16 @@ void EngineHook::placeHooks() {
     //GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
     HI.__worldMissionEventStart = false;
     HI.__worldMissionEventEnd = false;
-    HI.__onScriptError = false;
+    //HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 5);
+   
+    //scriptPreprocessorDefineDefine = GlobalHookManager.findPattern(pat_scriptPreprocessorDefineDefine);
+    //
+    //HI.scriptPreprocDefine = (scriptPreprocessorDefineDefine != 0);
+    //if (scriptPreprocessorDefineDefine) //else report error
+    //    HI.scriptPreprocConstr = GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 0xA);
+
+
+
 #else
     HI.__scriptVMConstructor = GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
     HI.__scriptVMSimulateStart = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 1);
@@ -402,7 +440,7 @@ void EngineHook::placeHooks() {
         MessageBoxA(0, error.c_str(), "ArmaDebugEngine", fatal ? MB_ICONERROR : MB_ICONWARNING | MB_OK | MB_SYSTEMMODAL | MB_TOPMOST);
     }
 
-	Tracker::trackPiwik();
+    Tracker::trackPiwik();
 }
 
 void EngineHook::removeHooks(bool leavePFrameHook) {

@@ -91,4 +91,8 @@ enum class haltType {
 
 
 typedef void EngineAlive(); //Call this periodically while in breakState
-typedef void EngineEnableMouse(bool enabled); //Call this periodically while in breakState
+#ifdef X64
+typedef void EngineEnableMouse(char enabled);
+#else
+typedef void EngineEnableMouse(bool enabled);
+#endif

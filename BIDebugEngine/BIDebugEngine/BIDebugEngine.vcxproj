@@ -204,7 +204,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <Profile>true</Profile>
+      <Profile>false</Profile>
       <ModuleDefinitionFile>BIDebugEngine.def</ModuleDefinitionFile>
     </Link>
     <ResourceCompile>

@@ -34,11 +34,12 @@ void VMContext::dbg_instructionTimeDiff(std::chrono::high_resolution_clock::dura
 extern std::chrono::high_resolution_clock::time_point globalTime;
 extern std::chrono::high_resolution_clock::time_point frameStart;
 
-RString str_newScope("NewScope");
-RString str_dummyPlaceholder("dummyPlaceholder");
-RString str_DbgEngine("DbgEngine");
+//RString str_newScope("NewScope");
+//RString str_dummyPlaceholder("dummyPlaceholder");
+//RString str_DbgEngine("DbgEngine");
 
 void VMContext::addInstruction(RV_VMContext* ctx, RV_GameInstruction* instruction) {
+    /*
     static uint32_t instructionCounter{ 0 };
     std::chrono::high_resolution_clock::time_point time(globalTime - frameStart);
     instructionCounter++;
@@ -72,7 +73,7 @@ void VMContext::addInstruction(RV_VMContext* ctx, RV_GameInstruction* instructio
         lastInstruction->lowerScope.push_back(Instruction{ dbgName,filename,line,offset,time });
     } else {
         __debugbreak();
-    }
+    } */
 }
 
 void Instruction::writeToFile(std::ofstream& f, uint16_t tabs) {
