@@ -28,16 +28,16 @@ void NetworkController::init() {
     pipeThread = new std::thread([this]() {
         server.open();
 
+        server.messageReadFailed.connect([this]() {clientConnected = false; });
+
         while (true) {//#TODO make exitable :u add onShutdown thingy
             auto msg = server.readMessageBlocking();
 
             if (!msg.empty()) {
                 clientConnected = true;
                 incomingMessage(msg);
-            } else {
-                clientConnected = false;
             }
-                
+
             //server.messageRead(msg);
             //pServer->writeMessage(/*msg+*/"teeest");
         }
@@ -94,7 +94,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                         GlobalDebugger.breakPoints.remove(fileName.c_str());
                 }
             } break;
-            case NC_CommandType::BPContinue: {    
+            case NC_CommandType::BPContinue: {
                 GlobalDebugger.commandContinue(static_cast<StepType>(packet.value<int>("data", 0)));
             } break;
 
@@ -134,8 +134,13 @@ void NetworkController::incomingMessage(const std::string& message) {
 #else
                 answer.Serialize("arch", "X86");
 #endif
-            
+
                 GlobalDebugger.productInfo.Serialize(answer);
+                JsonArchive HI;
+
+                GlobalDebugger.SerializeHookIntegrity(HI);
+                answer.Serialize("HI", HI);
+
                 sendMessage(answer.to_string());
             } break;
 

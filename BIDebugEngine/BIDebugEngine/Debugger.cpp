@@ -242,8 +242,8 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 }
 
 void Debugger::onScriptError(GameState * gs) {
-	BPAction_Halt hAction(haltType::error);
-	hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,gs->_context ,gs});
+    BPAction_Halt hAction(haltType::error);
+    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,gs->_context ,gs });
 }
 
 void Debugger::onScriptAssert(GameState* gs) {
@@ -320,40 +320,33 @@ void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructio
             break;
         default: break;
     }
-    
+
     instructionInfo.context->Serialize(ar); //Set's callstack
 
     //#TODO add GameState variables
 
-	if (instructionInfo.instruction) {
-		JsonArchive instructionAr;
-		instructionInfo.instruction->Serialize(instructionAr);
-		ar.Serialize("instruction", instructionAr);
-	} else if (type == haltType::error) {
-		JsonArchive errorAr;
-		instructionInfo.gs->GEval->SerializeError(errorAr);
-		ar.Serialize("error", errorAr);
-	} else if(type == haltType::assert || type == haltType::halt) {
+    if (instructionInfo.instruction) {
+        JsonArchive instructionAr;
+        instructionInfo.instruction->Serialize(instructionAr);
+        ar.Serialize("instruction", instructionAr);
+    } else if (type == haltType::error) {
+        JsonArchive errorAr;
+        instructionInfo.gs->GEval->SerializeError(errorAr);
+        ar.Serialize("error", errorAr);
+    } else if (type == haltType::assert || type == haltType::halt) {
         JsonArchive assertAr;
 
         auto& _errorPosition = instructionInfo.context->_lastInstructionPos;
-        const char* curOffs = _errorPosition._content.data() + _errorPosition._pos;
-        int lineOffset = 0;
-        while (*curOffs != '\n' && curOffs > _errorPosition._content.data()) {
-            curOffs--;
-            lineOffset++;
-        }
 
-
-        assertAr.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, std::max(lineOffset - 1,0) });
+        assertAr.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, Script::getScriptLineOffset(_errorPosition) });
         assertAr.Serialize("filename", _errorPosition._sourceFile);
-        assertAr.Serialize("content", _errorPosition._content);
+        assertAr.Serialize("content", Script::getScriptFromFirstLine(_errorPosition));
 
 
-        ar.Serialize("assert", assertAr);
-	}
+        ar.Serialize("halt", assertAr);
+    }
 
-	
+
 
 
 
@@ -414,12 +407,29 @@ void Debugger::commandContinue(StepType stepType) {
 
     ResetEvent(breakStateContinueEvent);
     SetEvent(breakStateContinueEvent);
-    nController.sendMessage("{\"command\":2}");
+    nController.sendMessage("{\"command\":8}");//#TODO this breaks if Continue commands number changes
 }
 
 void Debugger::setGameVersion(const char* productType, const char* productVersion) {
     productInfo.gameType = productType;
     productInfo.gameVersion = productVersion;
+}
+
+void Debugger::SerializeHookIntegrity(JsonArchive& answer) {
+    answer.Serialize("SvmCon", HI.__scriptVMConstructor);
+    answer.Serialize("SvmSimSt", HI.__scriptVMSimulateStart);
+    answer.Serialize("SvmSimEn", HI.__scriptVMSimulateEnd);
+    answer.Serialize("InstrBP", HI.__instructionBreakpoint);
+    answer.Serialize("WSim", HI.__worldSimulate);
+    answer.Serialize("WMEVS", HI.__worldMissionEventStart);
+    answer.Serialize("WMEVE", HI.__worldMissionEventEnd);
+    answer.Serialize("ScrErr", HI.__onScriptError);
+    answer.Serialize("PreDef", HI.scriptPreprocDefine);
+    answer.Serialize("PreCon", HI.scriptPreprocConstr);
+    answer.Serialize("ScrAass", HI.scriptAssert);
+    answer.Serialize("ScrHalt", HI.scriptHalt);
+    answer.Serialize("Alive", HI.engineAlive);
+    answer.Serialize("EnMouse", HI.enableMouse);
 }
 
 std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, std::vector<std::string>& varNames) const {
@@ -485,7 +495,7 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
             }
 
             if (scope & VariableScope::profileNamespace) {
-                
+
             }
 
             if (scope & VariableScope::parsingNamespace) {
@@ -525,7 +535,34 @@ void Debugger::VariableInfo::Serialize(JsonArchive& ar) const {
         ar.Serialize("ns", static_cast<int>(ns));
     }
 }
-
+#pragma comment (lib, "version.lib")
 void Debugger::productInfoStruct::Serialize(JsonArchive &ar) {
-    ar.Serialize("gameType", gameType); ar.Serialize("gameVersion", gameVersion);
+    ar.Serialize("gameType", gameType);
+
+    if (true || gameVersion.isNull()) {
+        WCHAR fileName[_MAX_PATH];
+        DWORD size = GetModuleFileName(nullptr, fileName, _MAX_PATH);
+        fileName[size] = NULL;
+        DWORD handle = 0;
+        size = GetFileVersionInfoSize(fileName, &handle);
+        BYTE* versionInfo = new BYTE[size];
+        if (!GetFileVersionInfo(fileName, handle, size, versionInfo)) {
+            delete[] versionInfo;
+            ar.Serialize("gameVersion", "FAIL");
+            return;
+        }
+        UINT    			len = 0;
+        VS_FIXEDFILEINFO*   vsfi = nullptr;
+        VerQueryValue(versionInfo, L"\\", reinterpret_cast<void**>(&vsfi), &len);
+
+        short version = HIWORD(vsfi->dwFileVersionLS);
+        short version2 = LOWORD(vsfi->dwFileVersionLS);
+        short minor = HIWORD(vsfi->dwFileVersionMS);
+        short minor2 = LOWORD(vsfi->dwFileVersionMS);
+        delete[] versionInfo;
+        std::string vers = std::to_string(minor) + "." + std::to_string(minor2) + "." + std::to_string(version) + "." + std::to_string(version2);
+        gameVersion = vers;
+    }
+
+    ar.Serialize("gameVersion", gameVersion);
 }

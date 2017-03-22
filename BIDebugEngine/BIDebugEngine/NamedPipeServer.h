@@ -14,6 +14,7 @@ public:
     void writeMessage(std::string message);
     std::string readMessageBlocking();
     Signal<void(std::string)> messageRead;
+    Signal<void()> messageReadFailed;
 
 private:
     void transactMessage(char *output, int outputSize, const char *input); //don't use

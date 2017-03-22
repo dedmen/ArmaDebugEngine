@@ -61,6 +61,7 @@ void NamedPipeServer::writeMessage(std::string message) {
             }
         }
         if (errorCode == ERROR_BROKEN_PIPE) {
+            messageReadFailed();
             openPipe();
         }
     }
@@ -115,6 +116,7 @@ std::string NamedPipeServer::readMessageBlocking() {
             }
         }
         if (errorCode == ERROR_BROKEN_PIPE) {
+            messageReadFailed();
             openPipe();
         }
     }

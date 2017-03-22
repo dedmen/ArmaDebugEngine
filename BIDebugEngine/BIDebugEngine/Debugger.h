@@ -48,18 +48,36 @@ inline std::underlying_type_t<VariableScope> operator & (VariableScope lhs, Vari
     return (static_cast<std::underlying_type_t<VariableScope>>(lhs) & static_cast<std::underlying_type_t<VariableScope>>(rhs));
 }
 
+struct HookIntegrity {
+    bool __scriptVMConstructor{ false };
+    bool __scriptVMSimulateStart{ false };
+    bool __scriptVMSimulateEnd{ false };
+    bool __instructionBreakpoint{ false };
+    bool __worldSimulate{ false };
+    bool __worldMissionEventStart{ false };
+    bool __worldMissionEventEnd{ false };
+    bool __onScriptError{ false };
+    bool scriptPreprocDefine{ false };
+    bool scriptPreprocConstr{ false };
+    bool scriptAssert{ false };
+    bool scriptHalt{ false };
+    bool engineAlive{ false };
+    bool enableMouse{ false };
+};
+
+
 
 class Debugger {
 public:
     Debugger();
     ~Debugger();
 
-
+    //#TOOD Variable read/write breakpoints GameInstructionVariable/GameInstructionAssignment
     void clear();
     std::shared_ptr<VMContext> getVMContext(RV_VMContext* vm);
     void writeFrameToFile(uint32_t frameCounter);
-	void onInstruction(DebuggerInstructionInfo& instructionInfo);
-	void onScriptError(GameState* gs);
+    void onInstruction(DebuggerInstructionInfo& instructionInfo);
+    void onScriptError(GameState* gs);
     void onScriptAssert(GameState* gs);
     void onScriptHalt(GameState* gs);
     void checkForBreakpoint(DebuggerInstructionInfo& instructionInfo);
@@ -70,11 +88,14 @@ public:
     void onContinue(); //Breakpoint has stopped halting
     void commandContinue(StepType stepType); //Tells Breakpoint in breakState to Stop halting
     void setGameVersion(const char* productType, const char* productVersion);
+    void SerializeHookIntegrity(JsonArchive& answer);
+    HookIntegrity HI;
+    void setHookIntegrity(HookIntegrity hi) { HI = hi; }
 
     struct VariableInfo {
         VariableInfo() {}
         VariableInfo(const GameVariable* _var, VariableScope _ns) : var(_var), ns(_ns) {};
-        VariableInfo(std::string _name) : var(nullptr), ns(VariableScope::invalid), notFoundName(std::move(_name)){};
+        VariableInfo(std::string _name) : var(nullptr), ns(VariableScope::invalid), notFoundName(std::move(_name)) {};
         const GameVariable* var;
         VariableScope ns;
         std::string notFoundName;  //#TODO use RString
@@ -87,10 +108,11 @@ public:
     class breakPointList : public std::vector<BreakPoint> {
     public:
         breakPointList() {}
-       // breakPointList(const breakPointList& b) = delete;// : _name(b._name) { for (auto &it : b) emplace_back(std::move(it)); } //std::vector like's to still copy while passing rvalue-ref
-        //breakPointList(const BreakPoint& b) : _name(b.filename) {push_back(b); }
-        breakPointList(BreakPoint&& b) noexcept : _name(b.filename) {push_back(std::move(b)); }
-        breakPointList& operator=(breakPointList&& b) noexcept {_name = (b._name); for (auto &it : b) emplace_back(std::move(it));
+        // breakPointList(const breakPointList& b) = delete;// : _name(b._name) { for (auto &it : b) emplace_back(std::move(it)); } //std::vector like's to still copy while passing rvalue-ref
+         //breakPointList(const BreakPoint& b) : _name(b.filename) {push_back(b); }
+        breakPointList(BreakPoint&& b) noexcept : _name(b.filename) { push_back(std::move(b)); }
+        breakPointList& operator=(breakPointList&& b) noexcept {
+            _name = (b._name); for (auto &it : b) emplace_back(std::move(it));
             return *this;
         }
         RString _name;
@@ -99,7 +121,7 @@ public:
     private:
 
         // disable copying
-       
+
         breakPointList& operator=(const breakPointList&);
 
 
@@ -107,7 +129,7 @@ public:
     MapStringToClassNonRV<breakPointList, std::vector<breakPointList>> breakPoints; //All inputs have to be tolowered before accessing
     std::vector<std::shared_ptr<IMonitorBase>> monitors;
     NetworkController nController;
-    HANDLE breakStateContinueEvent{ 0 }; 
+    HANDLE breakStateContinueEvent{ 0 };
     DebuggerState state{ DebuggerState::Uninitialized };
     BreakStateInfo breakStateInfo;
     struct {

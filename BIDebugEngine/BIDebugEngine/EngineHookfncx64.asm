@@ -188,7 +188,7 @@ _TEXT    SEGMENT
 	;##########
 	PUBLIC worldSimulate
 	worldSimulate PROC
-		//rcx is worldPtr!
+		;rcx is worldPtr!
         push	rcx;
 
         mov     rcx, offset GlobalEngineHook;

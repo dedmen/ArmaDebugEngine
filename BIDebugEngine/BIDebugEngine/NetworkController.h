@@ -22,6 +22,7 @@ enum class NC_OutgoingCommandType {
     halt_error,
     halt_scriptAssert,
     halt_scriptHalt,
+    halt_placeholder,
     ContinueExecution,
     VariableReturn //returning from getVariable
 };
@@ -37,6 +38,6 @@ public:
 private:
     NamedPipeServer server;
     std::thread* pipeThread{ nullptr };
-    bool clientConnected {false};
+    bool clientConnected{ false };
 };
 
