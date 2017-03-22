@@ -281,17 +281,17 @@ _TEXT    SEGMENT
         mov     dword ptr [rbx+0C4h], 14h
         mov     rax, rbx
 
-        ;push rax;
+        push rax;
         push rdx; 
 
         mov     r8, preprocMacroValue;
         mov     rdx, preprocMacroName;
         mov     rcx, rax;                                           this*
-        mov     rbx, scriptPreprocessorDefineDefine;
-        call    rbx;
+        mov     rax, scriptPreprocessorDefineDefine;
+        call    rax;
         
         pop rdx;
-        ;pop rax;
+        pop rax;
 
         jmp     scriptPreprocessorConstructorJmpBack;
 
