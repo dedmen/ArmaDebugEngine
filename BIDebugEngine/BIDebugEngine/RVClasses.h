@@ -378,6 +378,14 @@ public:
         if (_ref)
             _strlwr_s(_ref->data(), _ref->_size);
     };
+	const char* cbegin() {
+		if (_ref) return _ref->data();
+		return data();
+	}
+	const char* cend() {
+		if (_ref) return _ref->data() + length();
+		return data();
+	}
 
 
 private:

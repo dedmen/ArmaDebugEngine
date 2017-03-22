@@ -1,5 +1,6 @@
 #include "RVClasses.h"
 #include "Serialize.h"
+#include "Script.h"
 
 void RV_GameInstruction::Serialize(JsonArchive& ar) {
 
@@ -9,15 +10,6 @@ void RV_GameInstruction::Serialize(JsonArchive& ar) {
     ar.Serialize("name", GetDebugName());
     ar.Serialize("filename", _scriptPos._sourceFile);
 
-    //Get offset from start of the line
-    const char* curOffs = _scriptPos._content.data() + _scriptPos._pos;
-    int lineOffset = 0;
-    while (*curOffs != '\n' && curOffs > _scriptPos._content.data()) {
-        curOffs--;
-        lineOffset++;
-    }
-
-
-    ar.Serialize("fileOffset", { _scriptPos._sourceLine, _scriptPos._pos, std::max(lineOffset - 1,0) });
+    ar.Serialize("fileOffset", { _scriptPos._sourceLine, _scriptPos._pos, Script::getScriptLineOffset(_scriptPos) });
 
 }

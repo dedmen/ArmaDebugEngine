@@ -285,16 +285,21 @@ public:
                                              mission
                                              */
     AutoArray<Ref<GameDataNamespace>> _namespaces; //Contains missionNamespace and uiNamespace
+	bool _6;
+	bool _showScriptErrors; //-showScriptErrors start parameter
+
+	RV_VMContext *_context;	//Current context
+	//AutoArray<callStackItemCreator> _callStackItems;
 };
 #else
 class GameState;
-class callStackItemCreator {
-public:
-    callStackItemCreator() {}
-
-    CallStackItem*(*createFunction)(CallStackItem* parent, GameVarSpace* parentVariables, const GameState* gs, bool serialization) { nullptr };
-    RString type;
-};
+//class callStackItemCreator {
+//public:
+//    callStackItemCreator() {}
+//
+//    CallStackItem*(*createFunction)(CallStackItem* parent, GameVarSpace* parentVariables, const GameState* gs, bool serialization) { nullptr };
+//    RString type;
+//};
 
 class GameState {
 public:
@@ -319,6 +324,6 @@ public:
     bool _showScriptErrors; //-showScriptErrors start parameter
 
     RV_VMContext *_context;	//Current context
-    AutoArray<callStackItemCreator> _callStackItems;
+    //AutoArray<callStackItemCreator> _callStackItems;
 };
 #endif

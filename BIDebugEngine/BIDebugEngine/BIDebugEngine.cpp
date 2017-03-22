@@ -5,6 +5,7 @@
 #include <windows.h>
 #include "EngineHook.h"
 #include <thread>
+#include "Script.h"
 static DllInterface dllIface;
 static EngineInterface* engineIface;
 extern "C" EngineHook GlobalEngineHook;
@@ -192,9 +193,13 @@ void GameData::Serialize(JsonArchive& ar) const {
     ar.Serialize("type", type);
     if (strcmp(type, "array") == 0) {
         ar.Serialize("value", getArray());
-    } else {
-        ar.Serialize("value", getAsString());
-    }
+    } else if (strcmp(type, "code") == 0) {
+		SourceDocPos x;
+		x._content = getAsString();
+        ar.Serialize("value", Script::getScriptFromFirstLine(x,true));
+	} else {
+		ar.Serialize("value", getAsString());
+	}
 }
 
 void GameValue::Serialize(JsonArchive& ar) const {
@@ -213,17 +218,7 @@ const GameVariable* GameVarSpace::getVariable(const std::string& varName) const 
 }
 
 void GameEvaluator::SerializeError(JsonArchive& ar) {
-
-
-	const char* curOffs = _errorPosition._content.data() + _errorPosition._pos;
-	int lineOffset = 0;
-	while (*curOffs != '\n' && curOffs > _errorPosition._content.data()) {
-		curOffs--;
-		lineOffset++;
-	}
-
-
-	ar.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, std::max(lineOffset - 1,0) });
+	ar.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, Script::getScriptLineOffset(_errorPosition) });
 
 	ar.Serialize("type", _errorType);
       //#TODO errorType enum
@@ -265,5 +260,5 @@ void GameEvaluator::SerializeError(JsonArchive& ar) {
 
 	ar.Serialize("message", _errorMessage);
 	ar.Serialize("filename", _errorPosition._sourceFile);
-	ar.Serialize("content", _errorPosition._content);
+	ar.Serialize("content", Script::getScriptFromFirstLine(_errorPosition));
 }
