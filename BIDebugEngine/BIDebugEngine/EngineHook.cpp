@@ -6,6 +6,7 @@
 #include "VMContext.h"
 #include <sstream>
 #include "Serialize.h"
+#include "Tracker.h"
 
 bool inScriptVM;
 extern "C" EngineHook GlobalEngineHook;
@@ -401,21 +402,7 @@ void EngineHook::placeHooks() {
         MessageBoxA(0, error.c_str(), "ArmaDebugEngine", fatal ? MB_ICONERROR : MB_ICONWARNING | MB_OK | MB_SYSTEMMODAL | MB_TOPMOST);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	Tracker::trackPiwik();
 }
 
 void EngineHook::removeHooks(bool leavePFrameHook) {

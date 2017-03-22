@@ -78,6 +78,9 @@
     <ClCompile Include="Monitor.cpp">
       <Filter>Source Files\Debugger</Filter>
     </ClCompile>
+    <ClCompile Include="Tracker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BIDebugEngine.h">
@@ -123,6 +126,9 @@
       <Filter>Header Files\Debugger</Filter>
     </ClInclude>
     <ClInclude Include="version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tracker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -363,6 +363,7 @@
     <ClCompile Include="RVClasses.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="Serialize.cpp" />
+    <ClCompile Include="Tracker.cpp" />
     <ClCompile Include="VMContext.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -379,6 +380,7 @@
     <ClInclude Include="Script.h" />
     <ClInclude Include="Serialize.h" />
     <ClInclude Include="SignalSlot.h" />
+    <ClInclude Include="Tracker.h" />
     <ClInclude Include="version.h" />
     <ClInclude Include="VMContext.h" />
   </ItemGroup>
