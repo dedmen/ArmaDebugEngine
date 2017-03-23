@@ -625,9 +625,9 @@ uintptr_t HookManager::placeHookTotalOffs(uintptr_t totalOffset, uintptr_t jmpTo
     auto jmpInstr = reinterpret_cast<unsigned char*>(totalOffset);
     auto addrOffs = reinterpret_cast<uint32_t*>(totalOffset + 1);
     *jmpInstr = 0x68; //push DWORD
-    *addrOffs = jmpTo /*- totalOffset - 6*/;//offset
+    *addrOffs = static_cast<uint32_t>(jmpTo) /*- totalOffset - 6*/;//offset
     *reinterpret_cast<uint32_t*>(totalOffset + 5) = 0x042444C7; //MOV [RSP+4],
-    *reinterpret_cast<uint32_t*>(totalOffset + 9) = ((uint64_t) jmpTo) >> 32;//DWORD
+    *reinterpret_cast<uint32_t*>(totalOffset + 9) = static_cast<uint64_t>(jmpTo) >> 32;//DWORD
     *reinterpret_cast<unsigned char*>(totalOffset + 13) = 0xc3;//ret
     VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 14u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
     return totalOffset + 14;
@@ -680,11 +680,11 @@ bool HookManager::placeHook(hookTypes, const Pattern & pat, uintptr_t jmpTo) {
 }
 
 bool HookManager::MatchPattern(uintptr_t addr, const char* pattern, const char* mask) {
-    DWORD size = strlen(mask);
+    size_t size = strlen(mask);
     if (IsBadReadPtr((void*) addr, size))
         return false;
     bool found = true;
-    for (DWORD j = 0; j < size; j++) {
+    for (size_t j = 0; j < size; j++) {
         found &= mask[j] == '?' || pattern[j] == *(char*) (addr + j);
     }
     if (found)
@@ -693,15 +693,15 @@ bool HookManager::MatchPattern(uintptr_t addr, const char* pattern, const char* 
 }
 
 uintptr_t HookManager::findPattern(const char* pattern, const char* mask, uintptr_t offset /*= 0*/) {
-    DWORD base = (DWORD) engineBase;
-    DWORD size = (DWORD) engineSize;
+    uintptr_t base = (DWORD) engineBase;
+    uint32_t size = (DWORD) engineSize;
 
-    DWORD patternLength = (DWORD) strlen(mask);
+    uintptr_t patternLength = (DWORD) strlen(mask);
 
-    for (DWORD i = 0; i < size - patternLength; i++) {
+    for (uintptr_t i = 0; i < size - patternLength; i++) {
         bool found = true;
-        for (DWORD j = 0; j < patternLength; j++) {
-            found &= mask[j] == '?' || pattern[j] == *(char*) (base + i + j);
+        for (uintptr_t j = 0; j < patternLength; j++) {
+            found &= mask[j] == '?' || pattern[j] == *reinterpret_cast<char*>(base + i + j);
             if (!found)
                 break;
         }
