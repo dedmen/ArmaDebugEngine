@@ -89,16 +89,17 @@ public:
     void commandContinue(StepType stepType); //Tells Breakpoint in breakState to Stop halting
     void setGameVersion(const char* productType, const char* productVersion);
     void SerializeHookIntegrity(JsonArchive& answer);
+    void onScriptEcho(RString msg);
     HookIntegrity HI;
     void setHookIntegrity(HookIntegrity hi) { HI = hi; }
 
     struct VariableInfo {
         VariableInfo() {}
         VariableInfo(const GameVariable* _var, VariableScope _ns) : var(_var), ns(_ns) {};
-        VariableInfo(std::string _name) : var(nullptr), ns(VariableScope::invalid), notFoundName(std::move(_name)) {};
+        VariableInfo(RString _name) : var(nullptr), ns(VariableScope::invalid), notFoundName(_name) {};
         const GameVariable* var;
         VariableScope ns;
-        std::string notFoundName;  //#TODO use RString
+        RString notFoundName;
         void Serialize(JsonArchive& ar) const;
     };
     std::vector<VariableInfo> getVariables(VariableScope, std::vector<std::string>& varName) const;

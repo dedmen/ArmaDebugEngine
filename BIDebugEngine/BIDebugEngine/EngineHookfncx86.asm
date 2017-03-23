@@ -16,6 +16,7 @@ _TEXT    SEGMENT
     EXTERN ?_onScriptError@EngineHook@@QAEXI@Z:             PROC;    EngineHook::_onScriptError
     EXTERN ?_onScriptAssert@EngineHook@@QAEXI@Z:            PROC;    EngineHook::_onScriptAssert
     EXTERN ?_onScriptHalt@EngineHook@@QAEXI@Z:              PROC;    EngineHook::_onScriptHalt
+    EXTERN ?_onScriptEcho@EngineHook@@QAEXI@Z:              PROC;    EngineHook::_onScriptEcho
 
     ;hool Enable fields
     EXTERN _hookEnabled_Instruction:                        dword
@@ -33,6 +34,7 @@ _TEXT    SEGMENT
     EXTERN _scriptPreprocessorConstructorJmpBack:           dword
     EXTERN _scriptAssertJmpBack:                            dword
     EXTERN _scriptHaltJmpBack:                              dword
+    EXTERN _scriptEchoJmpBack:                              dword
     
     ;misc
     EXTERN _GlobalEngineHook:                               dword
@@ -319,7 +321,19 @@ _TEXT    SEGMENT
 
     _onScriptHalt ENDP
 
+    ;##########
+    PUBLIC _onScriptEcho
+    _onScriptEcho PROC
+        mov     ecx, [esp+12];  
+        push    ecx;                                                GameValue*
+        mov     ecx, offset _GlobalEngineHook;
+        call    ?_onScriptEcho@EngineHook@@QAEXI@Z;                 EngineHook::_onScriptHalt;
 
+        mov     ecx, [esp+12];                                      Fixup
+        sub     esp, 8;                                             
+        jmp     _scriptEchoJmpBack;
+
+    _onScriptEcho ENDP
 
 _TEXT    ENDS
 END

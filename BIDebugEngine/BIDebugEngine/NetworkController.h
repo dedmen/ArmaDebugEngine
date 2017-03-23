@@ -35,8 +35,11 @@ public:
     void incomingMessage(const std::string& message);
     void sendMessage(const std::string& message);
     bool isClientConnected() { return clientConnected; }
+
+    void onShutdown();
 private:
     NamedPipeServer server;
+    bool pipeThreadShouldRun{ true };
     std::thread* pipeThread{ nullptr };
     bool clientConnected{ false };
 };

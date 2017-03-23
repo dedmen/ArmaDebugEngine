@@ -18,6 +18,7 @@ enum class hookTypes {
     scriptPreprocessorConstructor,
     onScriptAssert,
     onScriptHalt,
+    onScriptEcho,
     End
 };
 
@@ -83,9 +84,10 @@ public:
     void _scriptInstruction(uintptr_t instructionBP_Instruction, uintptr_t instructionBP_VMContext, uintptr_t instructionBP_gameState, uintptr_t instructionBP_IDebugScript);
     void _world_OnMissionEventStart(uintptr_t eventType);
     void _world_OnMissionEventEnd();
-    void _onScriptError(uintptr_t gameSate);
-    void _onScriptAssert(uintptr_t gameSate);
-    void _onScriptHalt(uintptr_t gameSate);
+    void _onScriptError(uintptr_t gameState);
+    void _onScriptAssert(uintptr_t gameState);
+    void _onScriptHalt(uintptr_t gameState);
+    void _onScriptEcho(uintptr_t gameValue);
     void onShutdown();
     void onStartup();
 

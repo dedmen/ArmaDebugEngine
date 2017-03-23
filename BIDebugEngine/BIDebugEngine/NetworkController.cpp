@@ -16,11 +16,11 @@ NetworkController::NetworkController() {
 
 NetworkController::~NetworkController() {
     if (pipeThread) {
-        pipeThread->join();
+        pipeThreadShouldRun = false;
+        if (pipeThread->joinable())
+            pipeThread->join();
         delete pipeThread;
     }
-
-
 }
 
 void NetworkController::init() {
@@ -30,7 +30,7 @@ void NetworkController::init() {
 
         server.messageReadFailed.connect([this]() {clientConnected = false; });
 
-        while (true) {//#TODO make exitable :u add onShutdown thingy
+        while (pipeThreadShouldRun) {
             auto msg = server.readMessageBlocking();
 
             if (!msg.empty()) {
@@ -156,4 +156,8 @@ void NetworkController::incomingMessage(const std::string& message) {
 
 void NetworkController::sendMessage(const std::string& message) {
     server.writeMessage(message);
+}
+
+void NetworkController::onShutdown() {
+    pipeThreadShouldRun = false;
 }

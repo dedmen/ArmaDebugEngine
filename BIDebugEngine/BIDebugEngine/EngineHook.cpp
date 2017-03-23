@@ -48,6 +48,7 @@ extern "C" {
     uintptr_t scriptPreprocessorDefineDefine;
     uintptr_t scriptAssertJmpBack;
     uintptr_t scriptHaltJmpBack;
+    uintptr_t scriptEchoJmpBack;
 
     const char* preprocMacroName = "DEBUG";
     const char* preprocMacroValue = "true";
@@ -81,6 +82,7 @@ extern "C" void onScriptError();
 extern "C" void scriptPreprocessorConstructor();
 extern "C" void onScriptAssert();
 extern "C" void onScriptHalt();
+extern "C" void onScriptEcho();
 
 #ifdef X64
 
@@ -202,6 +204,10 @@ HookManager::Pattern pat_onScriptHalt{
     "\x40\x53\x48\x83\xEC\x20\x48\x8B\xC2\x48\x8B\xD9\xBA\x00\x00\x00\x00\x48\x8B\xC8\xE8\x00\x00\x00\x00\x33\xD2\x48\x8B\xCB\xE8\x00\x00\x00\x00\x48\x8B\xC3\x48\x83\xC4\x20\x5B\xC3"
 };
 
+HookManager::Pattern pat_onScriptEcho{
+    "xxxx?xxxxxxxxxxxx?xxxx????xxxx?xxxxxxxxxxxxx????xxxxxxxxx????xxxxx",
+    "\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x8D\x54\x24\x00\x49\x8B\xC8\xE8\x00\x00\x00\x00\x48\x8B\x54\x24\x00\x48\x85\xD2\x74\x12\xF0\xFF\x0A\x75\x0D\x48\x8B\x0D\x00\x00\x00\x00\x48\x8B\x01\xFF\x50\x18\x48\x8D\x05\x00\x00\x00\x00\x48\x89\x03\x33\xC0"
+};
 
 #else
 HookManager::Pattern pat_productType{//01827340
@@ -304,11 +310,15 @@ HookManager::Pattern pat_onScriptHalt{//01050B10 1.68.140.940
     "\x6a\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x8b\x4c\x24\x00\x83\xc4\x00\x6a\x00\xe8\x00\x00\x00\x00\x8b\x44\x24\x00\xc3"
 };
 
+HookManager::Pattern pat_onScriptEcho{//01052800 1.68.140.940
+    "xxxxxxxxxxxxxx????xxxxxxxxxxxxxxxxxxxxxx????xxxxxxxxxxxx????xx?????xxxxx?????",
+    "\x83\xEC\x08\x8B\x4C\x24\x14\x8D\x04\x24\x56\x57\x50\xE8\x00\x00\x00\x00\x8B\x54\x24\x08\x83\xCF\xFF\x85\xD2\x74\x15\x8B\xC7\xF0\x0F\xC1\x02\x48\x75\x0C\x8B\x0D\x00\x00\x00\x00\x52\x8B\x01\xFF\x50\x0C\x8B\x74\x24\x14\xC7\x06\x00\x00\x00\x00\xC7\x46\x00\x00\x00\x00\x00\x8B\x4E\x04\xC7\x46\x00\x00\x00\x00\x00"
+};
 
 #endif
 
 //#TODO onVariableChanged event
-//#TODO hook https://community.bistudio.com/wiki/halt https://community.bistudio.com/wiki/echo https://community.bistudio.com/wiki/assert
+//#TODO hook VariableAssignment. 1.68 profv1 Assignment::Execute has notes
 
 scriptExecutionContext currentContext = scriptExecutionContext::Invalid;
 MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create some invalid handler type
@@ -370,7 +380,7 @@ void EngineHook::placeHooks() {
 
     HI.scriptAssert = GlobalHookManager.placeHook(hookTypes::onScriptAssert, pat_onScriptAssert, reinterpret_cast<uintptr_t>(onScriptAssert), scriptAssertJmpBack, 0xB7 - 0x95 + 0x8);
     HI.scriptHalt = GlobalHookManager.placeHook(hookTypes::onScriptHalt, pat_onScriptHalt, reinterpret_cast<uintptr_t>(onScriptHalt), scriptHaltJmpBack, 1 + 0xE + 1);
-
+    GlobalHookManager.placeHook(hookTypes::onScriptEcho, pat_onScriptEcho, reinterpret_cast<uintptr_t>(onScriptEcho), scriptEchoJmpBack, 0xE -0xD + 3);
 
 #else
     HI.__scriptVMConstructor = GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
@@ -389,6 +399,7 @@ void EngineHook::placeHooks() {
         HI.scriptPreprocConstr = GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 4);
     HI.scriptAssert = GlobalHookManager.placeHook(hookTypes::onScriptAssert, pat_onScriptAssert, reinterpret_cast<uintptr_t>(onScriptAssert), scriptAssertJmpBack, 0xB7 - 0x95);
     HI.scriptHalt = GlobalHookManager.placeHook(hookTypes::onScriptHalt, pat_onScriptHalt, reinterpret_cast<uintptr_t>(onScriptHalt), scriptHaltJmpBack, 1 + 0xE);
+    GlobalHookManager.placeHook(hookTypes::onScriptEcho, pat_onScriptEcho, reinterpret_cast<uintptr_t>(onScriptEcho), scriptEchoJmpBack, 2);
 #endif
 
     EngineAliveFnc = reinterpret_cast<EngineAlive*>(GlobalHookManager.findPattern(pat_EngineAliveFnc));
@@ -591,6 +602,13 @@ void EngineHook::_onScriptAssert(uintptr_t gameSate) {
 void EngineHook::_onScriptHalt(uintptr_t gameSate) {
     auto gs = reinterpret_cast<GameState *>(gameSate);
     GlobalDebugger.onScriptHalt(gs);
+}
+
+void EngineHook::_onScriptEcho(uintptr_t gameValue) {
+    auto gv = reinterpret_cast<GameValue *>(gameValue);
+    if (!gv->_data) return;
+    auto msg = gv->_data->getAsString();
+    GlobalDebugger.onScriptEcho(msg);
 }
 
 void EngineHook::onShutdown() {

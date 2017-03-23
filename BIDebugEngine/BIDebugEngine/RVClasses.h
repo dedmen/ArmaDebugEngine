@@ -277,7 +277,7 @@ private:
     Ref<compact_array<char>> _ref;
     uint32_t offset;
     uint32_t length;
-    //#TODO complete this. And return ref for RString::substr
+    //#TODO complete this. And return ref for RString::substr Problem is reading the string needs 0 terminator so calling data on it is forbidden
 };
 
 

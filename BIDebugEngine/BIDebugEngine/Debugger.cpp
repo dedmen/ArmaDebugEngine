@@ -288,6 +288,7 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
 void Debugger::onShutdown() {
     for (auto& it : monitors)
         it->onShutdown();
+    nController.onShutdown();
 }
 
 void Debugger::onStartup() {
@@ -430,6 +431,12 @@ void Debugger::SerializeHookIntegrity(JsonArchive& answer) {
     answer.Serialize("ScrHalt", HI.scriptHalt);
     answer.Serialize("Alive", HI.engineAlive);
     answer.Serialize("EnMouse", HI.enableMouse);
+}
+
+void Debugger::onScriptEcho(RString msg) {
+    OutputDebugStringA("echo: ");
+    OutputDebugStringA(msg.data());
+    OutputDebugStringA("\n");
 }
 
 std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, std::vector<std::string>& varNames) const {

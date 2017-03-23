@@ -190,6 +190,8 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
         FALSE,    // initial state = signaled 
         NULL);   // unnamed event object
 
+    //#TODO catch crashes in these engine funcs by using https://msdn.microsoft.com/en-us/library/1deeycx5(v=vs.80).aspx http://stackoverflow.com/questions/457577/catching-access-violation-exceptions
+
 #ifndef X64 //#TODO crashy bashy
     EngineEnableMouseFnc(false); //Free mouse from Arma
 #endif

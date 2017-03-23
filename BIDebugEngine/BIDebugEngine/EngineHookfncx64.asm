@@ -15,6 +15,7 @@ _TEXT    SEGMENT
     EXTERN ?_onScriptError@EngineHook@@QEAAX_K@Z:               PROC;    EngineHook::_onScriptError
     EXTERN ?_onScriptAssert@EngineHook@@QEAAX_K@Z:              PROC;    EngineHook::_onScriptAssert
     EXTERN ?_onScriptHalt@EngineHook@@QEAAX_K@Z:                PROC;    EngineHook::_onScriptHalt
+    EXTERN ?_onScriptEcho@EngineHook@@QEAAX_K@Z:                PROC;    EngineHook::_onScriptEcho
 
     ;hool Enable fields    
     EXTERN hookEnabled_Instruction:                             qword
@@ -32,6 +33,7 @@ _TEXT    SEGMENT
     EXTERN scriptPreprocessorConstructorJmpBack:                qword
     EXTERN scriptAssertJmpBack:                                 qword
     EXTERN scriptHaltJmpBack:                                   qword
+    EXTERN scriptEchoJmpBack:                                   qword
 
     ;misc
     EXTERN GlobalEngineHook:                                    qword
@@ -353,9 +355,49 @@ _TEXT    SEGMENT
         
         xor     edx, edx;                                           return code. set to 1 to return true or leave to return false
         mov     rcx, rbx;                                           gameState*
-        jmp     scriptHaltJmpBack;                                 Orig function will create a bool(false) value on ecx and return it
+        jmp     scriptHaltJmpBack;                                  Orig function will create a bool(false) value on ecx and return it
 
     onScriptHalt ENDP
+
+
+    ;##########
+    PUBLIC onScriptEcho
+    onScriptEcho PROC
+
+        mov     [rsp+10h], rbx
+        push    rdi
+        sub     rsp, 20h
+        mov     rbx, rcx
+
+
+        push RAX;                                                   Overkill.. I know..
+        push RDX 
+        push R8 
+        push R9 
+        push R10; //#TODO R10 and R11 probably not needed
+        push R11
+
+
+
+        mov     rdx, r8;                                            GameValue*
+        mov     rcx, offset GlobalEngineHook;
+        call    ?_onScriptEcho@EngineHook@@QEAAX_K@Z;               EngineHook::_onScriptHalt;
+
+        pop R11
+        pop R10 
+        pop R9 
+        pop R8 
+        pop RDX 
+        pop RAX 
+
+        lea     rdx, [rsp+28h+20h];
+        mov     rcx, rbx;
+         
+        
+                                     
+        jmp     scriptEchoJmpBack;
+
+    onScriptEcho ENDP
 
 
 _TEXT    ENDS
