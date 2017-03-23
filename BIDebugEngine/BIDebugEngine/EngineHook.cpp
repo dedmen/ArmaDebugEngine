@@ -192,14 +192,14 @@ HookManager::Pattern pat_scriptPreprocessorDefineDefine{
     "\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x50\x48\x8B\xD9\x48\x8D\x4C\x24\x00\x48\x8B\xFA\xE8\x00\x00\x00\x00\x48\x8D\x54\x24\x00\x48\x8D\x4B\x18\xE8\x00\x00\x00\x00\x48\x8D\x4B\x18\x48\x8B\xD7\xE8\x00\x00\x00\x00\x8B\x48\x28\x85\xC9\x7E\x05\xFF\xC9\x89\x48\x28\x48\x8B\x54\x24\x00\x48\x85\xD2\x74\x0F\x44\x8B\x44\x24\x00"
 };
 
-HookManager::Pattern pat_onScriptAssert{//01052790 1.68.140.940
-    "xxxxx?xxx?xxx?xxxx?xxxxx?x?xxx?x????xx?xxx?xx????xx?????xx",
-    "\x53\x56\x8b\x74\x24\x00\x57\x8b\x4e\x00\x85\xc9\x74\x00\x8b\x01\x8b\x40\x00\xff\xd0\x84\xc0\x75\x00\x6a\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x83\xc4\x00\x8b\x7c\x24\x00\xc7\x07\x00\x00\x00\x00\xc7\x47\x00\x00\x00\x00\x00\x8b\x56"
+HookManager::Pattern pat_onScriptAssert{
+    "xxxx?xxxx?xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx????xxxx????xxx????xxxxxx?????xxxxxxxxxxxxx",
+    "\x48\x89\x5C\x24\x00\x48\x89\x74\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\xD9\x49\x8B\x48\x08\x49\x8B\xF8\x48\x8B\xF2\x48\x85\xC9\x74\x0A\x48\x8B\x01\xFF\x50\x20\x84\xC0\x75\x0D\xBA\x00\x00\x00\x00\x48\x8B\xCE\xE8\x00\x00\x00\x00\x48\x8D\x05\x00\x00\x00\x00\x48\x89\x03\x48\xC7\x43\x00\x00\x00\x00\x00\x48\x8B\x47\x08\x48\x8B\x4B\x08\x48\x85\xC0\x74\x04"
 };
 
-HookManager::Pattern pat_onScriptHalt{//01050B10 1.68.140.940
-    "x?xxx?x????xxx?xx?x?x????xxx?x",
-    "\x6a\x00\xff\x74\x24\x00\xe8\x00\x00\x00\x00\x8b\x4c\x24\x00\x83\xc4\x00\x6a\x00\xe8\x00\x00\x00\x00\x8b\x44\x24\x00\xc3"
+HookManager::Pattern pat_onScriptHalt{
+    "xxxxxxxxxxxxx????xxxx????xxxxxx????xxxxxxxxx",
+    "\x40\x53\x48\x83\xEC\x20\x48\x8B\xC2\x48\x8B\xD9\xBA\x00\x00\x00\x00\x48\x8B\xC8\xE8\x00\x00\x00\x00\x33\xD2\x48\x8B\xCB\xE8\x00\x00\x00\x00\x48\x8B\xC3\x48\x83\xC4\x20\x5B\xC3"
 };
 
 
@@ -349,16 +349,17 @@ void EngineHook::placeHooks() {
                                      //Could also patternFind and patch (profv3 0107144F) to unconditional jmp
     HookIntegrity HI;
 #ifdef X64
-    HI.__scriptVMConstructor = GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
-    HI.__scriptVMSimulateStart = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 2);
-    HI.__scriptVMSimulateEnd = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateEnd, pat_scriptVMSimulateEnd, reinterpret_cast<uintptr_t>(scriptVMSimulateEnd));
+    //HI.__scriptVMConstructor = GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
+    //HI.__scriptVMSimulateStart = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 2);
+    //HI.__scriptVMSimulateEnd = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateEnd, pat_scriptVMSimulateEnd, reinterpret_cast<uintptr_t>(scriptVMSimulateEnd));
     HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
     //has to jmpback 13CF0B6 wants 0x00000000013cf0af
-    HI.__worldSimulate = GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
+    //#TODO worldSimulate crashing on x64 1.68 profv3
+    //HI.__worldSimulate = GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
     //GlobalHookManager.placeHook(hookTypes::worldMissionEventStart, pat_worldMissionEventStart, reinterpret_cast<uintptr_t>(worldMissionEventStart), worldMissionEventStartJmpBack, 2);
     //GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
-    HI.__worldMissionEventStart = false;
-    HI.__worldMissionEventEnd = false;
+    //HI.__worldMissionEventStart = false;
+    //HI.__worldMissionEventEnd = false;
     HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 5);
    
     scriptPreprocessorDefineDefine = GlobalHookManager.findPattern(pat_scriptPreprocessorDefineDefine);
@@ -367,6 +368,8 @@ void EngineHook::placeHooks() {
     if (scriptPreprocessorDefineDefine) //else report error
         HI.scriptPreprocConstr = GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 0xA);
 
+    HI.scriptAssert = GlobalHookManager.placeHook(hookTypes::onScriptAssert, pat_onScriptAssert, reinterpret_cast<uintptr_t>(onScriptAssert), scriptAssertJmpBack, 0xB7 - 0x95 + 0x8);
+    HI.scriptHalt = GlobalHookManager.placeHook(hookTypes::onScriptHalt, pat_onScriptHalt, reinterpret_cast<uintptr_t>(onScriptHalt), scriptHaltJmpBack, 1 + 0xE + 1);
 
 
 #else

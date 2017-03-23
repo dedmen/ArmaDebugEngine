@@ -13,6 +13,8 @@ _TEXT    SEGMENT
     EXTERN ?_world_OnMissionEventEnd@EngineHook@@QEAAXXZ:       PROC;    EngineHook::_world_OnMissionEventEnd
     EXTERN ?_worldSimulate@EngineHook@@QEAAXXZ:                 PROC;    EngineHook::_worldSimulate
     EXTERN ?_onScriptError@EngineHook@@QEAAX_K@Z:               PROC;    EngineHook::_onScriptError
+    EXTERN ?_onScriptAssert@EngineHook@@QEAAX_K@Z:              PROC;    EngineHook::_onScriptAssert
+    EXTERN ?_onScriptHalt@EngineHook@@QEAAX_K@Z:                PROC;    EngineHook::_onScriptHalt
 
     ;hool Enable fields    
     EXTERN hookEnabled_Instruction:                             qword
@@ -27,9 +29,9 @@ _TEXT    SEGMENT
     EXTERN worldMissionEventEndJmpBack:                         qword
     EXTERN scriptVMConstructorJmpBack:                          qword
     EXTERN onScriptErrorJmpBack:                                qword
-    EXTERN scriptPreprocessorConstructorJmpBack:               qword
-    EXTERN scriptAssertJmpBack:                                qword
-    EXTERN scriptHaltJmpBack:                                  qword
+    EXTERN scriptPreprocessorConstructorJmpBack:                qword
+    EXTERN scriptAssertJmpBack:                                 qword
+    EXTERN scriptHaltJmpBack:                                   qword
 
     ;misc
     EXTERN GlobalEngineHook:                                    qword
@@ -297,8 +299,63 @@ _TEXT    SEGMENT
 
     scriptPreprocessorConstructor ENDP
 
+    ;##########
+    PUBLIC onScriptAssert
+    onScriptAssert PROC
+
+        mov     [rsp+10h], rbx
+        mov     [rsp+18h], rsi
+        push    rdi
+        sub     rsp, 20h
+        mov     rbx, rcx
+        mov     rcx, [r8+8]
+        mov     rdi, r8
+        mov     rsi, rdx
+        test    rcx, rcx
+        jz      short _error
+        mov     rax, [rcx]
+        call    qword ptr [rax+20h];                                GameValue::getAsBool
+        test    al, al
+        jnz     short _return
+    _error:
+        push    rdx;
+        mov     rdx, rsi;                                           GameState*
+        mov     rcx, offset GlobalEngineHook;
+        call    ?_onScriptAssert@EngineHook@@QEAAX_K@Z;               EngineHook::_onScriptAssert;
+        pop     rdx;
+    _return:
+        jmp     scriptAssertJmpBack;
+
+    onScriptAssert ENDP
+
+    ;##########
+    PUBLIC onScriptHalt
+    onScriptHalt PROC
+
+        push    rbx
+        sub     rsp, 20h
+        mov     rax, rdx
+        mov     rbx, rcx
+
+        ;mov     edx, 19h
+        ;mov     rcx, rax
+        ;call    sub_1392640     ; setError
 
 
+
+
+        push    rdx;
+        mov     rdx, rax;
+        mov     rcx, offset GlobalEngineHook;
+        call    ?_onScriptHalt@EngineHook@@QEAAX_K@Z;                 EngineHook::_onScriptHalt;
+        pop     rdx;
+    _return:
+        
+        xor     edx, edx;                                           return code. set to 1 to return true or leave to return false
+        mov     rcx, rbx;                                           gameState*
+        jmp     scriptHaltJmpBack;                                 Orig function will create a bool(false) value on ecx and return it
+
+    onScriptHalt ENDP
 
 
 _TEXT    ENDS

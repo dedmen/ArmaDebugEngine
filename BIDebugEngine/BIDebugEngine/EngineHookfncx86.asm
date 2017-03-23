@@ -312,9 +312,9 @@ _TEXT    SEGMENT
         mov     ecx, offset _GlobalEngineHook;
         call    ?_onScriptHalt@EngineHook@@QAEXI@Z;                 EngineHook::_onScriptHalt;
     _return:
-        mov     ecx, [esp+4];                                     Orig function will create a Nil value on ecx and return it
+        mov     ecx, [esp+4];                                       Orig function will create a bool(false) value on ecx and return it
         ;add     esp, 8
-        push    0
+        push    0                                                  ;make this 1 to return true
         jmp     _scriptHaltJmpBack;
 
     _onScriptHalt ENDP
