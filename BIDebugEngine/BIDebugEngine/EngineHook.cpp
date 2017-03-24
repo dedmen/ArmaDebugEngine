@@ -591,7 +591,8 @@ void EngineHook::_world_OnMissionEventEnd() {
 
 void EngineHook::_onScriptError(uintptr_t gameSate) {
     auto gs = reinterpret_cast<GameState *>(gameSate);
-    GlobalDebugger.onScriptError(gs);
+    if (gs && gs->GEval->_errorType != 0)
+        GlobalDebugger.onScriptError(gs);
 }
 
 void EngineHook::_onScriptAssert(uintptr_t gameSate) {

@@ -301,7 +301,7 @@ void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructio
     state = DebuggerState::breakState;
     breakStateInfo.bp = bp;
     breakStateInfo.instruction = &instructionInfo;
-    if (!nController.isClientConnected()) { commandContinue(StepType::STContinue); return; }
+
     JsonArchive ar;
     switch (type) {
         case haltType::breakpoint:
