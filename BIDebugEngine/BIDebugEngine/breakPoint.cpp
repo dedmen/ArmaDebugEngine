@@ -180,7 +180,8 @@ extern EngineAlive* EngineAliveFnc;
 extern EngineEnableMouse* EngineEnableMouseFnc;
 
 void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstructionInfo& info) {
-    auto waitEvent = std::make_shared<std::condition_variable>();
+    auto waitEvent = std::make_shared<std::pair<std::condition_variable,bool>>();
+    waitEvent->second = false;
     std::mutex waitMutex;
 
     //#TODO catch crashes in these engine funcs by using https://msdn.microsoft.com/en-us/library/1deeycx5(v=vs.80).aspx http://stackoverflow.com/questions/457577/catching-access-violation-exceptions
@@ -192,12 +193,12 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
     bool halting = true;
     while (halting) {
         std::unique_lock<std::mutex> lk(waitMutex);
-        auto result = waitEvent->wait_for(lk, 3s);
+        waitEvent->first.wait_for(lk, 1s, [waitEvent]() {return waitEvent->second; });
 
 #ifndef X64 //#TODO crashy bashy
         if (EngineAliveFnc) EngineAliveFnc();
 #endif
-        if (result != std::cv_status::timeout) {
+        if (waitEvent->second) {
             halting = false;
             //EngineEnableMouseFnc(true); Causes mouse to jump to bottom right screen corner
             dbg->onContinue();

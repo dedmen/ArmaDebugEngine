@@ -91,7 +91,7 @@ public:
     void onShutdown();
     void onStartup();
 
-    void onHalt(std::shared_ptr<std::condition_variable> waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& info, haltType type); //Breakpoint is halting engine
+    void onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& info, haltType type); //Breakpoint is halting engine
     void onContinue(); //Breakpoint has stopped halting
     void commandContinue(StepType stepType); //Tells Breakpoint in breakState to Stop halting
     void setGameVersion(const char* productType, const char* productVersion);
@@ -138,7 +138,7 @@ public:
     MapStringToClassNonRV<breakPointList, std::vector<breakPointList>> breakPoints; //All inputs have to be tolowered before accessing
     std::vector<std::shared_ptr<IMonitorBase>> monitors;
     NetworkController nController;
-    std::shared_ptr<std::condition_variable> breakStateContinueEvent;
+    std::shared_ptr<std::pair<std::condition_variable, bool>> breakStateContinueEvent;
     DebuggerState state{ DebuggerState::Uninitialized };
     BreakStateInfo breakStateInfo;
     struct {

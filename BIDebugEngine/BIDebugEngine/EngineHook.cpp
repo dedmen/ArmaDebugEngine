@@ -19,12 +19,16 @@ std::chrono::high_resolution_clock::time_point lastContextExit;
 
 class globalTimeKeeper {
 public:
+#ifdef ScriptProfiling 
     globalTimeKeeper() {
         globalTime += std::chrono::high_resolution_clock::now() - lastContextExit;
     }
     ~globalTimeKeeper() {
         lastContextExit = std::chrono::high_resolution_clock::now();
     }
+#endif
+    globalTimeKeeper() {}
+    ~globalTimeKeeper() {}
 };
 
 EngineHook::EngineHook() {
@@ -559,7 +563,7 @@ const char* lastInstructionFile;
 
 void EngineHook::_scriptInstruction(uintptr_t instructionBP_Instruction, uintptr_t instructionBP_VMContext, uintptr_t instructionBP_gameState, uintptr_t instructionBP_IDebugScript) {
     globalTimeKeeper _tc;
-    auto start = std::chrono::high_resolution_clock::now();
+    //auto start = std::chrono::high_resolution_clock::now();
 
     auto instruction = reinterpret_cast<RV_GameInstruction *>(instructionBP_Instruction);
     auto ctx = reinterpret_cast<RV_VMContext *>(instructionBP_VMContext);

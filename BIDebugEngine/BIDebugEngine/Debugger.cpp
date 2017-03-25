@@ -207,6 +207,7 @@ void Debugger::writeFrameToFile(uint32_t frameCounter) {
 }
 
 void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
+    if (monitors.empty() && breakPoints.empty()) return;
     instructionInfo.instruction->_scriptPos._sourceFile.lower();
     checkForBreakpoint(instructionInfo);
 
@@ -278,8 +279,12 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     auto &found = breakPoints.get(instructionInfo.instruction->_scriptPos._sourceFile.data());
     if (breakPoints.isNull(found) || found.empty()) return;
     for (auto& bp : found) {
-        if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine)
+        if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine) {
+            lk.unlock();//if this BP halt's adding/deleting breakpoints should still be possible
             bp.trigger(this, instructionInfo);
+            lk.lock();
+        }
+            
     }
 }
 
@@ -294,7 +299,7 @@ void Debugger::onStartup() {
     state = DebuggerState::running;
 }
 
-void Debugger::onHalt(std::shared_ptr<std::condition_variable> waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo, haltType type) {
+void Debugger::onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo, haltType type) {
     breakStateContinueEvent = waitEvent;
     state = DebuggerState::breakState;
     breakStateInfo.bp = bp;
@@ -334,7 +339,7 @@ void Debugger::onHalt(std::shared_ptr<std::condition_variable> waitEvent, BreakP
     } else if (type == haltType::assert || type == haltType::halt) {
         JsonArchive assertAr;
 
-        auto& _errorPosition = instructionInfo.context->_lastInstructionPos;
+        auto& _errorPosition = instructionInfo.context->_lastInstructionPos; //#BUG context could be nullptr
 
         assertAr.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, Script::getScriptLineOffset(_errorPosition) });
         assertAr.Serialize("filename", _errorPosition._sourceFile);
@@ -401,8 +406,8 @@ void Debugger::commandContinue(StepType stepType) {
             default: break;
         }
     }
-
-    breakStateContinueEvent->notify_all();
+    breakStateContinueEvent->second = true;
+    breakStateContinueEvent->first.notify_all();
     nController.sendMessage("{\"command\":8}");//#TODO this breaks if Continue commands number changes
 }
 
