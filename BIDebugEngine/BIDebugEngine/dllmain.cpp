@@ -14,16 +14,35 @@ struct IUnknown; //Clang compiler error in windows.h
 
 extern uintptr_t engineAlloc;
 extern uintptr_t globalAlivePtr;
-
+std::string gameVersionResource;
 BOOL APIENTRY DllMain(HMODULE hModule,
     DWORD  ul_reason_for_call,
     LPVOID lpReserved
 ) {
     WAIT_FOR_DEBUGGER_ATTACHED;
-
-
     switch (ul_reason_for_call) {
-        case DLL_PROCESS_ATTACH:
+        case DLL_PROCESS_ATTACH: {
+
+            WCHAR fileName[_MAX_PATH];
+            DWORD size = GetModuleFileName(nullptr, fileName, _MAX_PATH);
+            fileName[size] = NULL;
+            DWORD handle = 0;
+            size = GetFileVersionInfoSize(fileName, &handle);
+            BYTE* versionInfo = new BYTE[size];
+            if (GetFileVersionInfo(fileName, handle, size, versionInfo)) {
+                UINT    			len = 0;
+                VS_FIXEDFILEINFO*   vsfi = nullptr;
+                VerQueryValue(versionInfo, L"\\", reinterpret_cast<void**>(&vsfi), &len);
+
+                short version = HIWORD(vsfi->dwFileVersionLS);
+                short version2 = LOWORD(vsfi->dwFileVersionLS);
+                short minor = HIWORD(vsfi->dwFileVersionMS);
+                short minor2 = LOWORD(vsfi->dwFileVersionMS);
+                gameVersionResource = std::to_string(minor) + "." + std::to_string(minor2) + (version < 100 ? ".0" : ".") + std::to_string(version) + (version2 < 100 ? "0" : "") + std::to_string(version2);
+            }
+            delete[] versionInfo;
+
+        }
         case DLL_THREAD_ATTACH:
         case DLL_THREAD_DETACH:
         case DLL_PROCESS_DETACH:
@@ -38,7 +57,7 @@ extern "C" BOOL WINAPI _DllMainCRTStartup(
     DWORD     const reason,
     LPVOID    const reserved
 );
-std::string gameVersionResource;
+
 BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason, LPVOID) {
     if (reason != DLL_PROCESS_ATTACH) return TRUE;
     //Post entry point and pre DllMain
@@ -89,31 +108,6 @@ BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason, LPVOID) {
     uintptr_t allocatorVtablePtr = (findInMemory((char*) &stringOffset, sizeof(uintptr_t)) - sizeof(uintptr_t));
     const char* test = getRTTIName(reinterpret_cast<uintptr_t*>(allocatorVtablePtr));
     engineAlloc = allocatorVtablePtr;
-
-
-    WCHAR fileName[_MAX_PATH];
-    DWORD size = GetModuleFileName(nullptr, fileName, _MAX_PATH);
-    fileName[size] = NULL;
-    DWORD handle = 0;
-    size = GetFileVersionInfoSize(fileName, &handle);
-    BYTE* versionInfo = new BYTE[size];
-    if (GetFileVersionInfo(fileName, handle, size, versionInfo)) {
-        UINT    			len = 0;
-        VS_FIXEDFILEINFO*   vsfi = nullptr;
-        VerQueryValue(versionInfo, L"\\", reinterpret_cast<void**>(&vsfi), &len);
-
-        short version = HIWORD(vsfi->dwFileVersionLS);
-        short version2 = LOWORD(vsfi->dwFileVersionLS);
-        short minor = HIWORD(vsfi->dwFileVersionMS);
-        short minor2 = LOWORD(vsfi->dwFileVersionMS);
-        gameVersionResource = std::to_string(minor) + "." + std::to_string(minor2) + "." + std::to_string(version) + "." + std::to_string(version2);
-    }
-    delete[] versionInfo;
-    
-
-
-
-
 
     return TRUE;
 }

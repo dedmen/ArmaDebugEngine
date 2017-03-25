@@ -61,6 +61,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                 BreakPoint bp;
                 bp.Serialize(ar);
                 bp.filename.lower();
+                std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
                 auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename);
                 if (!GlobalDebugger.breakPoints.isNull(bpVec)) {
                     auto vecFound = std::find_if(bpVec.begin(), bpVec.end(), [lineNumber = bp.line](const BreakPoint& bp) {
@@ -82,6 +83,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                 ar.Serialize("line", lineNumber);
                 ar.Serialize("filename", fileName);
                 std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
+                std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
                 auto &found = GlobalDebugger.breakPoints.get(fileName.c_str());
                 if (!GlobalDebugger.breakPoints.isNull(found)) {
                     auto vecFound = std::find_if(found.begin(), found.end(), [lineNumber](const BreakPoint& bp) {

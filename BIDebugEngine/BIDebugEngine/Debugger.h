@@ -5,6 +5,7 @@
 #include "BreakPoint.h"
 #include "Monitor.h"
 #include "NetworkController.h"
+#include <shared_mutex>
 
 namespace std {
     class mutex;
@@ -66,6 +67,7 @@ struct HookIntegrity {
     bool scriptPreprocConstr{ false };
     bool scriptAssert{ false };
     bool scriptHalt{ false };
+    bool scriptEcho{ false };
     bool engineAlive{ false };
     bool enableMouse{ false };
 };
@@ -77,7 +79,7 @@ public:
     Debugger();
     ~Debugger();
 
-    //#TOOD Variable read/write breakpoints GameInstructionVariable/GameInstructionAssignment
+    //#TODO Variable read/write breakpoints GameInstructionVariable/GameInstructionAssignment
     void clear();
     std::shared_ptr<VMContext> getVMContext(RV_VMContext* vm);
     void writeFrameToFile(uint32_t frameCounter);
@@ -132,6 +134,7 @@ public:
 
 
     };
+    std::shared_mutex breakPointsLock;
     MapStringToClassNonRV<breakPointList, std::vector<breakPointList>> breakPoints; //All inputs have to be tolowered before accessing
     std::vector<std::shared_ptr<IMonitorBase>> monitors;
     NetworkController nController;

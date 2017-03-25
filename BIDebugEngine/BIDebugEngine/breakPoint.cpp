@@ -145,7 +145,7 @@ bool BreakPoint::trigger(Debugger* dbg, const DebuggerInstructionInfo& instructi
 }
 
 void BreakPoint::executeActions(Debugger* dbg, const DebuggerInstructionInfo& instructionInfo) {
-    if (action) action->execute(dbg, this, instructionInfo); //#TODO move into breakPoint::executeActions 
+    if (action) action->execute(dbg, this, instructionInfo);
 }
 
 bool BPCondition_Code::isMatching(Debugger*, BreakPoint*, const DebuggerInstructionInfo& info) {
@@ -186,7 +186,7 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
     //#TODO catch crashes in these engine funcs by using https://msdn.microsoft.com/en-us/library/1deeycx5(v=vs.80).aspx http://stackoverflow.com/questions/457577/catching-access-violation-exceptions
 
 #ifndef X64 //#TODO crashy bashy
-    EngineEnableMouseFnc(false); //Free mouse from Arma
+    if (EngineEnableMouseFnc) EngineEnableMouseFnc(false); //Free mouse from Arma
 #endif
     dbg->onHalt(waitEvent, bp, info, type);
     bool halting = true;
@@ -195,7 +195,7 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
         auto result = waitEvent->wait_for(lk, 3s);
 
 #ifndef X64 //#TODO crashy bashy
-        EngineAliveFnc();
+        if (EngineAliveFnc) EngineAliveFnc();
 #endif
         if (result != std::cv_status::timeout) {
             halting = false;

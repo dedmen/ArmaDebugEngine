@@ -356,19 +356,21 @@ void EngineHook::placeHooks() {
                                      //Could also patternFind and patch (profv3 0107144F) to unconditional jmp
     HookIntegrity HI;
 #ifdef X64
+#ifdef ScriptProfiling
     //HI.__scriptVMConstructor = GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
     //HI.__scriptVMSimulateStart = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 2);
     //HI.__scriptVMSimulateEnd = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateEnd, pat_scriptVMSimulateEnd, reinterpret_cast<uintptr_t>(scriptVMSimulateEnd));
-    HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
-    //has to jmpback 13CF0B6 wants 0x00000000013cf0af
     //#TODO worldSimulate crashing on x64 1.68 profv3
     //HI.__worldSimulate = GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
     //GlobalHookManager.placeHook(hookTypes::worldMissionEventStart, pat_worldMissionEventStart, reinterpret_cast<uintptr_t>(worldMissionEventStart), worldMissionEventStartJmpBack, 2);
     //GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
-    //HI.__worldMissionEventStart = false;
-    //HI.__worldMissionEventEnd = false;
-    HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 5);
+#endif
 
+
+    HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
+    //has to jmpback 13CF0B6 wants 0x00000000013cf0af
+
+    HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 5);
     scriptPreprocessorDefineDefine = GlobalHookManager.findPattern(pat_scriptPreprocessorDefineDefine);
 
     HI.scriptPreprocDefine = (scriptPreprocessorDefineDefine != 0);
@@ -377,16 +379,18 @@ void EngineHook::placeHooks() {
 
     HI.scriptAssert = GlobalHookManager.placeHook(hookTypes::onScriptAssert, pat_onScriptAssert, reinterpret_cast<uintptr_t>(onScriptAssert), scriptAssertJmpBack, 0xB7 - 0x95 + 0x8);
     HI.scriptHalt = GlobalHookManager.placeHook(hookTypes::onScriptHalt, pat_onScriptHalt, reinterpret_cast<uintptr_t>(onScriptHalt), scriptHaltJmpBack, 1 + 0xE + 1);
-    GlobalHookManager.placeHook(hookTypes::onScriptEcho, pat_onScriptEcho, reinterpret_cast<uintptr_t>(onScriptEcho), scriptEchoJmpBack, 0xE - 0xD + 3);
+    HI.scriptEcho = GlobalHookManager.placeHook(hookTypes::onScriptEcho, pat_onScriptEcho, reinterpret_cast<uintptr_t>(onScriptEcho), scriptEchoJmpBack, 0xE - 0xD + 3);
 
 #else
+#ifdef ScriptProfiling
     HI.__scriptVMConstructor = GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
     HI.__scriptVMSimulateStart = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 1);
     HI.__scriptVMSimulateEnd = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateEnd, pat_scriptVMSimulateEnd, reinterpret_cast<uintptr_t>(scriptVMSimulateEnd));
-    HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 1);
     HI.__worldSimulate = GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
     HI.__worldMissionEventStart = GlobalHookManager.placeHook(hookTypes::worldMissionEventStart, pat_worldMissionEventStart, reinterpret_cast<uintptr_t>(worldMissionEventStart), worldMissionEventStartJmpBack, 2);
     HI.__worldMissionEventEnd = GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
+#endif
+    HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 1);
     HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 0);
 
     scriptPreprocessorDefineDefine = GlobalHookManager.findPattern(pat_scriptPreprocessorDefineDefine);
@@ -396,16 +400,29 @@ void EngineHook::placeHooks() {
         HI.scriptPreprocConstr = GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 4);
     HI.scriptAssert = GlobalHookManager.placeHook(hookTypes::onScriptAssert, pat_onScriptAssert, reinterpret_cast<uintptr_t>(onScriptAssert), scriptAssertJmpBack, 0xB7 - 0x95);
     HI.scriptHalt = GlobalHookManager.placeHook(hookTypes::onScriptHalt, pat_onScriptHalt, reinterpret_cast<uintptr_t>(onScriptHalt), scriptHaltJmpBack, 1 + 0xE);
-    GlobalHookManager.placeHook(hookTypes::onScriptEcho, pat_onScriptEcho, reinterpret_cast<uintptr_t>(onScriptEcho), scriptEchoJmpBack, 2);
+    HI.scriptEcho = GlobalHookManager.placeHook(hookTypes::onScriptEcho, pat_onScriptEcho, reinterpret_cast<uintptr_t>(onScriptEcho), scriptEchoJmpBack, 2);
 #endif
 
     EngineAliveFnc = reinterpret_cast<EngineAlive*>(GlobalHookManager.findPattern(pat_EngineAliveFnc));
     //Find by searching for.  "XML parsing error: cannot read the source file". function call right after start of while loop
     HI.engineAlive = (EngineAliveFnc != nullptr);
-    //#TODO don't call EngineEnableMouseFnc if nullptr
+
     EngineEnableMouseFnc = reinterpret_cast<EngineEnableMouse*>(GlobalHookManager.findPattern(pat_EngineEnableMouseFnc));
     HI.enableMouse = (EngineEnableMouseFnc != nullptr);
     //To yield scriptVM and let engine run while breakPoint hit. 0103C5BB overwrite eax to Yield
+
+
+
+
+#ifndef ScriptProfiling
+    HI.__scriptVMConstructor = true;
+    HI.__scriptVMSimulateStart = true;
+    HI.__scriptVMSimulateEnd = true;
+    HI.__worldSimulate = true;
+    HI.__worldMissionEventStart = true;
+    HI.__worldMissionEventEnd = true;
+#endif
+
     GlobalDebugger.setHookIntegrity(HI);
 
     if (!
@@ -422,6 +439,7 @@ void EngineHook::placeHooks() {
             && HI.scriptPreprocConstr
             && HI.scriptAssert
             && HI.scriptHalt
+            && HI.scriptEcho
             && HI.engineAlive
             && HI.enableMouse)) {
         std::string error("Some hooks have failed. Certain functionality might not be available.\n\n");
@@ -439,6 +457,7 @@ void EngineHook::placeHooks() {
         if (!HI.scriptPreprocConstr)	  error += "PRECON	\tFAILED WARNING	\n\tEffect: Preprocessor Macro \"DEBUG\" will not be available\n\n";
         if (!HI.scriptAssert)			  error += "SCRASS	\tFAILED WARNING	\n\tEffect: Script Command \"assert\" will not trigger a break\n\n";
         if (!HI.scriptHalt)				  error += "SCRHALT	\tFAILED WARNING	\n\tEffect: Script Command \"halt\" will not trigger a break\n\n";
+        if (!HI.scriptEcho)				  error += "SCRECHO	\tFAILED WARNING	\n\tEffect: Script Command \"echo\" will not echo anything\n\n";
         if (!HI.engineAlive)			  error += "ALIVE	\tFAILED WARNING	\n\tEffect: Game might think it froze if a breakpoint is triggered\n\n";
         if (!HI.enableMouse)			  error += "ENMOUSE	\tFAILED WARNING	\n\tEffect: Mouse might be stuck in Game and has to be Freed by opening Task-Manager via CTRL+ALT+DEL\n\n";
         if (fatal) error += "\n A Fatal error occured. Your Game version is not compatible with ArmaDebugEngine. Please tell a dev.";

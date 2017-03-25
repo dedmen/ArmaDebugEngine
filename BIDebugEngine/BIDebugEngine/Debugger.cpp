@@ -274,9 +274,9 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     if (breakPoints.empty()) return;
     //if (_strcmpi(instructionInfo.instruction->_scriptPos._sourceFile.data(), "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf") == 0)
     //    __debugbreak();
+    std::shared_lock<std::shared_mutex> lk(breakPointsLock);
     auto &found = breakPoints.get(instructionInfo.instruction->_scriptPos._sourceFile.data());
     if (breakPoints.isNull(found) || found.empty()) return;
-    //#TODO put RWLock around breakPoints!
     for (auto& bp : found) {
         if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine)
             bp.trigger(this, instructionInfo);
@@ -322,7 +322,6 @@ void Debugger::onHalt(std::shared_ptr<std::condition_variable> waitEvent, BreakP
     if (instructionInfo.context)
         instructionInfo.context->Serialize(ar); //Set's callstack
 
-        //#TODO add GameState variables
 
     if (instructionInfo.instruction) {
         JsonArchive instructionAr;

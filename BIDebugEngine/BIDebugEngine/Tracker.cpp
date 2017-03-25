@@ -49,12 +49,13 @@ void Tracker::trackPiwik() {
             { 15,"ScrHalt",std::to_string(HI.scriptHalt) },
             { 16,"Alive",std::to_string(HI.engineAlive) },
             { 17,"EnMouse",std::to_string(HI.enableMouse) },
+            { 18,"ScrEcho",std::to_string(HI.scriptEcho) },
         };
         std::stringstream request;
         request << "piwik.php?idsite=5&rec=1&url=\"piwik.dedmen.de\"";
         request << "&action_name=" << DBG_BUILD;
-        request << "&rand=" << rand();
-        request << "&uid=" << rand();
+        request << "&rand=" << std::chrono::system_clock::now().time_since_epoch().count(); //this is better than using rand() as rand() always produces same output cause we don't salt it
+        request << "&uid=" << std::chrono::system_clock::now().time_since_epoch().count();
         request << "&cvar={";
         bool firstVar = true;
         for (const trackerCustomVariable& customVar : piwikData) {
