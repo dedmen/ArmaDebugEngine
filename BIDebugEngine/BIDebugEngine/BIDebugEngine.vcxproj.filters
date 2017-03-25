@@ -40,6 +40,9 @@
     <Filter Include="Header Files\misc">
       <UniqueIdentifier>{8f7668fe-b898-49f0-b12b-a771c1ee3482}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\misc">
+      <UniqueIdentifier>{c384d552-a3be-4ac3-9f01-2055b596d10c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -78,8 +81,17 @@
     <ClCompile Include="Monitor.cpp">
       <Filter>Source Files\Debugger</Filter>
     </ClCompile>
+    <ClCompile Include="RVBaseTypes.cpp">
+      <Filter>Source Files\BIDebugEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="RVContainer.cpp">
+      <Filter>Source Files\BIDebugEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="RVIDebugInterface.cpp">
+      <Filter>Source Files\BIDebugEngine</Filter>
+    </ClCompile>
     <ClCompile Include="Tracker.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\misc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -128,8 +140,17 @@
     <ClInclude Include="version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RVBaseTypes.h">
+      <Filter>Header Files\BIDebugEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="RVContainer.h">
+      <Filter>Header Files\BIDebugEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="RVIDebugInterface.h">
+      <Filter>Header Files\BIDebugEngine</Filter>
+    </ClInclude>
     <ClInclude Include="Tracker.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\misc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

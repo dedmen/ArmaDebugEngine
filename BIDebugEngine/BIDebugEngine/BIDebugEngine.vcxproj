@@ -50,7 +50,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug141|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>LLVM-vs2014</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -157,6 +157,8 @@
       <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;WIN32;_DEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MinimalRebuild>true</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -178,10 +180,11 @@
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <MSCompatibility>true</MSCompatibility>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <ModuleDefinitionFile>BIDebugEngine.def</ModuleDefinitionFile>
       <Profile>false</Profile>
     </Link>
@@ -200,6 +203,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;_DEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -241,6 +245,7 @@
       <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;WIN32;NDEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -292,6 +297,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;NDEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -314,6 +320,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;NDEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -360,7 +367,10 @@
     <ClCompile Include="Monitor.cpp" />
     <ClCompile Include="NamedPipeServer.cpp" />
     <ClCompile Include="NetworkController.cpp" />
+    <ClCompile Include="RVBaseTypes.cpp" />
     <ClCompile Include="RVClasses.cpp" />
+    <ClCompile Include="RVContainer.cpp" />
+    <ClCompile Include="RVIDebugInterface.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="Serialize.cpp" />
     <ClCompile Include="Tracker.cpp" />
@@ -376,7 +386,10 @@
     <ClInclude Include="Monitor.h" />
     <ClInclude Include="NamedPipeServer.h" />
     <ClInclude Include="NetworkController.h" />
+    <ClInclude Include="RVBaseTypes.h" />
     <ClInclude Include="RVClasses.h" />
+    <ClInclude Include="RVContainer.h" />
+    <ClInclude Include="RVIDebugInterface.h" />
     <ClInclude Include="Script.h" />
     <ClInclude Include="Serialize.h" />
     <ClInclude Include="SignalSlot.h" />

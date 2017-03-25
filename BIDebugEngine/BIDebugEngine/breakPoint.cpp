@@ -1,8 +1,11 @@
 #include "BreakPoint.h"
 #include "Debugger.h"
 #include "Serialize.h"
-#include <windows.h>
+#include <condition_variable>
+#include <memory>
 #include <fstream>
+#include <chrono>
+using namespace std::chrono_literals;
 
 BreakPoint::BreakPoint(uint16_t _line) :line(_line) {}
 
@@ -177,18 +180,8 @@ extern EngineAlive* EngineAliveFnc;
 extern EngineEnableMouse* EngineEnableMouseFnc;
 
 void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstructionInfo& info) {
-    SECURITY_DESCRIPTOR SD;
-    InitializeSecurityDescriptor(&SD, SECURITY_DESCRIPTOR_REVISION);
-    SetSecurityDescriptorDacl(&SD, TRUE, NULL, FALSE);
-    SECURITY_ATTRIBUTES SA;
-    SA.nLength = sizeof(SA);
-    SA.lpSecurityDescriptor = &SD;
-    SA.bInheritHandle = TRUE;
-    auto waitEvent = CreateEvent(
-        &SA,    // default security attribute 
-        TRUE,    // manual-reset event 
-        FALSE,    // initial state = signaled 
-        NULL);   // unnamed event object
+    auto waitEvent = std::make_shared<std::condition_variable>();
+    std::mutex waitMutex;
 
     //#TODO catch crashes in these engine funcs by using https://msdn.microsoft.com/en-us/library/1deeycx5(v=vs.80).aspx http://stackoverflow.com/questions/457577/catching-access-violation-exceptions
 
@@ -198,19 +191,19 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
     dbg->onHalt(waitEvent, bp, info, type);
     bool halting = true;
     while (halting) {
-        DWORD waitResult = WaitForSingleObject(waitEvent, 3000);
+        std::unique_lock<std::mutex> lk(waitMutex);
+        auto result = waitEvent->wait_for(lk, 3s);
 
 #ifndef X64 //#TODO crashy bashy
         EngineAliveFnc();
 #endif
-        if (waitResult != WAIT_TIMEOUT) {
+        if (result != std::cv_status::timeout) {
             halting = false;
             //EngineEnableMouseFnc(true); Causes mouse to jump to bottom right screen corner
             dbg->onContinue();
         }
     }
 
-    CloseHandle(waitEvent);
 }
 
 void BPAction_Halt::Serialize(JsonArchive& ar) {

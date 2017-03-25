@@ -1,4 +1,7 @@
 #include "NamedPipeServer.h"
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN 
+struct IUnknown; //Clang compiler error in windows.h
 #include <windows.h>
 
 NamedPipeServer::NamedPipeServer() {
@@ -207,30 +210,28 @@ void NamedPipeServer::closePipe() {
 }
 
 void NamedPipeServer::queueRead() {
-    struct overlappedCarrier {
-        OVERLAPPED pipeOverlap{ 0 };
-        NamedPipeServer* _this;
-    };
-    overlappedCarrier overlapCarry;
-    //overlapCarry.pipeOverlap.hEvent = waitForDataEvent;
-    overlapCarry._this = this;
-
-    auto fSuccess = ReadFileEx(
-        pipe,
-        recvBuffer.data(),
-        static_cast<DWORD>(recvBuffer.size() * sizeof(recvBuffer)),
-        &overlapCarry.pipeOverlap,
-        [](DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
-        auto ob = reinterpret_cast<overlappedCarrier *>(lpOverlapped);
-        ob->_this;
-    });
-    if (!fSuccess) {
-        auto errorCode = GetLastError();
-        if (errorCode == ERROR_BROKEN_PIPE) {
-            openPipe();
-        }
-    }
-    SleepEx(5000, true);
-
-
+    //struct overlappedCarrier {
+    //    OVERLAPPED pipeOverlap{ 0 };
+    //    NamedPipeServer* _this;
+    //};
+    //overlappedCarrier overlapCarry;
+    ////overlapCarry.pipeOverlap.hEvent = waitForDataEvent;
+    //overlapCarry._this = this;
+    //
+    //auto fSuccess = ReadFileEx(
+    //    pipe,
+    //    recvBuffer.data(),
+    //    static_cast<DWORD>(recvBuffer.size() * sizeof(recvBuffer)),
+    //    &overlapCarry.pipeOverlap,
+    //    [](DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped) {
+    //    auto ob = reinterpret_cast<overlappedCarrier *>(lpOverlapped);
+    //    ob->_this;
+    //});
+    //if (!fSuccess) {
+    //    auto errorCode = GetLastError();
+    //    if (errorCode == ERROR_BROKEN_PIPE) {
+    //        openPipe();
+    //    }
+    //}
+    //SleepEx(5000, true);
 }

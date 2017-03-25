@@ -3,9 +3,7 @@
 #include <fstream>
 #include "Script.h"
 #include "Serialize.h"
-#include <unordered_set>
-#include <windows.h>
-#include <unordered_map>
+#include <condition_variable>
 #include "version.h"
 //std::array<const char*, 710> files{};
 Debugger::Debugger() {
@@ -296,7 +294,7 @@ void Debugger::onStartup() {
     state = DebuggerState::running;
 }
 
-void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo, haltType type) {
+void Debugger::onHalt(std::shared_ptr<std::condition_variable> waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo, haltType type) {
     breakStateContinueEvent = waitEvent;
     state = DebuggerState::breakState;
     breakStateInfo.bp = bp;
@@ -322,9 +320,9 @@ void Debugger::onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructio
         default: break;
     }
     if (instructionInfo.context)
-    instructionInfo.context->Serialize(ar); //Set's callstack
+        instructionInfo.context->Serialize(ar); //Set's callstack
 
-    //#TODO add GameState variables
+        //#TODO add GameState variables
 
     if (instructionInfo.instruction) {
         JsonArchive instructionAr;
@@ -405,9 +403,7 @@ void Debugger::commandContinue(StepType stepType) {
         }
     }
 
-
-    ResetEvent(breakStateContinueEvent);
-    SetEvent(breakStateContinueEvent);
+    breakStateContinueEvent->notify_all();
     nController.sendMessage("{\"command\":8}");//#TODO this breaks if Continue commands number changes
 }
 
@@ -434,9 +430,9 @@ void Debugger::SerializeHookIntegrity(JsonArchive& answer) {
 }
 
 void Debugger::onScriptEcho(RString msg) {
-    OutputDebugStringA("echo: ");
-    OutputDebugStringA(msg.data());
-    OutputDebugStringA("\n");
+    OutputDebugString("echo: ");
+    OutputDebugString(msg.data());
+    OutputDebugString("\n");
 }
 
 std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, std::vector<std::string>& varNames) const {
@@ -542,33 +538,13 @@ void Debugger::VariableInfo::Serialize(JsonArchive& ar) const {
         ar.Serialize("ns", static_cast<int>(ns));
     }
 }
-#pragma comment (lib, "version.lib")
+extern std::string gameVersionResource;
+
 void Debugger::productInfoStruct::Serialize(JsonArchive &ar) {
     ar.Serialize("gameType", gameType);
 
-    if (true || gameVersion.isNull()) {
-        WCHAR fileName[_MAX_PATH];
-        DWORD size = GetModuleFileName(nullptr, fileName, _MAX_PATH);
-        fileName[size] = NULL;
-        DWORD handle = 0;
-        size = GetFileVersionInfoSize(fileName, &handle);
-        BYTE* versionInfo = new BYTE[size];
-        if (!GetFileVersionInfo(fileName, handle, size, versionInfo)) {
-            delete[] versionInfo;
-            ar.Serialize("gameVersion", "FAIL");
-            return;
-        }
-        UINT    			len = 0;
-        VS_FIXEDFILEINFO*   vsfi = nullptr;
-        VerQueryValue(versionInfo, L"\\", reinterpret_cast<void**>(&vsfi), &len);
-
-        short version = HIWORD(vsfi->dwFileVersionLS);
-        short version2 = LOWORD(vsfi->dwFileVersionLS);
-        short minor = HIWORD(vsfi->dwFileVersionMS);
-        short minor2 = LOWORD(vsfi->dwFileVersionMS);
-        delete[] versionInfo;
-        std::string vers = std::to_string(minor) + "." + std::to_string(minor2) + "." + std::to_string(version) + "." + std::to_string(version2);
-        gameVersion = vers;
+    if (gameVersion.isNull()) {
+        gameVersion = gameVersionResource;
     }
 
     ar.Serialize("gameVersion", gameVersion);

@@ -1,6 +1,9 @@
 #include "Tracker.h"
 #include <thread>
 #include <sstream>
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN 
+struct IUnknown; //Clang compiler error in windows.h
 #include <windows.h>
 #include <algorithm>
 #include <wininet.h>

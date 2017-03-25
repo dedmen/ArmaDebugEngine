@@ -1,11 +1,16 @@
 #pragma once
-#include <cstdint>
 #include <map>
 #include <memory>
 #include "RVClasses.h"
 #include "BreakPoint.h"
 #include "Monitor.h"
 #include "NetworkController.h"
+
+namespace std {
+    class mutex;
+    class condition_variable;
+}
+
 struct RV_VMContext;
 class Script;
 class VMContext;
@@ -84,7 +89,7 @@ public:
     void onShutdown();
     void onStartup();
 
-    void onHalt(HANDLE waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& info, haltType type); //Breakpoint is halting engine
+    void onHalt(std::shared_ptr<std::condition_variable> waitEvent, BreakPoint* bp, const DebuggerInstructionInfo& info, haltType type); //Breakpoint is halting engine
     void onContinue(); //Breakpoint has stopped halting
     void commandContinue(StepType stepType); //Tells Breakpoint in breakState to Stop halting
     void setGameVersion(const char* productType, const char* productVersion);
@@ -130,7 +135,7 @@ public:
     MapStringToClassNonRV<breakPointList, std::vector<breakPointList>> breakPoints; //All inputs have to be tolowered before accessing
     std::vector<std::shared_ptr<IMonitorBase>> monitors;
     NetworkController nController;
-    HANDLE breakStateContinueEvent{ 0 };
+    std::shared_ptr<std::condition_variable> breakStateContinueEvent;
     DebuggerState state{ DebuggerState::Uninitialized };
     BreakStateInfo breakStateInfo;
     struct {

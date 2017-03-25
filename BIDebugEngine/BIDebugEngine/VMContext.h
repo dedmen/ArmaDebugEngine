@@ -3,8 +3,10 @@
 #include <memory>
 #include <chrono>
 #include <vector>
-#include "BIDebugEngine.h"
+#include "RVBaseTypes.h"
 
+class RV_GameInstruction;
+struct RV_VMContext;
 class RString;
 class Script;
 

@@ -96,3 +96,11 @@ typedef void EngineEnableMouse(char enabled);
 #else
 typedef void EngineEnableMouse(bool enabled);
 #endif
+
+
+void OutputDebugString(const char* lpOutputString);//defined in dllmain
+enum class ErrorMsgBoxType {
+    warning,
+    error
+};
+int MessageBox(const char* text, ErrorMsgBoxType type);

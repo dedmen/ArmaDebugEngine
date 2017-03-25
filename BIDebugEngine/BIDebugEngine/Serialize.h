@@ -102,7 +102,8 @@ public:
             if (_array.is_array()) {
                 for (auto& it : _array) {
                     auto iterator = value.emplace(value.end(),Type());
-                    iterator->Serialize(JsonArchive(it));
+                    JsonArchive tmpAr(it);
+                    iterator->Serialize(tmpAr);
                 }
             }
         } else {
@@ -187,79 +188,55 @@ public:
     //serializeFunction - Function that is called for every element in the Array
     //************************************
     template <class Type, class Func>
-    void Serialize(const char* key, AutoArray<Type>& value, Func& serializeFunction);
+    void Serialize(const char* key, AutoArray<Type>& value, Func& serializeFunction) {
+        auto &_array = (*pJson)[key];
+        if (isReading) {
+            if (!_array.is_array()) __debugbreak();
+            for (auto& it : _array) {
+                __debugbreak(); //#TODO AutoArray pushback
+            }
+        } else {
+            value.forEach([&_array, &serializeFunction](auto&& value) {
+                JsonArchive element;
+                serializeFunction(element, value);
+                _array.push_back(*element.pJson);
+            });
+        }
+    }
 
     //************************************
     //serializeFunction - Function that is called for every element in the Array
     //************************************
-    template <class Type, class Func>           //#TODO make these templates better :/
-    void Serialize(const char* key, const Array<Type>& value, Func& serializeFunction);
+    template <class Type, class Func>
+    void Serialize(const char* key, const Array<Type>& value, Func&& serializeFunction) {
+        if (isReading) {
+            __debugbreak(); //not possible
+        } else {
+            auto &_array = (*pJson)[key];
+            value.forEach([&_array,&serializeFunction](auto && value) {
+                JsonArchive element;
+                serializeFunction(element, value);
+                _array.push_back(*element.pJson);
+            });                                       
+        }
+    }
 
-    template <class Type>           //#TODO make these templates better :/
-    void Serialize(const char* key, const std::initializer_list<Type>& value);
+    template <class Type>
+    void Serialize(const char* key, const std::initializer_list<Type>& value) {
+        auto &_array = (*pJson)[key];
+        for (auto& it : value) {
+            _array.push_back(it);
+        }
+    }
 
 private:
     json* pJson;
     bool isReading;
 };
 
-
-
-template <class Type, class Func>
-void JsonArchive::Serialize(const char* key, AutoArray<Type>& value, Func& serializeFunction) {
-    auto &_array = (*pJson)[key];
-    if (isReading) {
-        if (!_array.is_array()) __debugbreak();
-        for (auto& it : _array) {
-            __debugbreak(); //#TODO AutoArray pushback
-        }
-    } else {
-        value.forEach([&_array, serializeFunction](Type& value) {
-            JsonArchive element;
-            serializeFunction(element, value);
-            _array.push_back(*element.pJson);
-        });
-    }
-}
-
-template <class Type, class Func>
-void JsonArchive::Serialize(const char* key, const Array<Type>& value, Func& serializeFunction) {
-    if (isReading) {
-        __debugbreak(); //not possible
-    } else {
-        auto &_array = (*pJson)[key];
-        value.forEach([&](const Type& value) {
-            JsonArchive element;
-            serializeFunction(element, value);
-            _array.push_back(*element.pJson);
-        });
-    }
-}
-
-template <class Type>
-void JsonArchive::Serialize(const char* key, const std::initializer_list<Type>& value) {
-    auto &_array = (*pJson)[key];
-    for (auto& it : value) {
-        _array.push_back(it);
-    }
-}
-
 class Serialize {
 public:
     Serialize();
     ~Serialize();
-
-
-
-
-
-
-
-
-
-
-
-
-
 };
 

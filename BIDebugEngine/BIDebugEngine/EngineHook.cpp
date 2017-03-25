@@ -1,10 +1,8 @@
 #include "EngineHook.h"
-#include <windows.h>
-#include "BIDebugEngine.h"
+
 #include "Debugger.h"
 #include "Script.h"
 #include "VMContext.h"
-#include <sstream>
 #include "Serialize.h"
 #include "Tracker.h"
 
@@ -324,15 +322,14 @@ scriptExecutionContext currentContext = scriptExecutionContext::Invalid;
 MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create some invalid handler type
 
 void EngineHook::placeHooks() {
-    WAIT_FOR_DEBUGGER_ATTACHED;
 
     char* productType = reinterpret_cast<char*>(GlobalHookManager.findPattern(pat_productType));
     char* productVersion = reinterpret_cast<char*>(GlobalHookManager.findPattern(pat_productVersion));
-    OutputDebugStringA("Product Type: ");
-    OutputDebugStringA(productType ? productType : "");
-    OutputDebugStringA("\t\tVersion: ");
-    OutputDebugStringA(productVersion ? productVersion : "");
-    OutputDebugStringA("\n");
+    OutputDebugString("Product Type: ");
+    OutputDebugString(productType ? productType : "");
+    OutputDebugString("\t\tVersion: ");
+    OutputDebugString(productVersion ? productVersion : "");
+    OutputDebugString("\n");
 
     if (!productType || !productVersion) {
         std::string error("Could not find gameVersion or gameType. This means this game version is likely incompatible! \n");
@@ -341,13 +338,13 @@ void EngineHook::placeHooks() {
         if (productType && strncmp(productType, "", 2))
             error += "You are not running a Profiling version of Arma. This is needed for Arma Debug Engine to work!";
 
-        MessageBoxA(0, error.c_str(), "ArmaDebugEngine", MB_ICONERROR | MB_OK | MB_SYSTEMMODAL | MB_TOPMOST);
+        MessageBox(error.c_str(), ErrorMsgBoxType::error);
         return;
     }
     if (productType && strncmp(productType, "Arma3RetailProfile_DX11", 13)) {
         std::string error("You are not running a Profiling version of Arma. This is needed for Arma Debug Engine to work!\n\nFurther error messages might be caused by this.");
 
-        MessageBoxA(0, error.c_str(), "ArmaDebugEngine", MB_ICONWARNING | MB_OK | MB_SYSTEMMODAL | MB_TOPMOST);
+        MessageBox(error.c_str(), ErrorMsgBoxType::warning);
     }
 
 
@@ -371,16 +368,16 @@ void EngineHook::placeHooks() {
     //HI.__worldMissionEventStart = false;
     //HI.__worldMissionEventEnd = false;
     HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 5);
-   
+
     scriptPreprocessorDefineDefine = GlobalHookManager.findPattern(pat_scriptPreprocessorDefineDefine);
-    
+
     HI.scriptPreprocDefine = (scriptPreprocessorDefineDefine != 0);
     if (scriptPreprocessorDefineDefine) //else report error
         HI.scriptPreprocConstr = GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 0xA);
 
     HI.scriptAssert = GlobalHookManager.placeHook(hookTypes::onScriptAssert, pat_onScriptAssert, reinterpret_cast<uintptr_t>(onScriptAssert), scriptAssertJmpBack, 0xB7 - 0x95 + 0x8);
     HI.scriptHalt = GlobalHookManager.placeHook(hookTypes::onScriptHalt, pat_onScriptHalt, reinterpret_cast<uintptr_t>(onScriptHalt), scriptHaltJmpBack, 1 + 0xE + 1);
-    GlobalHookManager.placeHook(hookTypes::onScriptEcho, pat_onScriptEcho, reinterpret_cast<uintptr_t>(onScriptEcho), scriptEchoJmpBack, 0xE -0xD + 3);
+    GlobalHookManager.placeHook(hookTypes::onScriptEcho, pat_onScriptEcho, reinterpret_cast<uintptr_t>(onScriptEcho), scriptEchoJmpBack, 0xE - 0xD + 3);
 
 #else
     HI.__scriptVMConstructor = GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
@@ -451,7 +448,7 @@ void EngineHook::placeHooks() {
 #endif
 
 
-        MessageBoxA(0, error.c_str(), "ArmaDebugEngine", fatal ? MB_ICONERROR : MB_ICONWARNING | MB_OK | MB_SYSTEMMODAL | MB_TOPMOST);
+        MessageBox(error.c_str(), fatal ? ErrorMsgBoxType::error : ErrorMsgBoxType::warning);
     }
 
     Tracker::trackPiwik();
@@ -551,7 +548,8 @@ void EngineHook::_scriptInstruction(uintptr_t instructionBP_Instruction, uintptr
 #ifdef OnlyOneInstructionPerLine
     if (instruction->_scriptPos._sourceLine != lastInstructionLine || instruction->_scriptPos._content.data() != lastInstructionFile) {
 #endif
-        GlobalDebugger.onInstruction(DebuggerInstructionInfo{ instruction, ctx, gs });
+        DebuggerInstructionInfo info{ instruction, ctx, gs };
+        GlobalDebugger.onInstruction(info);
 #ifdef OnlyOneInstructionPerLine
         lastInstructionLine = instruction->_scriptPos._sourceLine;
         lastInstructionFile = instruction->_scriptPos._content.data();
@@ -619,124 +617,4 @@ void EngineHook::onShutdown() {
 void EngineHook::onStartup() {
     placeHooks();
     GlobalDebugger.onStartup();
-}
-
-uintptr_t HookManager::placeHook(uintptr_t offset, uintptr_t jmpTo, uint8_t jmpBackOffset) {
-    auto totalOffset = offset + engineBase;
-    return placeHookTotalOffs(totalOffset, jmpTo) + jmpBackOffset;
-}
-
-uintptr_t HookManager::placeHookTotalOffs(uintptr_t totalOffset, uintptr_t jmpTo) {
-    DWORD dwVirtualProtectBackup;
-
-
-    /*
-    32bit
-        jmp 0x123122
-        0:  e9 1e 31 12 00          jmp    123123 <_main+0x123123>
-    64bit
-        FF 25 64bit relative
-    */
-#ifdef X64
-    //auto distance = std::max(totalOffset, jmpTo) - std::min(totalOffset, jmpTo);
-    // if distance < 2GB (2147483648) we could use the 32bit relative jmp
-    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 14u, 0x40u, &dwVirtualProtectBackup);
-    auto jmpInstr = reinterpret_cast<unsigned char*>(totalOffset);
-    auto addrOffs = reinterpret_cast<uint32_t*>(totalOffset + 1);
-    *jmpInstr = 0x68; //push DWORD
-    *addrOffs = static_cast<uint32_t>(jmpTo) /*- totalOffset - 6*/;//offset
-    *reinterpret_cast<uint32_t*>(totalOffset + 5) = 0x042444C7; //MOV [RSP+4],
-    *reinterpret_cast<uint32_t*>(totalOffset + 9) = static_cast<uint64_t>(jmpTo) >> 32;//DWORD
-    *reinterpret_cast<unsigned char*>(totalOffset + 13) = 0xc3;//ret
-    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 14u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
-    return totalOffset + 14;
-#else
-    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 5u, 0x40u, &dwVirtualProtectBackup);
-    auto jmpInstr = reinterpret_cast<unsigned char *>(totalOffset);
-    auto addrOffs = reinterpret_cast<unsigned int *>(totalOffset + 1);
-    *jmpInstr = 0xE9;
-    *addrOffs = jmpTo - totalOffset - 5;
-    VirtualProtect(reinterpret_cast<LPVOID>(totalOffset), 5u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
-    return totalOffset + 5;
-#endif
-
-
-}
-
-
-#include <Psapi.h>
-HookManager::HookManager() {
-    MODULEINFO modInfo = { 0 };
-    HMODULE hModule = GetModuleHandle(NULL);
-    GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
-    engineBase = reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll);
-    engineSize = static_cast<uintptr_t>(modInfo.SizeOfImage);
-}
-
-bool HookManager::placeHook(hookTypes type, const Pattern& pat, uintptr_t jmpTo, uintptr_t & jmpBackRef, uint8_t jmpBackOffset) {
-
-    auto found = findPattern(pat);
-    if (found == 0) {
-#ifdef _DEBUG
-        __debugbreak(); //#TODO report somehow
-#endif
-        return false;
-    }
-    jmpBackRef = placeHookTotalOffs(found, jmpTo) + jmpBackOffset;
-    return true;
-}
-
-bool HookManager::placeHook(hookTypes, const Pattern & pat, uintptr_t jmpTo) {
-    auto found = findPattern(pat);
-    if (found == 0) {
-#ifdef _DEBUG
-        __debugbreak(); //#TODO report somehow
-#endif
-        return false;
-    }
-    placeHookTotalOffs(found, jmpTo);
-    return true;
-}
-
-bool HookManager::MatchPattern(uintptr_t addr, const char* pattern, const char* mask) {
-    size_t size = strlen(mask);
-    if (IsBadReadPtr((void*) addr, size))
-        return false;
-    bool found = true;
-    for (size_t j = 0; j < size; j++) {
-        found &= mask[j] == '?' || pattern[j] == *(char*) (addr + j);
-    }
-    if (found)
-        return true;
-    return false;
-}
-
-uintptr_t HookManager::findPattern(const char* pattern, const char* mask, uintptr_t offset /*= 0*/) {
-    uintptr_t base = (DWORD) engineBase;
-    uint32_t size = (DWORD) engineSize;
-
-    uintptr_t patternLength = (DWORD) strlen(mask);
-
-    for (uintptr_t i = 0; i < size - patternLength; i++) {
-        bool found = true;
-        for (uintptr_t j = 0; j < patternLength; j++) {
-            found &= mask[j] == '?' || pattern[j] == *reinterpret_cast<char*>(base + i + j);
-            if (!found)
-                break;
-        }
-        if (found)
-            return base + i + offset;
-    }
-    return 0x0;
-}
-
-uintptr_t HookManager::findPattern(const Pattern & pat, uintptr_t offset) {
-    if (pat.offsetFunc) {
-        auto found = findPattern(pat.pattern, pat.mask, pat.offset + offset);
-        if (found)
-            return pat.offsetFunc(found);
-        return found;
-    }
-
-    return findPattern(pat.pattern, pat.mask, pat.offset + offset);
 }

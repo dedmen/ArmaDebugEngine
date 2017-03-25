@@ -23,7 +23,7 @@ enum class hookTypes {
 };
 
 
-class HookManager {
+class HookManager {//Implementation in dllmain
 public:
 
     struct Pattern {
