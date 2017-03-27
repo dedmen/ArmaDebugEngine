@@ -4,9 +4,10 @@
 
 void RV_GameInstruction::Serialize(JsonArchive& ar) {
 
-
-
-    ar.Serialize("type", typeid(*this).name());
+    auto& type = typeid(*this);
+    //#TODO X64 may on this didn't try but I expect it to
+    const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
+    ar.Serialize("type", typeName);
     ar.Serialize("name", GetDebugName());
     ar.Serialize("filename", _scriptPos._sourceFile);
 
@@ -41,7 +42,9 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 
     ar.Serialize("callstack", callStack, [](JsonArchive& ar, const Ref<CallStackItem>& item) {
         auto& type = typeid(*item.get());
-        const auto typeName = type.name();
+        //#TODO X64 fails on this
+        const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
+
         ar.Serialize("type", typeName);
         auto hash = type.hash_code();
         {

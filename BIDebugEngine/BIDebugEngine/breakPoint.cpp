@@ -180,24 +180,34 @@ extern EngineAlive* EngineAliveFnc;
 extern EngineEnableMouse* EngineEnableMouseFnc;
 
 void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstructionInfo& info) {
-    auto waitEvent = std::make_shared<std::pair<std::condition_variable,bool>>();
+    auto waitEvent = std::make_shared<std::pair<std::condition_variable, bool>>();
     waitEvent->second = false;
     std::mutex waitMutex;
 
     //#TODO catch crashes in these engine funcs by using https://msdn.microsoft.com/en-us/library/1deeycx5(v=vs.80).aspx http://stackoverflow.com/questions/457577/catching-access-violation-exceptions
 
-#ifndef X64 //#TODO crashy bashy
-    if (EngineEnableMouseFnc) EngineEnableMouseFnc(false); //Free mouse from Arma
-#endif
+
+    static bool EngStable_EnableMouse = true;
+    static bool EngStable_Alive = true;
+
+    try {
+        //#TODO also want to SkipKeysInThisFrame See 1.68.140.940
+        if (EngineEnableMouseFnc && EngStable_EnableMouse) EngineEnableMouseFnc(false); //Free mouse from Arma
+    } catch (...) {
+        EngStable_EnableMouse = false;
+    }
+
     dbg->onHalt(waitEvent, bp, info, type);
     bool halting = true;
     while (halting) {
         std::unique_lock<std::mutex> lk(waitMutex);
         waitEvent->first.wait_for(lk, 1s, [waitEvent]() {return waitEvent->second; });
 
-#ifndef X64 //#TODO crashy bashy
-        if (EngineAliveFnc) EngineAliveFnc();
-#endif
+        try {
+            if (EngineAliveFnc && EngStable_Alive) EngineAliveFnc();
+        } catch (...) {
+            EngStable_Alive = false;
+        }
         if (waitEvent->second) {
             halting = false;
             //EngineEnableMouseFnc(true); Causes mouse to jump to bottom right screen corner
