@@ -182,14 +182,157 @@ public:
     SourceDocPos _errorPosition;
     void SerializeError(JsonArchive& ar);
 };
+
+
+//Intercept  https://github.com/intercept/intercept/pull/108
+
+class RVScriptTypeInfo {
+public:
+    RString _name;
+    void* _createFunction{ nullptr };
+    RString _typeName;
+    RString _readableName;
+    RString _description;
+    RString _category;
+    RString _javaTypeShort;
+    RString _javaTypeLong;
+
+    void SerializeFull(JsonArchive &ar) const;
+    void Serialize(JsonArchive &ar) const;
+};
+
+
+class RVScriptType : public DummyVClass {
+public:
+    const RVScriptTypeInfo* _type{ nullptr };
+    class CompoundGameType : public AutoArray<const RVScriptTypeInfo *>, public DummyVClass {
+
+    };
+    const CompoundGameType* _compoundType{ nullptr };
+
+    RVScriptType() {}
+    void Serialize(JsonArchive& ar);
+};
+
+class NularOperator : public RefCount {
+public:
+    NularOperator() {}
+    void* _funcPtr{ nullptr };
+    RVScriptType _returnType;
+    void Serialize(JsonArchive &ar);
+};
+
+class UnaryOperator : public RefCount {
+public:
+    UnaryOperator() {}
+    void* _funcPtr{ nullptr };
+    RVScriptType _returnType;
+    RVScriptType _rightArgumentType;
+    void Serialize(JsonArchive &ar);
+};
+
+class BinaryOperator : public RefCount {
+public:
+    BinaryOperator() {}
+    void* _funcPtr{ nullptr };
+    RVScriptType _returnType;
+    RVScriptType _leftArgumentType;
+    RVScriptType _rightArgumentType;
+    void Serialize(JsonArchive &ar);
+};
+
+struct GameOperatorNameBase {
+public:
+    RString _operatorName;
+private:
+    uint32_t placeholder1;//0x4
+    uint32_t placeholder2;//0x8 actually a pointer to empty memory
+    uint32_t placeholder3;//0xC
+    uint32_t placeholder4;//0x10
+    uint32_t placeholder5;//0x14
+    uint32_t placeholder6;//0x18  
+    uint32_t placeholder7;//0x1C
+    uint32_t placeholder8;//0x20
+};
+
+class ScriptCmdInfo {
+public:
+    RString _description;
+    RString _example;
+    RString _exampleResult;
+    RString _addedInVersion;
+    RString _changed;
+    RString _category;
+    void Serialize(JsonArchive &ar) const;
+};
+
+struct GameNular : public GameOperatorNameBase {
+public:
+    RString _name; //0x24
+    Ref<NularOperator> _operator;
+    ScriptCmdInfo _info;
+    void *_nullptr{ nullptr };
+
+    GameNular() {}
+
+    const char *getMapKey() const { return _name; }
+    void Serialize(JsonArchive &ar) const;
+};
+
+struct GameFunction : public GameOperatorNameBase {
+    uint32_t placeholder9;//0x24
+public:
+    RString _name;
+    Ref<UnaryOperator> _operator;
+    RString _rightOperatorDescription;
+    ScriptCmdInfo _info;
+
+    GameFunction() {}
+    void Serialize(JsonArchive &ar) const;
+};
+
+enum GamePriority {
+    priority, testy
+};
+
+struct GameOperator : public GameOperatorNameBase {
+    uint32_t placeholder9;//0x24
+public:
+    RString _name;
+    GamePriority _priority; //Don't use Enum the higher the number the higher the prio//#TODO remove enum
+    Ref<BinaryOperator> _operator;
+    RString _leftOperatorDescription;
+    RString _rightOperatorDescription;
+    ScriptCmdInfo _info;
+
+    GameOperator() {}
+    void Serialize(JsonArchive &ar) const;
+};
+
+
+struct GameFunctions : public AutoArray<GameFunction>, public GameOperatorNameBase {
+public:
+    RString _name;
+    GameFunctions() {}
+    const char *getMapKey() const { return _name; }
+};
+
+struct GameOperators : public AutoArray<GameOperator>, public GameOperatorNameBase {
+public:
+    RString _name;
+    GamePriority _priority; //Don't use Enum the higher the number the higher the prio//#TODO remove enum
+    GameOperators() {}
+    const char *getMapKey() const { return _name; }
+};
+
 #ifdef X64
 class GameState {
 public:
     //virtual void _NOU() {} //GameState has no vtable since 1.68 (it had one in 1.66)
-    AutoArray<void*> _1;
-    MapStringToClass<void*, AutoArray<void*>> _2; //functions  Should consult Intercept on these. 
-    MapStringToClass<void*, AutoArray<void*>> _3; //operators
-    MapStringToClass<void*, AutoArray<void*>> _4; //nulars  //#TODO add DebugBreak script nular. Check Visor
+    AutoArray<const RVScriptTypeInfo *> _scriptTypes;
+    MapStringToClass<GameFunctions, AutoArray<GameFunctions>> _scriptFunctions; //functions  Should consult Intercept on these. 
+    MapStringToClass<GameOperators, AutoArray<GameOperators>> _scriptOperators; //operators
+    MapStringToClass<GameNular, AutoArray<GameNular>> _scriptNulars; //nulars  //#TODO add DebugBreak script nular. Check Visor
     char _5[0x220];
     Ref<GameEvaluator> GEval;
     Ref<GameDataNamespace> _globalNamespace; //Can change by https://community.bistudio.com/wiki/with
@@ -219,10 +362,10 @@ class GameState;
 class GameState {
 public:
     //virtual void _NOU() {} //GameState has no vtable since 1.68 (it had one in 1.66)
-    AutoArray<void*> _1;
-    MapStringToClass<void*, AutoArray<void*>> _2; //functions  Should consult Intercept on these. 
-    MapStringToClass<void*, AutoArray<void*>> _3; //operators
-    MapStringToClass<void*, AutoArray<void*>> _4; //nulars  //#TODO add DebugBreak script nular. Check Visor
+    AutoArray<const RVScriptTypeInfo *> _scriptTypes;
+    MapStringToClass<GameFunctions, AutoArray<GameFunctions>> _scriptFunctions; //functions  Should consult Intercept on these. 
+    MapStringToClass<GameOperators, AutoArray<GameOperators>> _scriptOperators; //operators
+    MapStringToClass<GameNular, AutoArray<GameNular>> _scriptNulars; //nulars  //#TODO add DebugBreak script nular. Check Visor
     char _5[0x114];
     Ref<GameEvaluator> GEval;
     Ref<GameDataNamespace> _globalNamespace; //Can change by https://community.bistudio.com/wiki/with

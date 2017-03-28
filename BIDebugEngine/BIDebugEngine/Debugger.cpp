@@ -207,6 +207,13 @@ void Debugger::writeFrameToFile(uint32_t frameCounter) {
 }
 
 void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
+    lastKnownGameState = instructionInfo.gs;
+    //JsonArchive ar;
+    //serializeScriptCommands(ar);
+    //std::ofstream f("P:\\funcs.json", std::ios::out | std::ios::binary);
+    //auto text = ar.to_string();
+    //f.write(text.c_str(), text.length());
+    //f.close();
     if (monitors.empty() && breakPoints.empty()) return;
     instructionInfo.instruction->_scriptPos._sourceFile.lower();
     checkForBreakpoint(instructionInfo);
@@ -284,7 +291,7 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
             bp.trigger(this, instructionInfo);
             lk.lock();
         }
-            
+
     }
 }
 
@@ -437,6 +444,37 @@ void Debugger::onScriptEcho(RString msg) {
     OutputDebugString("echo: ");
     OutputDebugString(msg.data());
     OutputDebugString("\n");
+}
+
+void Debugger::serializeScriptCommands(JsonArchive& answer) {
+    if (!lastKnownGameState) return;
+
+    JsonArchive types;
+    for (auto& type : lastKnownGameState->_scriptTypes) {
+        JsonArchive entry;
+        type->SerializeFull(entry);
+        types.Serialize(type->_name, entry);
+    }
+    JsonArchive nulars;
+    lastKnownGameState->_scriptNulars.forEach([&](const GameNular& gn) {
+        JsonArchive entry;
+        gn.Serialize(entry);
+        nulars.Serialize(gn._operatorName, entry);
+    });
+    JsonArchive funcs;
+    lastKnownGameState->_scriptFunctions.forEach([&](const GameFunctions& gn) {
+        funcs.Serialize(gn._operatorName, gn);
+    });
+    JsonArchive ops;
+    lastKnownGameState->_scriptOperators.forEach([&](const GameOperators& gn) {
+        std::vector<JsonArchive> entries;
+        ops.Serialize(gn._operatorName, gn);
+    });
+    answer.Serialize("nulars", nulars);
+    answer.Serialize("functions", funcs);
+    answer.Serialize("operators", ops);
+    answer.Serialize("types", types);
+
 }
 
 std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, std::vector<std::string>& varNames) const {

@@ -181,3 +181,94 @@ void GameEvaluator::SerializeError(JsonArchive& ar) {
     ar.Serialize("filename", _errorPosition._sourceFile);
     ar.Serialize("content", Script::getScriptFromFirstLine(_errorPosition));
 }
+
+void GameFunction::Serialize(JsonArchive &ar) const {
+    ar.Serialize("name", _name);
+    JsonArchive op;
+    _operator->Serialize(op);
+    ar.Serialize("op", op);
+    ar.Serialize("rname", _rightOperatorDescription);
+    _info.Serialize(ar);
+}
+
+void GameNular::Serialize(JsonArchive &ar) const {
+    ar.Serialize("name", _name);
+    JsonArchive op;
+    _operator->Serialize(op);
+    ar.Serialize("op", op);
+    _info.Serialize(ar);
+}
+
+void GameOperator::Serialize(JsonArchive &ar) const {
+    ar.Serialize("name", _name);
+    JsonArchive op;
+    _operator->Serialize(op);
+    ar.Serialize("op", op);
+    ar.Serialize("rArgDesc", _rightOperatorDescription);
+    ar.Serialize("lArgDesc", _leftOperatorDescription);
+    _info.Serialize(ar);
+}
+
+void RVScriptTypeInfo::SerializeFull(JsonArchive &ar) const {
+    ar.Serialize("name", _name);
+    ar.Serialize("typeName", _typeName);
+    ar.Serialize("readableName", _readableName);
+    ar.Serialize("desc", _description);
+    ar.Serialize("cat", _category);
+    //ar.Serialize("sig", _javaTypeLong);
+    //ar.Serialize("j", _javaTypeShort);
+    ar.Serialize("name", _name);
+}
+
+void RVScriptTypeInfo::Serialize(JsonArchive &ar) const {
+    ar.Serialize("type", _name);
+}
+
+void NularOperator::Serialize(JsonArchive &ar) {
+    JsonArchive retType;
+    _returnType.Serialize(retType);
+    ar.Serialize("retT", retType);
+}
+
+void BinaryOperator::Serialize(JsonArchive &ar) {
+    JsonArchive retType;
+    _returnType.Serialize(retType);
+    ar.Serialize("retT", retType);
+    JsonArchive arg1Type;
+    _leftArgumentType.Serialize(arg1Type);
+    ar.Serialize("argL", arg1Type);
+    JsonArchive arg2Type;
+    _rightArgumentType.Serialize(arg2Type);
+    ar.Serialize("argR", arg2Type);
+}
+
+void UnaryOperator::Serialize(JsonArchive &ar) {
+    JsonArchive retType;
+    _returnType.Serialize(retType);
+    ar.Serialize("retT", retType);
+    JsonArchive argType;
+    _rightArgumentType.Serialize(argType);
+    ar.Serialize("argT", argType);
+}
+
+void RVScriptType::Serialize(JsonArchive& ar) {
+    std::vector<std::string> ars;
+
+    if (_type) {
+        ars.push_back(_type->_name);
+    }
+    if (_compoundType) {
+        for (auto& it : *_compoundType) {
+            ars.push_back(it->_name);
+        }
+    }
+    ar.Serialize("types", ars);
+}
+
+void ScriptCmdInfo::Serialize(JsonArchive &ar) const {
+    ar.Serialize("desc", _description);
+    ar.Serialize("ex", _example);
+    ar.Serialize("exres", _exampleResult);
+    ar.Serialize("since", _addedInVersion);
+    ar.Serialize("cat", _category);
+}

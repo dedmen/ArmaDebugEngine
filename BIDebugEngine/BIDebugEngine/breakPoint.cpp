@@ -185,8 +185,8 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
     std::mutex waitMutex;
 
     //#TODO catch crashes in these engine funcs by using https://msdn.microsoft.com/en-us/library/1deeycx5(v=vs.80).aspx http://stackoverflow.com/questions/457577/catching-access-violation-exceptions
-
-
+    //#TODO get information from exception https://www.codeproject.com/Articles/422/SEH-and-C-Exceptions-catch-all-in-one https://msdn.microsoft.com/en-us/library/5z4bw5h5.aspx 
+//https://msdn.microsoft.com/en-us/library/s58ftw19(v=vs.80).aspx This is maybe a better method instead of enabling SEH. Plus here I also get what exception happened without complicated handling
     static bool EngStable_EnableMouse = true;
     static bool EngStable_Alive = true;
 

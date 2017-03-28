@@ -97,7 +97,10 @@ public:
     void setGameVersion(const char* productType, const char* productVersion);
     void SerializeHookIntegrity(JsonArchive& answer);
     void onScriptEcho(RString msg);
+    void serializeScriptCommands(JsonArchive& answer);
     HookIntegrity HI;
+    GameState* lastKnownGameState;
+
     void setHookIntegrity(HookIntegrity hi) { HI = hi; }
 
     struct VariableInfo {

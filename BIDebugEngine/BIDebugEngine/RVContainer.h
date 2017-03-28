@@ -2,8 +2,10 @@
 #include "RVBaseTypes.h"
 #include <vector>
 
+class RVArrayType {};
+
 template<class Type>
-class Array {
+class Array : RVArrayType {
 protected:
     Type *_data;
     int _n;
@@ -22,6 +24,12 @@ public:
 
     Type &front() { return get(0); }
     Type &back() { return get(_n - 1); }
+
+    Type* begin() { return &get(0); }
+    Type* end() { return &get(_n); }
+
+    const Type* begin() const { return &get(0); }
+    const Type* end() const { return &get(_n); }
 
     const Type &front() const { return get(0); }
     const Type &back() const { return get(_n - 1); }

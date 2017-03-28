@@ -21,7 +21,7 @@ public:
         if (isReading) __debugbreak(); //not implemented
         (*pJson)[key] = *ar.pJson;
     }
-
+       
     template <class Type>
     typename std::enable_if<has_Serialize<Type>::value>::type
         Serialize(const char* key, const AutoArray<Type>& value) {
@@ -101,7 +101,7 @@ public:
         if (isReading) {
             if (_array.is_array()) {
                 for (auto& it : _array) {
-                    auto iterator = value.emplace(value.end(),Type());
+                    auto iterator = value.emplace(value.end(), Type());
                     JsonArchive tmpAr(it);
                     iterator->Serialize(tmpAr);
                 }
@@ -114,10 +114,6 @@ public:
             }
         }
     }
-
-
-
-
 
     //Generic serialization. Calls Type::Serialize
     template <class Type>
@@ -134,7 +130,7 @@ public:
 
     //Generic serialization. Calls Type::Serialize
     template <class Type>
-    typename std::enable_if<has_Serialize<Type>::value>::type
+    typename std::enable_if<has_Serialize<Type>::value && !std::is_convertible<Type, RVArrayType>::value>::type
         Serialize(const char* key, std::unique_ptr<Type>& value) {
         if (isReading) {
             __debugbreak(); //not implemented
@@ -149,7 +145,7 @@ public:
 
 
     template <class Type>
-    typename std::enable_if<!has_Serialize<Type>::value>::type
+    typename std::enable_if<!has_Serialize<Type>::value && !std::is_convertible<Type, RVArrayType>::value>::type
         Serialize(const char* key, Type& value) {
         if (isReading) {
             value = (*pJson)[key].get<Type>();
@@ -160,7 +156,7 @@ public:
 
 
     template <class Type>
-    typename std::enable_if<has_Serialize<Type>::value>::type
+    typename std::enable_if<has_Serialize<Type>::value && !std::is_convertible<Type, RVArrayType>::value>::type
         Serialize(const char* key, const Type& value) {
         if (isReading) {
             __debugbreak(); //not possible
@@ -172,7 +168,7 @@ public:
     }
 
     template <class Type>
-    typename std::enable_if<!has_Serialize<Type>::value>::type
+    typename std::enable_if<!has_Serialize<Type>::value && !std::is_convertible<Type, RVArrayType>::value>::type
         Serialize(const char* key, const Type& value) {
         if (isReading) {
             __debugbreak(); //not possible
@@ -213,11 +209,11 @@ public:
             __debugbreak(); //not possible
         } else {
             auto &_array = (*pJson)[key];
-            value.forEach([&_array,&serializeFunction](auto && value) {
+            value.forEach([&_array, &serializeFunction](auto && value) {
                 JsonArchive element;
                 serializeFunction(element, value);
                 _array.push_back(*element.pJson);
-            });                                       
+            });
         }
     }
 
