@@ -11,7 +11,8 @@ enum class NC_CommandType {
     MonitorDump, //Dump's all Monitors
     setHookEnable,
     getVariable,
-    getCurrentCode //While in breakState returns full preproced code of last Instructions script file
+    getCurrentCode, //While in breakState returns full preproced code of last Instructions script file
+    getAllScriptCommands
 };
 
 enum class NC_OutgoingCommandType {

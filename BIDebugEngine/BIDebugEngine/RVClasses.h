@@ -96,6 +96,7 @@ public:
     /// number of values on the data stack before the current instruction processing
     int _stackLast;
     RString _scopeName;
+    SourceDocPos tryGetFilenameAndCode();
 };
 
 class CallStackItemSimple : public CallStackItem {
@@ -212,6 +213,7 @@ public:
 
     RVScriptType() {}
     void Serialize(JsonArchive& ar);
+    std::vector<std::string> getTypeNames() const;
 };
 
 class NularOperator : public RefCount {

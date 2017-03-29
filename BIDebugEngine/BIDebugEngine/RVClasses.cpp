@@ -183,7 +183,7 @@ void GameEvaluator::SerializeError(JsonArchive& ar) {
 }
 
 void GameFunction::Serialize(JsonArchive &ar) const {
-    ar.Serialize("name", _name);
+    //ar.Serialize("name", _name);
     JsonArchive op;
     _operator->Serialize(op);
     ar.Serialize("op", op);
@@ -192,7 +192,7 @@ void GameFunction::Serialize(JsonArchive &ar) const {
 }
 
 void GameNular::Serialize(JsonArchive &ar) const {
-    ar.Serialize("name", _name);
+    //ar.Serialize("name", _name);
     JsonArchive op;
     _operator->Serialize(op);
     ar.Serialize("op", op);
@@ -200,7 +200,7 @@ void GameNular::Serialize(JsonArchive &ar) const {
 }
 
 void GameOperator::Serialize(JsonArchive &ar) const {
-    ar.Serialize("name", _name);
+    //ar.Serialize("name", _name);
     JsonArchive op;
     _operator->Serialize(op);
     ar.Serialize("op", op);
@@ -225,33 +225,25 @@ void RVScriptTypeInfo::Serialize(JsonArchive &ar) const {
 }
 
 void NularOperator::Serialize(JsonArchive &ar) {
-    JsonArchive retType;
-    _returnType.Serialize(retType);
-    ar.Serialize("retT", retType);
+    ar.Serialize("retT", _returnType.getTypeNames());
 }
 
 void BinaryOperator::Serialize(JsonArchive &ar) {
-    JsonArchive retType;
-    _returnType.Serialize(retType);
-    ar.Serialize("retT", retType);
-    JsonArchive arg1Type;
-    _leftArgumentType.Serialize(arg1Type);
-    ar.Serialize("argL", arg1Type);
-    JsonArchive arg2Type;
-    _rightArgumentType.Serialize(arg2Type);
-    ar.Serialize("argR", arg2Type);
+    ar.Serialize("retT", _returnType.getTypeNames());
+    ar.Serialize("argL", _leftArgumentType.getTypeNames());
+    ar.Serialize("argR", _rightArgumentType.getTypeNames());
 }
 
 void UnaryOperator::Serialize(JsonArchive &ar) {
-    JsonArchive retType;
-    _returnType.Serialize(retType);
-    ar.Serialize("retT", retType);
-    JsonArchive argType;
-    _rightArgumentType.Serialize(argType);
-    ar.Serialize("argT", argType);
+    ar.Serialize("retT", _returnType.getTypeNames());
+    ar.Serialize("argT", _rightArgumentType.getTypeNames());
 }
 
 void RVScriptType::Serialize(JsonArchive& ar) {
+    ar.Serialize("types", getTypeNames());
+}
+
+std::vector<std::string> RVScriptType::getTypeNames() const {
     std::vector<std::string> ars;
 
     if (_type) {
@@ -262,7 +254,7 @@ void RVScriptType::Serialize(JsonArchive& ar) {
             ars.push_back(it->_name);
         }
     }
-    ar.Serialize("types", ars);
+    return ars;
 }
 
 void ScriptCmdInfo::Serialize(JsonArchive &ar) const {
@@ -271,4 +263,40 @@ void ScriptCmdInfo::Serialize(JsonArchive &ar) const {
     ar.Serialize("exres", _exampleResult);
     ar.Serialize("since", _addedInVersion);
     ar.Serialize("cat", _category);
+}
+
+SourceDocPos CallStackItem::tryGetFilenameAndCode() {
+
+    auto& type = typeid(*this);
+    //#TODO X64 fails on this
+    const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
+    auto hash = type.hash_code();
+
+    switch (hash) {
+        case 0xed08ac32: { //CallStackItemSimple
+            auto stackItem = static_cast<const CallStackItemSimple*>(this);
+            //#TODO test if this is the correct instruction or if i should -1 this
+            auto & lastInstruction = (stackItem->_instructions.get(stackItem->_currentInstruction))->_scriptPos;
+            return lastInstruction;
+        }   break;
+
+        case 0x224543d0: { //CallStackItemData
+            auto stackItem = static_cast<const CallStackItemData*>(this);
+            auto & lastInstruction = (stackItem->_code->_instructions._code.get(stackItem->_ip - 1))->_scriptPos;
+            return lastInstruction;
+        }   break;
+        case 0x254c4241: { //CallStackItemArrayForEach
+
+        } break;
+    }
+
+
+
+
+
+
+
+
+
+    return std::pair<RString, RString>();
 }

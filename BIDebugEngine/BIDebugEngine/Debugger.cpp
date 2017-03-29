@@ -561,12 +561,24 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
     return output;
 }
 
-void Debugger::grabCurrentCode(JsonArchive& answer) const {
+void Debugger::grabCurrentCode(JsonArchive& answer, const std::string& file) const {
     if (state != DebuggerState::breakState) {
         answer.Serialize("exception", "getCurrentCode: Not in breakState!");
         return;
     }
-    answer.Serialize("code", breakStateInfo.instruction->instruction->_scriptPos._content);
+    if (breakStateInfo.instruction->instruction->_scriptPos._sourceFile != file.c_str()) {
+
+        breakStateInfo.instruction->context->callStack.forEachBackwards([&](Ref<CallStackItem>& item) {
+            auto fileCode = item->tryGetFilenameAndCode();
+            if (!fileCode._content.isNull() && fileCode._sourceFile == file.c_str()) {
+                answer.Serialize("code", Script::getScriptFromFirstLine(fileCode));
+                answer.Serialize("fileName", fileCode._sourceFile);
+                return;
+            }
+        });
+
+    }               
+    answer.Serialize("code", Script::getScriptFromFirstLine(breakStateInfo.instruction->instruction->_scriptPos));
     answer.Serialize("fileName", breakStateInfo.instruction->instruction->_scriptPos._sourceFile);
 }
 

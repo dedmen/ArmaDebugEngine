@@ -123,7 +123,7 @@ void NetworkController::incomingMessage(const std::string& message) {
             } break;
             case NC_CommandType::getCurrentCode: {
                 JsonArchive answer;
-                GlobalDebugger.grabCurrentCode(answer);
+                GlobalDebugger.grabCurrentCode(answer, packet.value<std::string>("file", ""));
                 sendMessage(answer.to_string());
             } break;
             case NC_CommandType::getVersionInfo: {
@@ -145,7 +145,11 @@ void NetworkController::incomingMessage(const std::string& message) {
 
                 sendMessage(answer.to_string());
             } break;
-
+            case NC_CommandType::getAllScriptCommands: {
+                JsonArchive answer;
+                GlobalDebugger.serializeScriptCommands(answer);
+                sendMessage(answer.to_string());
+                } break;
 
         }
     }
