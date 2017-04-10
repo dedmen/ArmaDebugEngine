@@ -298,5 +298,5 @@ SourceDocPos CallStackItem::tryGetFilenameAndCode() {
 
 
 
-    return std::pair<RString, RString>();
+	return {};
 }

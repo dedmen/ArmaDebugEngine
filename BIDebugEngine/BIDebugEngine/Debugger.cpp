@@ -397,6 +397,10 @@ void Debugger::commandContinue(StepType stepType) {
     } else {
         state = DebuggerState::stepState;
         stepInfo.stepType = stepType;
+		if (!breakStateInfo.instruction || !breakStateInfo.instruction->instruction) {
+			state = DebuggerState::running;
+			goto jumpOut;
+		}
         stepInfo.stepLine = breakStateInfo.instruction->instruction->_scriptPos._sourceLine;
         stepInfo.context = breakStateInfo.instruction->context;
 
@@ -413,6 +417,7 @@ void Debugger::commandContinue(StepType stepType) {
             default: break;
         }
     }
+	jumpOut:
     breakStateContinueEvent->second = true;
     breakStateContinueEvent->first.notify_all();
     nController.sendMessage("{\"command\":8}");//#TODO this breaks if Continue commands number changes
@@ -568,7 +573,7 @@ void Debugger::grabCurrentCode(JsonArchive& answer, const std::string& file) con
     }
     if (breakStateInfo.instruction->instruction->_scriptPos._sourceFile != file.c_str()) {
 
-        breakStateInfo.instruction->context->callStack.forEachBackwards([&](Ref<CallStackItem>& item) {
+        breakStateInfo.instruction->context->callStack.forEachBackwards([&](const Ref<CallStackItem>& item) {
             auto fileCode = item->tryGetFilenameAndCode();
             if (!fileCode._content.isNull() && fileCode._sourceFile == file.c_str()) {
                 answer.Serialize("code", Script::getScriptFromFirstLine(fileCode));

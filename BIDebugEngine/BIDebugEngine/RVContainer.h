@@ -44,11 +44,20 @@ public:
     }
 
     template <class Func>
-    void forEachBackwards(const Func &f) const { //This returns if Func returns true
+	typename std::enable_if<std::is_same<decltype(&Func::operator()), bool>::value,void>::type
+		forEachBackwards(const Func &f) const { //This returns if Func returns true
         for (int i = count() - 1; i >= 0; i--) {
             if (f(get(i))) return;
         }
     }
+
+	template <class Func>
+	typename std::enable_if<!std::is_same<decltype(&Func::operator()), bool>::value, void>::type
+		forEachBackwards(const Func &f) const { //This returns if Func returns true
+		for (int i = count() - 1; i >= 0; i--) {
+			f(get(i));
+		}
+	}
 
     template <class Func>
     void forEach(const Func &f) {
