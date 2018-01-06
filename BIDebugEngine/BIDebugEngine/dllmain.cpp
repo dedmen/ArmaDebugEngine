@@ -9,8 +9,19 @@ struct IUnknown; //Clang compiler error in windows.h
 #include "GlobalHeader.h"
 #pragma comment (lib, "Psapi.lib")//GetModuleInformation
 #pragma comment (lib, "version.lib")
+#include "../../intercept/src/client/headers/intercept.hpp"
 #undef OutputDebugString
 #undef MessageBox
+
+
+int intercept::api_version() {
+    return 1;
+}
+
+void intercept::pre_start() {
+
+}
+
 
 extern uintptr_t engineAlloc;
 extern uintptr_t globalAlivePtr;

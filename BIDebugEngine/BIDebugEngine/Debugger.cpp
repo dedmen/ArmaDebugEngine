@@ -151,8 +151,6 @@ Debugger::Debugger() {
      Best resolve time while case sensitive MapClassToStringNonRV
 
  */
-
-
 }
 
 
@@ -208,12 +206,12 @@ void Debugger::writeFrameToFile(uint32_t frameCounter) {
 
 void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
     lastKnownGameState = instructionInfo.gs;
-    //JsonArchive ar;
-    //serializeScriptCommands(ar);
-    //std::ofstream f("P:\\funcs.json", std::ios::out | std::ios::binary);
-    //auto text = ar.to_string();
-    //f.write(text.c_str(), text.length());
-    //f.close();
+    JsonArchive ar;
+    serializeScriptCommands(ar);
+    std::ofstream f("P:\\funcs.json", std::ios::out | std::ios::binary);
+    auto text = ar.to_string();
+    f.write(text.c_str(), text.length());
+    f.close();
     if (monitors.empty() && breakPoints.empty()) return;
     instructionInfo.instruction->_scriptPos._sourceFile.lower();
     checkForBreakpoint(instructionInfo);
@@ -390,18 +388,18 @@ void Debugger::onContinue() {
 }
 
 void Debugger::commandContinue(StepType stepType) {
-    if (state != DebuggerState::breakState && state != DebuggerState::stepState) return;
+    if (state == DebuggerState::running || state == DebuggerState::Uninitialized) return nController.sendMessage("{\"command\":8}");
 
     if (stepType == StepType::STContinue) {
         state = DebuggerState::running;
     } else {
         state = DebuggerState::stepState;
         stepInfo.stepType = stepType;
-		if (!breakStateInfo.instruction || !breakStateInfo.instruction->instruction) {
-			state = DebuggerState::running;
-			goto jumpOut;
-		}
-        stepInfo.stepLine = breakStateInfo.instruction->instruction->_scriptPos._sourceLine;
+        if (!breakStateInfo.instruction || !breakStateInfo.instruction->instruction) {
+            state = DebuggerState::running;
+            goto jumpOut;
+        }
+        stepInfo.stepLine = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->_scriptPos._sourceLine : breakStateInfo.instruction->context->_lastInstructionPos._sourceLine;
         stepInfo.context = breakStateInfo.instruction->context;
 
         switch (stepType) {
@@ -417,9 +415,11 @@ void Debugger::commandContinue(StepType stepType) {
             default: break;
         }
     }
-	jumpOut:
-    breakStateContinueEvent->second = true;
-    breakStateContinueEvent->first.notify_all();
+    jumpOut:
+    if (breakStateContinueEvent) {
+        breakStateContinueEvent->first.notify_all();
+        breakStateContinueEvent->second = true;
+    }
     nController.sendMessage("{\"command\":8}");//#TODO this breaks if Continue commands number changes
 }
 
@@ -578,8 +578,9 @@ void Debugger::grabCurrentCode(JsonArchive& answer, const std::string& file) con
             if (!fileCode._content.isNull() && fileCode._sourceFile == file.c_str()) {
                 answer.Serialize("code", Script::getScriptFromFirstLine(fileCode));
                 answer.Serialize("fileName", fileCode._sourceFile);
-                return;
+                return true;
             }
+            return false;
         });
 
     }               

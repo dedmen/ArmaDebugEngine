@@ -122,7 +122,12 @@ void GameData::Serialize(JsonArchive& ar) const {
 }
 
 void GameValue::Serialize(JsonArchive& ar) const {
-    _data->Serialize(ar);
+    if (_data)
+        _data->Serialize(ar);
+    else {
+        ar.Serialize("type", "void");
+        ar.Serialize("value", "NIL");
+    }
 }
 
 const GameVariable* GameVarSpace::getVariable(const std::string& varName) const {
@@ -206,6 +211,7 @@ void GameOperator::Serialize(JsonArchive &ar) const {
     ar.Serialize("op", op);
     ar.Serialize("rArgDesc", _rightOperatorDescription);
     ar.Serialize("lArgDesc", _leftOperatorDescription);
+    ar.Serialize("priority", _priority);
     _info.Serialize(ar);
 }
 
@@ -290,13 +296,5 @@ SourceDocPos CallStackItem::tryGetFilenameAndCode() {
         } break;
     }
 
-
-
-
-
-
-
-
-
-	return {};
+    return SourceDocPos();
 }

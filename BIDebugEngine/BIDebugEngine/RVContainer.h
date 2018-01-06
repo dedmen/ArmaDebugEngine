@@ -5,7 +5,7 @@
 class RVArrayType {};
 
 template<class Type>
-class Array : RVArrayType {
+class Array : public RVArrayType {
 protected:
     Type *_data;
     int _n;
@@ -124,6 +124,69 @@ protected:
     int _count{ 0 };
     static Type _nullEntry;
 public:
+    class iterator {
+        int _table;
+        int _item;
+        const MapStringToClass<Type, Container, Traits> *_map;
+        uint32_t number_of_tables() {
+            return _map->_table ? _map->_tableCount : 0;
+        }
+        void get_next() {
+            while (_table < number_of_tables() && _item >= _map->_table[_table].count()) {
+                _table++;
+                _item = 0;
+            }
+        }
+    public:
+        iterator(const MapStringToClass<Type, Container, Traits> &base) {
+            _table = 0; _item = 0; _map = &base;
+            get_next();
+        }
+        iterator(const MapStringToClass<Type, Container, Traits> &base, bool) { //Creates end Iterator
+            _table = number_of_tables() + 1; _item = 0; _map = &base;
+        }
+        iterator& operator++ () {
+            if (_table >= number_of_tables()) return *this;
+            ++_item;
+            get_next();
+            return *this;
+        }
+        iterator operator++(int) {
+            iterator _tmp = *this;
+            ++*this;
+            return (_tmp);
+        }
+        bool operator==(const iterator& _other) {
+            return _table == _other._table && _item == _other._item;
+        }
+        bool operator!=(const iterator& _other) {
+            return _table != _other._table || _item != _other._item;
+        }
+        const Type &operator * () const {
+            return _map->_table[_table][_item];
+        }
+        const Type *operator-> () const {
+            return &_map->_table[_table][_item];
+        }
+        Type &operator * () {
+            return _map->_table[_table][_item];
+        }
+        Type *operator-> () {
+            return &_map->_table[_table][_item];
+        }
+    };
+    iterator begin() {
+        return iterator(*this);
+    }
+    iterator end() {
+        return iterator(*this, true);
+    }
+    const iterator begin() const {
+        return iterator(*this);
+    }
+    const iterator end() const {
+        return iterator(*this, true);
+    }
     MapStringToClass() {}
 
     template <class Func>

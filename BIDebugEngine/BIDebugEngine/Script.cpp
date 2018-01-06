@@ -29,10 +29,26 @@ std::string Script::getScriptFromFirstLine(SourceDocPos& pos, bool compact) {
     auto start = pos._content.cbegin();
     auto end = pos._content.cend();
     std::string filename(needSourceFile ? "" : pos._sourceFile.data());
+    std::transform(filename.begin(), filename.end(), filename.begin(), tolower);
     auto curPos = start;
+    auto curLine = 1U;
     std::string output;
     bool inWantedFile = needSourceFile;
     output.reserve(end - start);
+
+    auto removeEmptyLines = [&](int count) {
+        for (size_t i = 0; i < count; i++) {
+            auto found = output.find("\n\n");
+            if (found != std::string::npos)
+                output.replace(found, 2, 1, '\n');
+            else if (output.front() == '\n') {
+                    output.erase(0,1);
+            } else {
+                output.replace(0, output.find("\n"), 1, '\n');
+            }
+        }
+    };
+
     auto readLineMacro = [&]() {
         curPos += 6;
         auto numberEnd = std::find(curPos, end, ' ');
@@ -40,12 +56,18 @@ std::string Script::getScriptFromFirstLine(SourceDocPos& pos, bool compact) {
         curPos = numberEnd + 2;
         auto nameEnd = std::find(curPos, end, '"');
         std::string name(curPos, 0, nameEnd - curPos);
+        std::transform(name.begin(), name.end(), name.begin(), tolower);
         if (needSourceFile) {
             needSourceFile = false;
             filename = name;
         }
         bool wasInWantedFile = inWantedFile;
         inWantedFile = (name == filename);
+        if (inWantedFile) {
+            if (number < curLine) removeEmptyLines((curLine - number));
+            curLine = number;
+        }
+        if (*(nameEnd + 1) == '\r') nameEnd++;
         curPos = nameEnd + 2;
         //if (inWantedFile && *curPos == '\n') {
         //	curPos++;
@@ -55,7 +77,8 @@ std::string Script::getScriptFromFirstLine(SourceDocPos& pos, bool compact) {
         if (wasInWantedFile) {
             output.append("#include \"");
             output.append(name);
-            output.append("\"");
+            output.append("\"\n");
+            curLine++;
         }
 
 
@@ -68,6 +91,7 @@ std::string Script::getScriptFromFirstLine(SourceDocPos& pos, bool compact) {
         auto lineEnd = std::find(curPos, end, '\n') + 1;
         if (inWantedFile) {
             output.append(curPos, lineEnd - curPos);
+            curLine++;
         }
         //line is curPos -> lineEnd
         curPos = lineEnd;
