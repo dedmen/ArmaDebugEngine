@@ -5,6 +5,8 @@
 #include "VMContext.h"
 #include "Serialize.h"
 #include "Tracker.h"
+#include <intercept.hpp>
+#include "SQF-Assembly-Iface.h"
 
 bool inScriptVM;
 extern "C" EngineHook GlobalEngineHook;
@@ -153,11 +155,11 @@ HookManager::Pattern pat_scriptVMSimulateEnd{
     0x00000000013ADF49 - 0x00000000013ADF1E
 };
 
-HookManager::Pattern pat_instructionBreakpoint{
-    "xxxx?xxxx?xxxxxxxx????xxxxxxxxxxxx????xxxxxxxxxxxxxxx",
-    "\x49\x8B\x44\x24\x00\x49\x8D\x54\x24\x00\x48\x85\xC0\x74\x22\x48\x8D\x0D\x00\x00\x00\x00\x48\x83\xC0\x10\x48\x3B\xC1\x74\x12\x48\x8B\x8F\x00\x00\x00\x00\x48\x85\xC9\x74\x06\x48\x8B\x01\xFF\x50\x08\x49\x8B\x04\x24",
-    -0x3C
-};
+//HookManager::Pattern pat_instructionBreakpoint{
+//    "xxxx?xxxx?xxxxxxxx????xxxxxxxxxxxx????xxxxxxxxxxxxxxx",
+//    "\x49\x8B\x44\x24\x00\x49\x8D\x54\x24\x00\x48\x85\xC0\x74\x22\x48\x8D\x0D\x00\x00\x00\x00\x48\x83\xC0\x10\x48\x3B\xC1\x74\x12\x48\x8B\x8F\x00\x00\x00\x00\x48\x85\xC9\x74\x06\x48\x8B\x01\xFF\x50\x08\x49\x8B\x04\x24",
+//    -0x3C
+//};
 
 HookManager::Pattern pat_worldSimulate{//PROF ONLY
     "xxxxxxxxxxxxxxxxxxxxxx????xxx????xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx?xxxx????xxxxxxxxxxxxxxxxxxxx????xxxx????xxxx????xxxx????xxxxxx????xxxx",
@@ -327,32 +329,32 @@ MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create s
 
 void EngineHook::placeHooks() {
 
-    char* productType = reinterpret_cast<char*>(GlobalHookManager.findPattern(pat_productType));
-    char* productVersion = reinterpret_cast<char*>(GlobalHookManager.findPattern(pat_productVersion));
-    OutputDebugString("Product Type: ");
-    OutputDebugString(productType ? productType : "");
-    OutputDebugString("\t\tVersion: ");
-    OutputDebugString(productVersion ? productVersion : "");
-    OutputDebugString("\n");
+    //char* productType = reinterpret_cast<char*>(GlobalHookManager.findPattern(pat_productType));
+    //char* productVersion = reinterpret_cast<char*>(GlobalHookManager.findPattern(pat_productVersion));
+    //OutputDebugStringA("Product Type: ");
+    //OutputDebugStringA(productType ? productType : "");
+    //OutputDebugStringA("\t\tVersion: ");
+    //OutputDebugStringA(productVersion ? productVersion : "");
+    //OutputDebugStringA("\n");
+	//
+    //if (!productType || !productVersion) {
+    //    std::string error("Could not find gameVersion or gameType. This means this game version is likely incompatible! \n");
+    //    error += "Version: " + std::string(productVersion ? productVersion : "NOT FOUND") + "\n";
+    //    error += "Type: " + std::string(productType ? productType : "NOT FOUND") + "\n";
+    //    if (productType && strncmp(productType, "", 2))
+    //        error += "You are not running a Profiling version of Arma. This is needed for Arma Debug Engine to work!";
+	//	
+    //    //MessageBox(error.c_str(), ErrorMsgBoxType::error);
+    //    return;
+    //}
+    //if (productType && strncmp(productType, "Arma3RetailProfile_DX11", 13)) {
+    //    std::string error("You are not running a Profiling version of Arma. This is needed for Arma Debug Engine to work!\n\nFurther error messages might be caused by this.");
+	//
+    //    //MessageBox(error.c_str(), ErrorMsgBoxType::warning);
+    //}
 
-    if (!productType || !productVersion) {
-        std::string error("Could not find gameVersion or gameType. This means this game version is likely incompatible! \n");
-        error += "Version: " + std::string(productVersion ? productVersion : "NOT FOUND") + "\n";
-        error += "Type: " + std::string(productType ? productType : "NOT FOUND") + "\n";
-        if (productType && strncmp(productType, "", 2))
-            error += "You are not running a Profiling version of Arma. This is needed for Arma Debug Engine to work!";
 
-        MessageBox(error.c_str(), ErrorMsgBoxType::error);
-        return;
-    }
-    if (productType && strncmp(productType, "Arma3RetailProfile_DX11", 13)) {
-        std::string error("You are not running a Profiling version of Arma. This is needed for Arma Debug Engine to work!\n\nFurther error messages might be caused by this.");
-
-        MessageBox(error.c_str(), ErrorMsgBoxType::warning);
-    }
-
-
-    GlobalDebugger.setGameVersion(productType, productVersion);
+    //GlobalDebugger.setGameVersion(productType, productVersion);
 
     bool* isDebuggerAttached = reinterpret_cast<bool*>(GlobalHookManager.findPattern(pat_IsDebuggerAttached));
     if (isDebuggerAttached)
@@ -360,40 +362,58 @@ void EngineHook::placeHooks() {
                                      //Could also patternFind and patch (profv3 0107144F) to unconditional jmp
     HookIntegrity HI;
 #ifdef X64
-#ifdef ScriptProfiling
-    //HI.__scriptVMConstructor = GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
-    //HI.__scriptVMSimulateStart = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 2);
-    //HI.__scriptVMSimulateEnd = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateEnd, pat_scriptVMSimulateEnd, reinterpret_cast<uintptr_t>(scriptVMSimulateEnd));
-    //#TODO worldSimulate crashing on x64 1.68 profv3
-    //HI.__worldSimulate = GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
-    //GlobalHookManager.placeHook(hookTypes::worldMissionEventStart, pat_worldMissionEventStart, reinterpret_cast<uintptr_t>(worldMissionEventStart), worldMissionEventStartJmpBack, 2);
-    //GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
-#endif
 
+	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionNewExpression, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+		GlobalEngineHook._scriptInstruction(instr, state, ctx);
+	});
+	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionConst, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+		GlobalEngineHook._scriptInstruction(instr, state, ctx);
+	});
+	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionFunction, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+		GlobalEngineHook._scriptInstruction(instr, state, ctx);
+	});
+	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionOperator, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+		GlobalEngineHook._scriptInstruction(instr, state, ctx);
+	}); 
+	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionAssignment, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+		GlobalEngineHook._scriptInstruction(instr, state, ctx);
+	});
+	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionVariable, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+		GlobalEngineHook._scriptInstruction(instr, state, ctx);
+	});
+	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionArray, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+		GlobalEngineHook._scriptInstruction(instr, state, ctx);
+	});
 
-    HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
+    //HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
     //has to jmpback 13CF0B6 wants 0x00000000013cf0af
 
-    HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 5);
+    //HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 5);
     scriptPreprocessorDefineDefine = GlobalHookManager.findPattern(pat_scriptPreprocessorDefineDefine);
 
     HI.scriptPreprocDefine = (scriptPreprocessorDefineDefine != 0);
     if (scriptPreprocessorDefineDefine) //else report error
         HI.scriptPreprocConstr = GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 0xA);
 
-    HI.scriptAssert = GlobalHookManager.placeHook(hookTypes::onScriptAssert, pat_onScriptAssert, reinterpret_cast<uintptr_t>(onScriptAssert), scriptAssertJmpBack, 0xB7 - 0x95 + 0x8);
-    HI.scriptHalt = GlobalHookManager.placeHook(hookTypes::onScriptHalt, pat_onScriptHalt, reinterpret_cast<uintptr_t>(onScriptHalt), scriptHaltJmpBack, 1 + 0xE + 1);
-    HI.scriptEcho = GlobalHookManager.placeHook(hookTypes::onScriptEcho, pat_onScriptEcho, reinterpret_cast<uintptr_t>(onScriptEcho), scriptEchoJmpBack, 0xE - 0xD + 3);
+	static auto assertHook = intercept::client::host::register_sqf_command("assert"sv, "", [](uintptr_t, game_value_parameter par) -> game_value {
+		return {};
+	}, game_data_type::NOTHING, game_data_type::BOOL);
+	static auto haltHook = intercept::client::host::register_sqf_command("halt"sv, "", [](uintptr_t, game_value_parameter par) -> game_value {
+		return {};
+	}, game_data_type::NOTHING, game_data_type::BOOL);
+	static auto echoHook = intercept::client::host::register_sqf_command("echo"sv, "", [](uintptr_t, game_value_parameter par) -> game_value {
+		return {};
+	}, game_data_type::NOTHING, game_data_type::BOOL);
+	
+	
+	HI.scriptAssert = assertHook.has_function();
+	HI.scriptHalt = haltHook.has_function();
+	HI.scriptEcho = echoHook.has_function();
+
+
 
 #else
-#ifdef ScriptProfiling
-    HI.__scriptVMConstructor = GlobalHookManager.placeHook(hookTypes::scriptVMConstructor, pat_scriptVMConstructor, reinterpret_cast<uintptr_t>(scriptVMConstructor), scriptVMConstructorJmpBack, 3);
-    HI.__scriptVMSimulateStart = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateStart, pat_scriptVMSimulateStart, reinterpret_cast<uintptr_t>(scriptVMSimulateStart), scriptVMSimulateStartJmpBack, 1);
-    HI.__scriptVMSimulateEnd = GlobalHookManager.placeHook(hookTypes::scriptVMSimulateEnd, pat_scriptVMSimulateEnd, reinterpret_cast<uintptr_t>(scriptVMSimulateEnd));
-    HI.__worldSimulate = GlobalHookManager.placeHook(hookTypes::worldSimulate, pat_worldSimulate, reinterpret_cast<uintptr_t>(worldSimulate), worldSimulateJmpBack, 1);
-    HI.__worldMissionEventStart = GlobalHookManager.placeHook(hookTypes::worldMissionEventStart, pat_worldMissionEventStart, reinterpret_cast<uintptr_t>(worldMissionEventStart), worldMissionEventStartJmpBack, 2);
-    HI.__worldMissionEventEnd = GlobalHookManager.placeHook(hookTypes::worldMissionEventEnd, pat_worldMissionEventEnd, reinterpret_cast<uintptr_t>(worldMissionEventEnd), worldMissionEventEndJmpBack, 1);
-#endif
+
     HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 1);
     HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 0);
 
@@ -471,10 +491,10 @@ void EngineHook::placeHooks() {
 #endif
 
 
-        MessageBox(error.c_str(), fatal ? ErrorMsgBoxType::error : ErrorMsgBoxType::warning);
+        //MessageBox(error.c_str(), fatal ? ErrorMsgBoxType::error : ErrorMsgBoxType::warning);
     }
 
-    Tracker::trackPiwik();
+    //Tracker::trackPiwik();
 }
 
 void EngineHook::removeHooks(bool leavePFrameHook) {
@@ -561,13 +581,13 @@ uint16_t lastInstructionLine;
 const char* lastInstructionFile;
 #endif
 
-void EngineHook::_scriptInstruction(uintptr_t instructionBP_Instruction, uintptr_t instructionBP_VMContext, uintptr_t instructionBP_gameState, uintptr_t instructionBP_IDebugScript) {
+void EngineHook::_scriptInstruction(intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctxi) {
     globalTimeKeeper _tc;
     //auto start = std::chrono::high_resolution_clock::now();
 
-    auto instruction = reinterpret_cast<RV_GameInstruction *>(instructionBP_Instruction);
-    auto ctx = reinterpret_cast<RV_VMContext *>(instructionBP_VMContext);
-    auto gs = reinterpret_cast<GameState *>(instructionBP_gameState);
+    auto instruction = reinterpret_cast<RV_GameInstruction *>(instr);
+    auto ctx = reinterpret_cast<RV_VMContext *>(&ctxi);
+    auto gs = reinterpret_cast<GameState *>(&state);
 #ifdef OnlyOneInstructionPerLine
     if (instruction->_scriptPos._sourceLine != lastInstructionLine || instruction->_scriptPos._content.data() != lastInstructionFile) {
 #endif
@@ -640,4 +660,12 @@ void EngineHook::onShutdown() {
 void EngineHook::onStartup() {
     placeHooks();
     GlobalDebugger.onStartup();
+}
+
+void intercept::pre_start() {
+	
+	GASM.init();
+	GlobalEngineHook.placeHooks();
+	GlobalDebugger.onStartup();
+
 }

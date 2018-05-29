@@ -206,12 +206,12 @@ void Debugger::writeFrameToFile(uint32_t frameCounter) {
 
 void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
     lastKnownGameState = instructionInfo.gs;
-    JsonArchive ar;
-    serializeScriptCommands(ar);
-    std::ofstream f("P:\\funcs.json", std::ios::out | std::ios::binary);
-    auto text = ar.to_string();
-    f.write(text.c_str(), text.length());
-    f.close();
+    //JsonArchive ar;
+    //serializeScriptCommands(ar);
+    //std::ofstream f("P:\\funcs.json", std::ios::out | std::ios::binary);
+    //auto text = ar.to_string();
+    //f.write(text.c_str(), text.length());
+    //f.close();
     if (monitors.empty() && breakPoints.empty()) return;
     instructionInfo.instruction->_scriptPos._sourceFile.lower();
     checkForBreakpoint(instructionInfo);
@@ -281,7 +281,11 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     //if (_strcmpi(instructionInfo.instruction->_scriptPos._sourceFile.data(), "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf") == 0)
     //    __debugbreak();
     std::shared_lock<std::shared_mutex> lk(breakPointsLock);
-    auto &found = breakPoints.get(instructionInfo.instruction->_scriptPos._sourceFile.data());
+	static bool doBreeak = true;
+	if (doBreeak && instructionInfo.instruction->_scriptPos._sourceFile.find("cba_fnc_currentunit") != std::string::npos) __debugbreak();
+	auto space = instructionInfo.instruction->_scriptPos._sourceFile.find(" ");
+	auto properPath = (space != std::string::npos) ? instructionInfo.instruction->_scriptPos._sourceFile.substr(0, space) : instructionInfo.instruction->_scriptPos._sourceFile;
+    auto &found = breakPoints.get(properPath.data());
     if (breakPoints.isNull(found) || found.empty()) return;
     for (auto& bp : found) {
         if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine) {

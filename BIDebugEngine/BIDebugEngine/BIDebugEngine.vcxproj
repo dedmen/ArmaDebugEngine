@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug141|Win32">
       <Configuration>Debug141</Configuration>
@@ -44,7 +44,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug141|Win32'" Label="Configuration">
@@ -56,7 +56,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -70,7 +70,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug141|x64'" Label="Configuration">
@@ -82,7 +82,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -132,6 +132,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>$(ProjectName)_x64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug141|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -205,8 +206,10 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;_DEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
+      <AdditionalIncludeDirectories>I:\ArmaDebugEngine\intercept\src\client\headers;I:\armadebugengine\intercept\src\client\headers\client;I:\armadebugengine\intercept\src\client\headers\client\sqf;I:\armadebugengine\intercept\src\client\headers\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -344,6 +347,42 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\client.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\eventhandlers.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\pointers.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\actions.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\ai.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\camera.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\cargo.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\chat.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\common_helpers.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\config.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\core.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\ctrl.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\curator.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\debug.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\deprecated.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\eden.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\group.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\hc.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\intersects.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\inventory.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\marker.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\misc.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\multiplayer.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\position.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\rotorlib.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\sound.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\tasks.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\uncategorized.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\units.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\vehicles.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\waypoint.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\world.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\shared\client_types.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\shared\containers.cpp" />
+    <ClCompile Include="..\..\intercept\src\client\intercept\shared\types.cpp" />
+    <ClCompile Include="SQF-Assembly-Iface.cpp" />
     <ClCompile Include="BIDebugEngine.cpp" />
     <ClCompile Include="BreakPoint.cpp" />
     <ClCompile Include="Debugger.cpp" />
@@ -387,6 +426,7 @@
     <ClCompile Include="VMContext.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SQF-Assembly-Iface.h" />
     <ClInclude Include="BIDebugEngine.h" />
     <ClInclude Include="BreakPoint.h" />
     <ClInclude Include="Debugger.h" />

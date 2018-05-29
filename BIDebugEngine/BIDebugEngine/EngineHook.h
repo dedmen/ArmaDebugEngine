@@ -6,6 +6,14 @@
 #include <array>
 #include <functional>
 
+namespace intercept {
+	namespace types {
+		class game_instruction;
+		class game_state;
+		class vm_context;
+	}
+}
+
 enum class hookTypes {
     worldSimulate,   //FrameEnd/FrameStart
     instructionBreakpoint,
@@ -81,7 +89,7 @@ public:
     void _scriptEntered(uintptr_t scrVMPtr);
     void _scriptTerminated(uintptr_t scrVMPtr);
     void _scriptLeft(uintptr_t scrVMPtr);
-    void _scriptInstruction(uintptr_t instructionBP_Instruction, uintptr_t instructionBP_VMContext, uintptr_t instructionBP_gameState, uintptr_t instructionBP_IDebugScript);
+    void _scriptInstruction(intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx);
     void _world_OnMissionEventStart(uintptr_t eventType);
     void _world_OnMissionEventEnd();
     void _onScriptError(uintptr_t gameState);

@@ -9,7 +9,10 @@ void RV_GameInstruction::Serialize(JsonArchive& ar) {
     const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
     ar.Serialize("type", typeName);
     ar.Serialize("name", GetDebugName());
-    ar.Serialize("filename", _scriptPos._sourceFile);
+	auto space = _scriptPos._sourceFile.find(" ");
+	auto properPath = (space != std::string::npos) ? _scriptPos._sourceFile.substr(0, space) : _scriptPos._sourceFile;
+
+    ar.Serialize("filename", properPath);
 
     ar.Serialize("fileOffset", { _scriptPos._sourceLine, _scriptPos._pos, Script::getScriptLineOffset(_scriptPos) });
 

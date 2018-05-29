@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "RVContainer.h"
 #include "RVIDebugInterface.h"
+#include <array>
 class JsonArchive;
 
 class RV_GameInstruction : public RefCount {
@@ -247,14 +248,18 @@ struct GameOperatorNameBase {
 public:
     RString _operatorName;
 private:
-    uint32_t placeholder1;//0x4
-    uint32_t placeholder2;//0x8 actually a pointer to empty memory
-    uint32_t placeholder3;//0xC
-    uint32_t placeholder4;//0x10
-    uint32_t placeholder5;//0x14
-    uint32_t placeholder6;//0x18  
-    uint32_t placeholder7;//0x1C
-    uint32_t placeholder8;//0x20
+	std::array<size_t,
+#if _WIN64 || __X86_64__
+		10
+#else
+#ifdef __linux__
+		8
+#else
+		11
+#endif
+#endif
+	> securityStuff{};  //Will scale with x64
+						//size_t securityStuff[11];
 };
 
 class ScriptCmdInfo {

@@ -43,6 +43,9 @@
     <Filter Include="Source Files\misc">
       <UniqueIdentifier>{c384d552-a3be-4ac3-9f01-2055b596d10c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Intercept">
+      <UniqueIdentifier>{a2074222-c2bb-466b-ac65-8f0380dfaea4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -92,6 +95,114 @@
     </ClCompile>
     <ClCompile Include="Tracker.cpp">
       <Filter>Source Files\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\shared\client_types.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\shared\containers.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\shared\types.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\client.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\eventhandlers.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\pointers.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\actions.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\ai.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\camera.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\cargo.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\chat.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\common_helpers.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\config.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\core.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\ctrl.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\curator.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\debug.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\deprecated.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\eden.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\group.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\hc.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\intersects.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\inventory.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\marker.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\misc.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\multiplayer.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\position.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\rotorlib.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\sound.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\tasks.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\uncategorized.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\units.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\vehicles.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\waypoint.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\intercept\src\client\intercept\client\sqf\world.cpp">
+      <Filter>Source Files\Intercept</Filter>
+    </ClCompile>
+    <ClCompile Include="SQF-Assembly-Iface.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -151,6 +262,9 @@
     </ClInclude>
     <ClInclude Include="Tracker.h">
       <Filter>Header Files\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="SQF-Assembly-Iface.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

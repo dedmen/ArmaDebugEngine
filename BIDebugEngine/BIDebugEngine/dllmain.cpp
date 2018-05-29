@@ -3,13 +3,14 @@
 #define VC_EXTRALEAN 
 #include "EngineHook.h"
 #include <string>
+#include <future>
 struct IUnknown; //Clang compiler error in windows.h
 #include <windows.h>
 #include <Psapi.h>
 #include "GlobalHeader.h"
 #pragma comment (lib, "Psapi.lib")//GetModuleInformation
 #pragma comment (lib, "version.lib")
-#include "../../intercept/src/client/headers/intercept.hpp"
+#include <intercept.hpp>
 #undef OutputDebugString
 #undef MessageBox
 
@@ -17,11 +18,6 @@ struct IUnknown; //Clang compiler error in windows.h
 int intercept::api_version() {
     return 1;
 }
-
-void intercept::pre_start() {
-
-}
-
 
 extern uintptr_t engineAlloc;
 extern uintptr_t globalAlivePtr;
@@ -76,49 +72,88 @@ BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason, LPVOID) {
     WAIT_FOR_DEBUGGER_ATTACHED;
 
 
-    //Get engine allocator - From my Intercept fork
-    //Find the allocator base
-    //This has to happen pre CRTInit because static/global Variables may need to alloc in Engine
-    MODULEINFO modInfo = { 0 };
-    HMODULE hModule = GetModuleHandleA(nullptr);
-    GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
-
-    auto findInMemory = [&modInfo](char* pattern, size_t patternLength) ->uintptr_t {
-        uintptr_t base = reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll);
-        uintptr_t size = static_cast<uintptr_t>(modInfo.SizeOfImage);
-        for (DWORD i = 0; i < size - patternLength; i++) {
-            bool found = true;
-            for (DWORD j = 0; j < patternLength; j++) {
-                found &= pattern[j] == *reinterpret_cast<char*>(base + i + j);
-                if (!found)
-                    break;
-            }
-            if (found)
-                return base + i;
-        }
-        return 0;
-    };
-
-    auto getRTTIName = [](uintptr_t* vtable) -> const char* {
-        class v1 {
-            virtual void doStuff() {}
-        };
-        class v2 : public v1 {
-            virtual void doStuff() {}
-        };
-        v2* v = (v2*) vtable;
-        auto& typex = typeid(*v);
-        auto test = typex.raw_name();
-        return test;
-    };
+	//Intercept Loader - Written by me
+	MODULEINFO modInfo = { nullptr };
+	HMODULE hModule = GetModuleHandleA(nullptr);
+	GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
+	const uintptr_t baseAddress = reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll);
+	const uintptr_t moduleSize = static_cast<uintptr_t>(modInfo.SizeOfImage);
 
 
+	auto findInMemory = [baseAddress, moduleSize](const char* pattern, size_t patternLength) ->uintptr_t {
+		const uintptr_t base = baseAddress;
+		const uintptr_t size = moduleSize;
+		for (uintptr_t i = 0; i < size - patternLength; i++) {
+			bool found = true;
+			for (uintptr_t j = 0; j < patternLength; j++) {
+				found &= pattern[j] == *reinterpret_cast<char*>(base + i + j);
+				if (!found)
+					break;
+			}
+			if (found)
+				return base + i;
+		}
+		return 0;
+	};
 
-    uintptr_t stringOffset = findInMemory("tbb4malloc_bi", 13);
+	auto findInMemoryPattern = [baseAddress, moduleSize](const char* pattern, const char* mask, uintptr_t offset = 0) {
+		const uintptr_t base = baseAddress;
+		const uintptr_t size = moduleSize;
 
-    uintptr_t allocatorVtablePtr = (findInMemory((char*) &stringOffset, sizeof(uintptr_t)) - sizeof(uintptr_t));
-    const char* test = getRTTIName(reinterpret_cast<uintptr_t*>(allocatorVtablePtr));
-    engineAlloc = allocatorVtablePtr;
+		const uintptr_t patternLength = static_cast<uintptr_t>(strlen(mask));
+
+		for (uintptr_t i = 0; i < size - patternLength; i++) {
+			bool found = true;
+			for (uintptr_t j = 0; j < patternLength; j++) {
+				found &= mask[j] == '?' || pattern[j] == *reinterpret_cast<char*>(base + i + j);
+				if (!found)
+					break;
+			}
+			if (found)
+				return base + i + offset;
+		}
+		return static_cast<uintptr_t>(0x0u);
+	};
+
+	auto getRTTIName = [](uintptr_t vtable) -> const char* {
+		class v1 {
+			virtual void doStuff() {}
+		};
+		class v2 : public v1 {
+			virtual void doStuff() {}
+		};
+		v2* v = (v2*) vtable;
+		auto& typex = typeid(*v);
+#ifdef __GNUC__
+		auto test = typex.name();
+#else
+		auto test = typex.raw_name();
+#endif
+		return test;
+	};
+
+
+
+	auto future_stringOffset =findInMemory("tbb4malloc_bi", 13);
+
+
+
+	auto future_allocatorVtablePtr = [&]() {
+		uintptr_t stringOffset = future_stringOffset;
+#ifndef __linux__
+		return (findInMemory(reinterpret_cast<char*>(&stringOffset), sizeof(uintptr_t)) - sizeof(uintptr_t));
+#else
+		uintptr_t vtableStart = stringOffset - (0x09D20C70 - 0x09D20BE8);
+		return vtableStart;
+		//return (findInMemory(reinterpret_cast<char*>(&vtableStart), 4));
+#endif
+
+	}();
+
+	const uintptr_t allocatorVtablePtr = future_allocatorVtablePtr;
+
+
+	engineAlloc = allocatorVtablePtr;
 
     return TRUE;
 }
@@ -239,8 +274,8 @@ bool HookManager::MatchPattern(uintptr_t addr, const char* pattern, const char* 
 }
 
 uintptr_t HookManager::findPattern(const char* pattern, const char* mask, uintptr_t offset /*= 0*/) {
-    uintptr_t base = (DWORD) engineBase;
-    uint32_t size = (DWORD) engineSize;
+    uintptr_t base = engineBase;
+    uint32_t size = engineSize;
 
     uintptr_t patternLength = (DWORD) strlen(mask);
 
