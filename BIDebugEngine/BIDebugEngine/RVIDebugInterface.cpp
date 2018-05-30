@@ -2,7 +2,7 @@
 #include <vector>
 
 char VarBuffer[1024];
-void IDebugScope::printAllVariables() {
+void intercept::types::vm_context::IDebugScope::printAllVariables() {
 
 
     auto varC = varCount();
@@ -19,11 +19,11 @@ void IDebugScope::printAllVariables() {
         value->getTypeStr(VarBuffer, 1023);
         std::string valueType(VarBuffer);
         value->getValue(10, VarBuffer, 1023);
-        OutputDebugString((name + " " + valueType + ": " + std::string(VarBuffer) + "\n").c_str());
+        OutputDebugStringA((name + " " + valueType + ": " + std::string(VarBuffer) + "\n").c_str());
     }
 }
 
-std::string IDebugScope::allVariablesToString() {
+std::string intercept::types::vm_context::IDebugScope::allVariablesToString() {
     std::string output;
     auto varC = varCount();
     std::vector<IDebugVariable*> vars;

@@ -1,6 +1,7 @@
 #include "Script.h"
+#include <types.hpp>
 
-Script::Script(RString content) {//#TODO change to taking docPos as constructor
+Script::Script(r_string content) {//#TODO change to taking docPos as constructor
     _content = content;
     _fileName = "";
 }
@@ -11,24 +12,24 @@ void Script::dbg_instructionExec() {
     ++instructionCount;
 }
 
-int Script::getScriptLineOffset(SourceDocPos& pos) {
-    if (pos._content.isNull()) return 0;
-    const char* curOffs = pos._content.data() + pos._pos;
+uint32_t Script::getScriptLineOffset(const intercept::types::sourcedocpos& pos) {
+    if (pos.content.empty()) return 0;
+    const char* curOffs = pos.content.data() + pos.pos;
     int lineOffset = 0;
-    while (*curOffs != '\n' && curOffs > pos._content.data()) {
+    while (*curOffs != '\n' && curOffs > pos.content.data()) {
         curOffs--;
         lineOffset++;
     }
     return std::max(lineOffset - 1, 0);
 }
 
-std::string Script::getScriptFromFirstLine(SourceDocPos& pos, bool compact) {
-    if (pos._content.isNull()) return pos._content.data();
-    auto needSourceFile = pos._sourceFile.isNull();
-    int line = pos._sourceLine + 1;
-    auto start = pos._content.cbegin();
-    auto end = pos._content.cend();
-    std::string filename(needSourceFile ? "" : pos._sourceFile.data());
+std::string Script::getScriptFromFirstLine(const intercept::types::sourcedocpos& pos, bool compact) {
+    if (pos.content.empty()) return pos.content.data();
+    auto needSourceFile = pos.sourcefile.empty();
+    int line = pos.sourceline + 1;
+    auto start = pos.content.begin();
+    auto end = pos.content.end();
+    std::string filename(needSourceFile ? "" : pos.sourcefile.data());
     std::transform(filename.begin(), filename.end(), filename.begin(), tolower);
     auto curPos = start;
     auto curLine = 1U;
@@ -52,10 +53,10 @@ std::string Script::getScriptFromFirstLine(SourceDocPos& pos, bool compact) {
     auto readLineMacro = [&]() {
         curPos += 6;
         auto numberEnd = std::find(curPos, end, ' ');
-        auto number = std::stoi(std::string(curPos, 0, numberEnd - curPos));
+        auto number = std::stoi(std::string(*curPos, numberEnd - curPos));
         curPos = numberEnd + 2;
         auto nameEnd = std::find(curPos, end, '"');
-        std::string name(curPos, 0, nameEnd - curPos);
+        std::string name(*curPos, nameEnd - curPos);
         std::transform(name.begin(), name.end(), name.begin(), tolower);
         if (needSourceFile) {
             needSourceFile = false;
@@ -90,7 +91,7 @@ std::string Script::getScriptFromFirstLine(SourceDocPos& pos, bool compact) {
         if (*curPos == '#') return readLineMacro();
         auto lineEnd = std::find(curPos, end, '\n') + 1;
         if (inWantedFile) {
-            output.append(curPos, lineEnd - curPos);
+            output.append(*curPos, lineEnd - curPos);
             curLine++;
         }
         //line is curPos -> lineEnd

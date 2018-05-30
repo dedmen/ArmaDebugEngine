@@ -8,7 +8,7 @@ VMContext::VMContext() {}
 
 VMContext::~VMContext() {}
 
-std::shared_ptr<Script> VMContext::getScriptByContent(RString content) {
+std::shared_ptr<Script> VMContext::getScriptByContent(r_string content) {
     uintptr_t contentPtr = reinterpret_cast<uintptr_t>(content.data());
     auto iter(contentPtrToScript.lower_bound(contentPtr));
     //Thank you SO! 
@@ -38,7 +38,7 @@ extern std::chrono::high_resolution_clock::time_point frameStart;
 //RString str_dummyPlaceholder("dummyPlaceholder");
 //RString str_DbgEngine("DbgEngine");
 
-void VMContext::addInstruction(RV_VMContext* ctx, RV_GameInstruction* instruction) {
+void VMContext::addInstruction(RV_VMContext* ctx, game_instruction* instruction) {
     /*
     static uint32_t instructionCounter{ 0 };
     std::chrono::high_resolution_clock::time_point time(globalTime - frameStart);

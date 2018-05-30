@@ -208,7 +208,7 @@
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
-      <AdditionalIncludeDirectories>I:\ArmaDebugEngine\intercept\src\client\headers;I:\armadebugengine\intercept\src\client\headers\client;I:\armadebugengine\intercept\src\client\headers\client\sqf;I:\armadebugengine\intercept\src\client\headers\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -416,7 +416,6 @@
     <ClCompile Include="Monitor.cpp" />
     <ClCompile Include="NamedPipeServer.cpp" />
     <ClCompile Include="NetworkController.cpp" />
-    <ClCompile Include="RVBaseTypes.cpp" />
     <ClCompile Include="RVClasses.cpp" />
     <ClCompile Include="RVContainer.cpp" />
     <ClCompile Include="RVIDebugInterface.cpp" />
@@ -438,7 +437,6 @@
     <ClInclude Include="NetworkController.h" />
     <ClInclude Include="RVBaseTypes.h" />
     <ClInclude Include="RVClasses.h" />
-    <ClInclude Include="RVContainer.h" />
     <ClInclude Include="RVIDebugInterface.h" />
     <ClInclude Include="Script.h" />
     <ClInclude Include="Serialize.h" />

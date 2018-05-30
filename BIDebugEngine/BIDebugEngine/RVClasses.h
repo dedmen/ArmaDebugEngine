@@ -1,24 +1,13 @@
 #pragma once
 
 #include <cstdint>
-#include "RVContainer.h"
+#include "RVBaseTypes.h"
 #include "RVIDebugInterface.h"
 #include <array>
+#include <types.hpp>
 class JsonArchive;
 
-class RV_GameInstruction : public RefCount {
-public:
-    virtual ~RV_GameInstruction() {}
-    virtual bool Execute(uintptr_t gameStatePtr, uintptr_t VMContextPtr) { return false; };
-    virtual int GetStackChange(uintptr_t _ptr) { return 0; };
-    virtual bool IsNewExpression() { return false; }
-    virtual RString GetDebugName() { return RString(); };
-
-    void Serialize(JsonArchive& ar);
-
-    SourceDocPos _scriptPos;
-};
-
+void Serialize(const game_instruction&, JsonArchive& ar);
 
 //inline char* rv_strdup(const char* in) {
 //    auto len = strlen(in);
@@ -28,91 +17,47 @@ public:
 //    return newMem;
 //}
 
-
-class GameValue;
-class GameData : public RefCount, public IDebugValue {   //#TODO move to right headerfile
+class GameData : public intercept::types::game_data {
 public:
-    static AutoArray<GameValue> emptyGVAutoArray;
-    virtual const void* getGameType() const { return nullptr; } //Don't call
-    virtual ~GameData() {}
-
-    virtual bool getBool() const { return false; }
-    virtual float getNumber() const { return 0; }
-    virtual RString getString() const { return ""; } //Don't use this! use getAsString instead!
-    virtual const AutoArray<GameValue> &getArray() const { return emptyGVAutoArray; }
-    virtual void _1() const {}//Don't call this
-    virtual void _2() const {}//Don't call this
-    virtual void setReadOnly(bool val) {}
-    //! check read only status
-    virtual bool isReadOnly() const { return false; }
-
-    virtual bool isFinal() const { return false; }
-    virtual void setFinal(bool val) {};
-
-    virtual RString getAsString() const { return ""; }
-    virtual bool isEqualTo(const GameData *data) const { return false; };
-
-    virtual const char *getTypeString() const { return ""; }
-    virtual bool isNil() const { return false; }
-
-    void Serialize(JsonArchive& ar) const;
-
-
+    virtual bool get_as_bool() const { return false; }
+    virtual float get_as_number() const { return 0.f; }
+    virtual const r_string& get_as_string() const { static r_string dummy; dummy.clear(); return dummy; } ///Only usable on String and Code! Use to_string instead!
+    virtual const auto_array<game_value>& get_as_const_array() const { static auto_array<game_value> dummy; dummy.clear(); return dummy; } //Why would you ever need this?
+    virtual auto_array<game_value> &get_as_array() { static auto_array<game_value> dummy; dummy.clear(); return dummy; }
+    virtual game_data *copy() const { return nullptr; }
+    virtual void set_readonly(bool) {} //No clue what this does...
+    virtual bool get_readonly() const { return false; }
+    virtual bool get_final() const { return false; }
+    virtual void set_final(bool) {} //Only on GameDataCode AFAIK
 };
+
+void Serialize(const GameData&, JsonArchive& ar);
+
 
 class GameValue {
     uintptr_t vtable{ 0 };
 public:
-    Ref<GameData> _data;
+    intercept::types::ref<GameData> _data;
     GameValue() {};
-    void Serialize(JsonArchive& ar) const;
-    bool isNull() const { return _data.isNull(); }
+
+    bool isNull() const { return _data.is_null(); }
 };
 
+void Serialize(const game_value&, JsonArchive& ar);
 
-class GameVariable : public IDebugVariable {
+class CallStackItemSimple : public vm_context::callstack_item {
 public:
-    RString _name;
-    GameValue _value;
-    bool _readOnly{ false };
-
-    GameVariable() {};
-    const char *getMapKey() const { return _name; }
-};
-
-struct GameVarSpace {
-    uintptr_t vtable;
-    MapStringToClass<GameVariable, AutoArray<GameVariable> > _variables;
-    GameVarSpace *_parent;
-    const GameVariable* getVariable(const std::string& varName) const;
-    bool _1;
-};
-
-class CallStackItem : public RefCount, public IDebugScope {
-public:
-    CallStackItem* _parent;
-    GameVarSpace _varSpace;
-    /// number of values on the data stack when item was created
-    int _stackBottom;
-    /// number of values on the data stack before the current instruction processing
-    int _stackLast;
-    RString _scopeName;
-    SourceDocPos tryGetFilenameAndCode();
-};
-
-class CallStackItemSimple : public CallStackItem {
-public:
-    AutoArray<Ref<RV_GameInstruction>> _instructions;
+    auto_array<intercept::types::ref<game_instruction>> _instructions;
     int _currentInstruction;
-    SourceDoc _content;
+    sourcedoc _content;
     bool _multipleInstructions;
 };
 
 class GameDataCode : public GameData {
 public:
     struct {
-        RString _string;
-        AutoArray<Ref<RV_GameInstruction>> _code;
+        r_string _string;
+        auto_array<intercept::types::ref<game_instruction>> _code;
         bool _compiled;
     } _instructions;
     bool _final;
@@ -123,32 +68,15 @@ public:
     virtual void Dummy() {};
 };
 
-
-class GameDataNamespace : public GameData, public DummyVClass {
+class CallStackItemData : public vm_context::callstack_item {
 public:
-    MapStringToClass<GameVariable, AutoArray<GameVariable> > _variables;
-    RString _name;
-    bool _1;
-};
-
-class CallStackItemData : public CallStackItem {
-public:
-    Ref<GameDataCode> _code; // compiled code
+    intercept::types::ref<GameDataCode> _code; // compiled code
     int _ip; // instruction pointer
 };
 
-struct RV_VMContext {
-    uintptr_t vtable;
-    Array<Ref<CallStackItem>> callStack; //max 64 items
-#ifdef X64
-    char pad_0x0018[0x220]; //0x0018
-#else
-    char pad_0x0018[0x114]; //0x0018
-#endif
-    SourceDoc _doc;
-    SourceDocPos _lastInstructionPos;
+struct RV_VMContext : public vm_context {
 
-    const GameVariable* getVariable(std::string varName);
+    const game_variable* getVariable(std::string varName);
     void Serialize(JsonArchive& ar);
 };
 
@@ -163,7 +91,7 @@ public:
     RV_VMContext _context;
     //#TODO X64 for vars below here
     char pad_0x0150[280]; //0x0150
-    RString _displayName;
+    r_string _displayName;
     bool _canSuspend;
     bool _1;
     bool _undefinedIsNil;
@@ -172,42 +100,20 @@ public:
     bool _4;
 };
 
-class GameEvaluator : public RefCount {
-public:
-    GameVarSpace *local;  // local variables
-    int           handle; // for debug purposes to test the Begin/EndContext matching pairs
-
-    bool _1;
-    bool _2;
-    uint32_t _errorType;
-    RString _errorMessage;
-    SourceDocPos _errorPosition;
-    void SerializeError(JsonArchive& ar);
-};
-
+sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack_item& it);
+void Serialize(const GameData& gd, JsonArchive& ar);
+void Serialize(const game_value& gv, JsonArchive& ar);
+void SerializeError(const intercept::types::game_state::game_evaluator&, JsonArchive& ar);
 
 //Intercept  https://github.com/intercept/intercept/pull/108
 
-class RVScriptTypeInfo {
-public:
-    RString _name;
-    void* _createFunction{ nullptr };
-    RString _typeName;
-    RString _readableName;
-    RString _description;
-    RString _category;
-    RString _javaTypeShort;
-    RString _javaTypeLong;
-
-    void SerializeFull(JsonArchive &ar) const;
-    void Serialize(JsonArchive &ar) const;
-};
-
+void SerializeFull(const script_type_info& t, JsonArchive &ar);
+void Serialize(const script_type_info& t, JsonArchive &ar);
 
 class RVScriptType : public DummyVClass {
 public:
-    const RVScriptTypeInfo* _type{ nullptr };
-    class CompoundGameType : public AutoArray<const RVScriptTypeInfo *>, public DummyVClass {
+    const script_type_info* _type{ nullptr };
+    class CompoundGameType : public auto_array<const script_type_info *>, public DummyVClass {
 
     };
     const CompoundGameType* _compoundType{ nullptr };
@@ -217,7 +123,7 @@ public:
     std::vector<std::string> getTypeNames() const;
 };
 
-class NularOperator : public RefCount {
+class NularOperator : public intercept::types::refcount {
 public:
     NularOperator() {}
     void* _funcPtr{ nullptr };
@@ -225,7 +131,7 @@ public:
     void Serialize(JsonArchive &ar);
 };
 
-class UnaryOperator : public RefCount {
+class UnaryOperator : public intercept::types::refcount {
 public:
     UnaryOperator() {}
     void* _funcPtr{ nullptr };
@@ -234,7 +140,7 @@ public:
     void Serialize(JsonArchive &ar);
 };
 
-class BinaryOperator : public RefCount {
+class BinaryOperator : public intercept::types::refcount {
 public:
     BinaryOperator() {}
     void* _funcPtr{ nullptr };
@@ -246,7 +152,7 @@ public:
 
 struct GameOperatorNameBase {
 public:
-    RString _operatorName;
+    r_string _operatorName;
 private:
 	std::array<size_t,
 #if _WIN64 || __X86_64__
@@ -264,34 +170,34 @@ private:
 
 class ScriptCmdInfo {
 public:
-    RString _description;
-    RString _example;
-    RString _exampleResult;
-    RString _addedInVersion;
-    RString _changed;
-    RString _category;
+    r_string _description;
+    r_string _example;
+    r_string _exampleResult;
+    r_string _addedInVersion;
+    r_string _changed;
+    r_string _category;
     void Serialize(JsonArchive &ar) const;
 };
 
 struct GameNular : public GameOperatorNameBase {
 public:
-    RString _name; //0x24
-    Ref<NularOperator> _operator;
+    r_string _name; //0x24
+    intercept::types::ref<NularOperator> _operator;
     ScriptCmdInfo _info;
     void *_nullptr{ nullptr };
 
     GameNular() {}
 
-    const char *getMapKey() const { return _name; }
+    const char *getMapKey() const { return _name.c_str(); }
     void Serialize(JsonArchive &ar) const;
 };
 
 struct GameFunction : public GameOperatorNameBase {
     uint32_t placeholder9;//0x24
 public:
-    RString _name;
-    Ref<UnaryOperator> _operator;
-    RString _rightOperatorDescription;
+    r_string _name;
+    intercept::types::ref<UnaryOperator> _operator;
+    r_string _rightOperatorDescription;
     ScriptCmdInfo _info;
 
     GameFunction() {}
@@ -305,90 +211,44 @@ enum GamePriority {
 struct GameOperator : public GameOperatorNameBase {
     uint32_t placeholder9;//0x24
 public:
-    RString _name;
+    r_string _name;
     GamePriority _priority; //Don't use Enum the higher the number the higher the prio//#TODO remove enum
-    Ref<BinaryOperator> _operator;
-    RString _leftOperatorDescription;
-    RString _rightOperatorDescription;
+    intercept::types::ref<BinaryOperator> _operator;
+    r_string _leftOperatorDescription;
+    r_string _rightOperatorDescription;
     ScriptCmdInfo _info;
 
     GameOperator() {}
     void Serialize(JsonArchive &ar) const;
 };
 
+namespace intercept::__internal {
+    class gsNular : public GameNular {};
 
-struct GameFunctions : public AutoArray<GameFunction>, public GameOperatorNameBase {
-public:
-    RString _name;
-    GameFunctions() {}
-    const char *getMapKey() const { return _name; }
-};
+    class game_functions : public auto_array<GameFunction>, public GameOperatorNameBase {
+    public:
+        game_functions(std::string name) : _name(name.c_str()) {}
+        r_string _name;
+        game_functions() noexcept {}
+        const char *get_map_key() const noexcept { return _name.data(); }
+    };
 
-struct GameOperators : public AutoArray<GameOperator>, public GameOperatorNameBase {
-public:
-    RString _name;
-    GamePriority _priority; //Don't use Enum the higher the number the higher the prio//#TODO remove enum
-    GameOperators() {}
-    const char *getMapKey() const { return _name; }
-};
-
-#ifdef X64
-class GameState {
-public:
-    //virtual void _NOU() {} //GameState has no vtable since 1.68 (it had one in 1.66)
-    AutoArray<const RVScriptTypeInfo *> _scriptTypes;
-    MapStringToClass<GameFunctions, AutoArray<GameFunctions>> _scriptFunctions; //functions  Should consult Intercept on these. 
-    MapStringToClass<GameOperators, AutoArray<GameOperators>> _scriptOperators; //operators
-    MapStringToClass<GameNular, AutoArray<GameNular>> _scriptNulars; //nulars  //#TODO add DebugBreak script nular. Check Visor
-    char _5[0x220];
-    Ref<GameEvaluator> GEval;
-    Ref<GameDataNamespace> _globalNamespace; //Can change by https://community.bistudio.com/wiki/with
-                                             /*
-                                             default,
-                                             ui,
-                                             parsing,
-                                             mission
-                                             */
-    AutoArray<Ref<GameDataNamespace>> _namespaces; //Contains missionNamespace and uiNamespace
-    bool _6;
-    bool _showScriptErrors; //-showScriptErrors start parameter
-
-    RV_VMContext *_context;	//Current context
-                            //AutoArray<callStackItemCreator> _callStackItems;
-};
-#else
-class GameState;
-//class callStackItemCreator {
-//public:
-//    callStackItemCreator() {}
-//
-//    CallStackItem*(*createFunction)(CallStackItem* parent, GameVarSpace* parentVariables, const GameState* gs, bool serialization) { nullptr };
-//    RString type;
-//};
-
-class GameState {
-public:
-    //virtual void _NOU() {} //GameState has no vtable since 1.68 (it had one in 1.66)
-    AutoArray<const RVScriptTypeInfo *> _scriptTypes;
-    MapStringToClass<GameFunctions, AutoArray<GameFunctions>> _scriptFunctions; //functions  Should consult Intercept on these. 
-    MapStringToClass<GameOperators, AutoArray<GameOperators>> _scriptOperators; //operators
-    MapStringToClass<GameNular, AutoArray<GameNular>> _scriptNulars; //nulars  //#TODO add DebugBreak script nular. Check Visor
-    char _5[0x114];
-    Ref<GameEvaluator> GEval;
-    Ref<GameDataNamespace> _globalNamespace; //Can change by https://community.bistudio.com/wiki/with
-                                             /*
-                                             default,
-                                             ui,
-                                             parsing,
-                                             mission
-                                             */
-    AutoArray<Ref<GameDataNamespace>> _namespaces; //Contains missionNamespace and uiNamespace
+    class game_operators : public auto_array<GameFunction>, public GameOperatorNameBase {
+    public:
+        game_operators(std::string name) : _name(name.c_str()) {}
+        r_string _name;
+        int32_t placeholder10{ 4 }; //0x2C Small int 0-5  priority
+        game_operators() noexcept {}
+        const char *get_map_key() const noexcept { return _name.data(); }
+    };
+}
 
 
-    bool _6;
-    bool _showScriptErrors; //-showScriptErrors start parameter
 
-    RV_VMContext *_context;	//Current context
-                            //AutoArray<callStackItemCreator> _callStackItems;
-};
-#endif
+
+
+
+
+
+
+using GameState = intercept::types::game_state;

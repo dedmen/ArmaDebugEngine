@@ -2,19 +2,24 @@
 #include <cstdint>
 #include <string>
 #include "RVBaseTypes.h"
-class SourceDocPos;
+
+namespace intercept {
+	namespace types {
+		struct sourcedocpos;
+	}
+}
 
 class Script {
 public:
-    Script(RString content);
+    Script(r_string content);
     ~Script();
     void dbg_instructionExec();
     uint32_t instructionCount{ 0 };
-    RString _content;
-    RString _fileName;
+    r_string _content;
+    r_string _fileName;
 
-	static int getScriptLineOffset(SourceDocPos& pos);
-	static std::string getScriptFromFirstLine(SourceDocPos& pos, bool compact = false);
+	static uint32_t getScriptLineOffset(const intercept::types::sourcedocpos& pos);
+	static std::string getScriptFromFirstLine(const intercept::types::sourcedocpos& pos, bool compact = false);
 
 };
 

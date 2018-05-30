@@ -24,7 +24,7 @@ public:
        
     template <class Type>
     typename std::enable_if<has_Serialize<Type>::value>::type
-        Serialize(const char* key, const AutoArray<Type>& value) {
+        Serialize(const char* key, const auto_array<Type>& value) {
         auto &_array = (*pJson)[key];
         _array.array({});
         if (isReading) {
@@ -33,7 +33,7 @@ public:
                 __debugbreak(); //#TODO AutoArray pushback
             }
         } else {
-            value.forEach([&_array](const Type& value) {
+            value.for_each([&_array](const Type& value) {
                 JsonArchive element;
                 value.Serialize(element);
                 _array.push_back(*element.pJson);
@@ -42,8 +42,30 @@ public:
     }
 
     template <class Type>
+    typename std::enable_if<!has_Serialize<Type>::value>::type
+        Serialize(const char* key, const auto_array<Type>& value) {
+        auto &_array = (*pJson)[key];
+        _array.array({});
+        if (isReading) {
+            if (!_array.is_array()) __debugbreak();
+            for (auto& it : _array) {
+                __debugbreak(); //#TODO AutoArray pushback
+            }
+        }
+        else {
+            value.for_each([&_array](const Type& value) {
+                JsonArchive element;
+                ::Serialize(value, element);
+                _array.push_back(*element.pJson);
+            });
+        }
+    }
+
+
+
+    template <class Type>
     typename std::enable_if<has_Serialize<Type>::value || has_Serialize<typename Type::baseType>::value>::type
-        Serialize(const char* key, AutoArray<Type>& value) {
+        Serialize(const char* key, auto_array<Type>& value) {
         auto &_array = (*pJson)[key];
         if (isReading) {
             if (!_array.is_array()) __debugbreak();
@@ -51,7 +73,7 @@ public:
                 __debugbreak(); //#TODO AutoArray pushback
             }
         } else {
-            value.forEach([&_array](Type& value) {
+            value.for_each([&_array](Type& value) {
                 JsonArchive element;
                 value.Serialize(element);
                 _array.push_back(*element.pJson);
@@ -63,7 +85,7 @@ public:
 
     template <class Type>
     typename std::enable_if<!has_Serialize<Type>::value && !has_Serialize<typename Type::baseType>::value>::type
-        Serialize(const char* key, AutoArray<Type>& value) {
+        Serialize(const char* key, auto_array<Type>& value) {
         auto &_array = (*pJson)[key];
         if (isReading) {
             if (!_array.is_array()) __debugbreak();
@@ -71,7 +93,7 @@ public:
                 __debugbreak(); //#TODO AutoArray pushback
             }
         } else {
-            value.forEach([&_array](Type& value) {
+            value.for_each([&_array](Type& value) {
                 _array.push_back(value);
             });
         }
@@ -130,7 +152,7 @@ public:
 
     //Generic serialization. Calls Type::Serialize
     template <class Type>
-    typename std::enable_if<has_Serialize<Type>::value && !std::is_convertible<Type, RVArrayType>::value>::type
+    typename std::enable_if<has_Serialize<Type>::value && !std::is_convertible<Type, rv_arraytype>::value>::type
         Serialize(const char* key, std::unique_ptr<Type>& value) {
         if (isReading) {
             __debugbreak(); //not implemented
@@ -145,7 +167,7 @@ public:
 
 
     template <class Type>
-    typename std::enable_if<!has_Serialize<Type>::value && !std::is_convertible<Type, RVArrayType>::value>::type
+    typename std::enable_if<!has_Serialize<Type>::value && !std::is_convertible<Type, rv_arraytype>::value>::type
         Serialize(const char* key, Type& value) {
         if (isReading) {
             value = (*pJson)[key].get<Type>();
@@ -154,9 +176,18 @@ public:
         }
     }
 
+    template <class Type>
+    void writeOnly(const char* key, Type& value) {
+        if (isReading) {
+            __debugbreak();
+        } else {
+            (*pJson)[key] = value;
+        }
+    }
+
 
     template <class Type>
-    typename std::enable_if<has_Serialize<Type>::value && !std::is_convertible<Type, RVArrayType>::value>::type
+    typename std::enable_if<has_Serialize<Type>::value && !std::is_convertible<Type, rv_arraytype>::value>::type
         Serialize(const char* key, const Type& value) {
         if (isReading) {
             __debugbreak(); //not possible
@@ -168,7 +199,7 @@ public:
     }
 
     template <class Type>
-    typename std::enable_if<!has_Serialize<Type>::value && !std::is_convertible<Type, RVArrayType>::value>::type
+    typename std::enable_if<!has_Serialize<Type>::value && !std::is_convertible<Type, rv_arraytype>::value>::type
         Serialize(const char* key, const Type& value) {
         if (isReading) {
             __debugbreak(); //not possible
@@ -177,14 +208,14 @@ public:
         }
     }
 
-    void Serialize(const char* key, RString& value);
-    void Serialize(const char* key, const RString& value);
+    void Serialize(const char* key, r_string& value);
+    void Serialize(const char* key, const r_string& value);
 
     //************************************
     //serializeFunction - Function that is called for every element in the Array
     //************************************
     template <class Type, class Func>
-    void Serialize(const char* key, AutoArray<Type>& value, Func& serializeFunction) {
+    void Serialize(const char* key, auto_array<Type>& value, Func& serializeFunction) {
         auto &_array = (*pJson)[key];
         if (isReading) {
             if (!_array.is_array()) __debugbreak();
@@ -204,12 +235,12 @@ public:
     //serializeFunction - Function that is called for every element in the Array
     //************************************
     template <class Type, class Func>
-    void Serialize(const char* key, const Array<Type>& value, Func&& serializeFunction) {
+    void Serialize(const char* key, const rv_array<Type>& value, Func&& serializeFunction) {
         if (isReading) {
             __debugbreak(); //not possible
         } else {
             auto &_array = (*pJson)[key];
-            value.forEach([&_array, &serializeFunction](auto && value) {
+            value.for_each([&_array, &serializeFunction](auto && value) {
                 JsonArchive element;
                 serializeFunction(element, value);
                 _array.push_back(*element.pJson);
@@ -236,3 +267,5 @@ public:
     ~Serialize();
 };
 
+
+static void from_json(const json& j, game_instruction& in) { }

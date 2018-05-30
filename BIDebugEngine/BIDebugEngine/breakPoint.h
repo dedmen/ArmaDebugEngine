@@ -5,7 +5,7 @@
 
 struct breakPointBreakInfo {
     RV_VMContext* pVMContext;
-    RV_GameInstruction* pInstruction;
+    game_instruction* pInstruction;
     //#TODO add gameState ptr
 };
 
@@ -111,7 +111,7 @@ public:
     void Serialize(JsonArchive& ar);
     bool trigger(Debugger*, const DebuggerInstructionInfo&);
     void executeActions(Debugger*, const DebuggerInstructionInfo&);
-    RString filename;
+    r_string filename;
     uint16_t line{ 0 };
     uint16_t hitcount{ 0 };
     std::unique_ptr<IBreakPointCondition> condition;

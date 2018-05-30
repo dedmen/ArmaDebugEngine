@@ -60,10 +60,10 @@ void NetworkController::incomingMessage(const std::string& message) {
                 JsonArchive ar(packet["data"]);
                 BreakPoint bp;
                 bp.Serialize(ar);
-                bp.filename.lower();
+                bp.filename.to_lower();
                 std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
-                auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename);
-                if (!GlobalDebugger.breakPoints.isNull(bpVec)) {
+                auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename.c_str());
+                if (!GlobalDebugger.breakPoints.is_null(bpVec)) {
                     auto vecFound = std::find_if(bpVec.begin(), bpVec.end(), [lineNumber = bp.line](const BreakPoint& bp) {
                         return lineNumber == bp.line;
                     });
@@ -85,7 +85,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                 std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
                 std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
                 auto &found = GlobalDebugger.breakPoints.get(fileName.c_str());
-                if (!GlobalDebugger.breakPoints.isNull(found)) {
+                if (!GlobalDebugger.breakPoints.is_null(found)) {
                     auto vecFound = std::find_if(found.begin(), found.end(), [lineNumber](const BreakPoint& bp) {
                         return lineNumber == bp.line;
                     });

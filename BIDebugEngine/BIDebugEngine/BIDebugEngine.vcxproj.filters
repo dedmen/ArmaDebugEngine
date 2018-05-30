@@ -84,9 +84,6 @@
     <ClCompile Include="Monitor.cpp">
       <Filter>Source Files\Debugger</Filter>
     </ClCompile>
-    <ClCompile Include="RVBaseTypes.cpp">
-      <Filter>Source Files\BIDebugEngine</Filter>
-    </ClCompile>
     <ClCompile Include="RVContainer.cpp">
       <Filter>Source Files\BIDebugEngine</Filter>
     </ClCompile>
@@ -252,9 +249,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RVBaseTypes.h">
-      <Filter>Header Files\BIDebugEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="RVContainer.h">
       <Filter>Header Files\BIDebugEngine</Filter>
     </ClInclude>
     <ClInclude Include="RVIDebugInterface.h">

@@ -543,9 +543,9 @@ void EngineHook::_scriptEntered(uintptr_t scrVMPtr) {
     currentContext = scriptExecutionContext::scriptVM;
 
     auto context = GlobalDebugger.getVMContext(&scVM->_context);
-    auto script = context->getScriptByContent(scVM->_context._doc._content);
-    if (!scVM->_context._doc._fileName.isNull() || !scVM->_context._lastInstructionPos._sourceFile.isNull())
-        script->_fileName = scVM->_context._doc._fileName.isNull() ? scVM->_context._lastInstructionPos._sourceFile : scVM->_context._doc._fileName;
+    auto script = context->getScriptByContent(scVM->_context.sdoc.content);
+    if (!scVM->_context.sdoc.sourcefile.empty() || !scVM->_context.sdocpos.sourcefile.empty())
+        script->_fileName = scVM->_context.sdoc.sourcefile.empty() ? scVM->_context.sdocpos.sourcefile : scVM->_context.sdoc.sourcefile;
     context->dbg_EnterContext();
 }
 
@@ -555,8 +555,8 @@ void EngineHook::_scriptTerminated(uintptr_t scrVMPtr) {
     GlobalDebugger.getVMContext(&scVM->_context)->dbg_LeaveContext();
     auto myCtx = GlobalDebugger.getVMContext(&scVM->_context);
     //scVM->debugPrint("Term " + std::to_string(myCtx->totalRuntime.count()));
-    if (scVM->_context.callStack.count() - 1 > 0) {
-        auto scope = scVM->_context.callStack.back();
+    if (scVM->_context.callstack.count() - 1 > 0) {
+        auto scope = scVM->_context.callstack.back();
         scope->printAllVariables();
     }
     myCtx->canBeDeleted = true;
@@ -585,17 +585,17 @@ void EngineHook::_scriptInstruction(intercept::types::game_instruction* instr, i
     globalTimeKeeper _tc;
     //auto start = std::chrono::high_resolution_clock::now();
 
-    auto instruction = reinterpret_cast<RV_GameInstruction *>(instr);
+    auto instruction = instr;
     auto ctx = reinterpret_cast<RV_VMContext *>(&ctxi);
     auto gs = reinterpret_cast<GameState *>(&state);
 #ifdef OnlyOneInstructionPerLine
-    if (instruction->_scriptPos._sourceLine != lastInstructionLine || instruction->_scriptPos._content.data() != lastInstructionFile) {
+    if (instruction->sdp.sourceline != lastInstructionLine || instruction->sdp.content.data() != lastInstructionFile) {
 #endif
         DebuggerInstructionInfo info{ instruction, ctx, gs };
         GlobalDebugger.onInstruction(info);
 #ifdef OnlyOneInstructionPerLine
-        lastInstructionLine = instruction->_scriptPos._sourceLine;
-        lastInstructionFile = instruction->_scriptPos._content.data();
+        lastInstructionLine = instruction->sdp.sourceline;
+        lastInstructionFile = instruction->sdp.content.data();
     }
 #endif       
 
@@ -632,7 +632,7 @@ void EngineHook::_world_OnMissionEventEnd() {
 
 void EngineHook::_onScriptError(uintptr_t gameSate) {
     auto gs = reinterpret_cast<GameState *>(gameSate);
-    if (gs && gs->GEval->_errorType != 0)
+    if (gs && gs->eval->_errorType != 0)
         GlobalDebugger.onScriptError(gs);
 }
 
@@ -649,7 +649,7 @@ void EngineHook::_onScriptHalt(uintptr_t gameSate) {
 void EngineHook::_onScriptEcho(uintptr_t gameValue) {
     auto gv = reinterpret_cast<GameValue *>(gameValue);
     if (!gv->_data) return;
-    auto msg = gv->_data->getAsString();
+    auto msg = gv->_data->get_as_string();
     GlobalDebugger.onScriptEcho(msg);
 }
 

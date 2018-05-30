@@ -2,35 +2,36 @@
 #include "Serialize.h"
 #include "Script.h"
 
-void RV_GameInstruction::Serialize(JsonArchive& ar) {
+void Serialize(const game_instruction& in, JsonArchive& ar) {
 
-    auto& type = typeid(*this);
+    auto& type = typeid(in); //#TODO does this work?
+    __debugbreak();
     //#TODO X64 may on this didn't try but I expect it to
     const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
     ar.Serialize("type", typeName);
-    ar.Serialize("name", GetDebugName());
-	auto space = _scriptPos._sourceFile.find(" ");
-	auto properPath = (space != std::string::npos) ? _scriptPos._sourceFile.substr(0, space) : _scriptPos._sourceFile;
+    ar.Serialize("name", in.get_name());
+	auto space = in.sdp.sourcefile.find(" ");
+	auto properPath = (space != std::string::npos) ? in.sdp.sourcefile.substr(0, space) : in.sdp.sourcefile;
 
-    ar.Serialize("filename", properPath);
+    ar.Serialize("filename", (std::string)properPath);
 
-    ar.Serialize("fileOffset", { _scriptPos._sourceLine, _scriptPos._pos, Script::getScriptLineOffset(_scriptPos) });
+    ar.Serialize("fileOffset", { in.sdp.sourceline, in.sdp.pos, Script::getScriptLineOffset(in.sdp) });
 
 }
 
 
 void RV_ScriptVM::debugPrint(std::string prefix) {
-    std::string title = _displayName;
-    std::string filename = _context._doc._fileName.isNull() ? _context._lastInstructionPos._sourceFile : _context._doc._fileName;
+    std::string title = static_cast<std::string>(_displayName);
+    std::string filename = static_cast<std::string>(_context.sdoc.sourcefile.empty() ? _context.sdocpos.sourcefile : _context.sdoc.sourcefile);
     std::string data;// = _doc._content.data();
-    OutputDebugString((prefix + " " + title + "F " + filename + " " + data + "\n").c_str());
+    OutputDebugStringA((prefix + " " + title + "F " + filename + " " + data + "\n").c_str());
 }
 #include "Serialize.h"
 
-const GameVariable* RV_VMContext::getVariable(std::string varName) {
-    const GameVariable* value = nullptr;
-    callStack.forEachBackwards([&value, &varName](const Ref<CallStackItem>& item) {
-        auto var = item->_varSpace.getVariable(varName);
+const game_variable* RV_VMContext::getVariable(std::string varName) {
+    const game_variable* value = nullptr;
+    callstack.for_each_backwards([&value, &varName](const ref<callstack_item>& item) {
+        auto var = item->_varSpace.get_variable(varName);
         if (var) {
             value = var;
             return true;
@@ -43,7 +44,7 @@ const GameVariable* RV_VMContext::getVariable(std::string varName) {
 void RV_VMContext::Serialize(JsonArchive& ar) {
 
 
-    ar.Serialize("callstack", callStack, [](JsonArchive& ar, const Ref<CallStackItem>& item) {
+    ar.Serialize("callstack", callstack, [](JsonArchive& ar, const ref<callstack_item>& item) {
         auto& type = typeid(*item.get());
         //#TODO X64 fails on this
         const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
@@ -53,24 +54,24 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
         {
             JsonArchive varArchive;
 
-            item->_varSpace._variables.forEach([&varArchive](const GameVariable& var) {
+            item->_varSpace.variables.for_each([&varArchive](const game_variable& var) {
 
                 JsonArchive variableArchive;
 
-                auto name = var._name;
-                if (var._value.isNull()) {
+                auto name = var.name;
+                if (var.value.is_null()) {
                     variableArchive.Serialize("type", "nil");
                     varArchive.Serialize(name.data(), variableArchive);
                     return;
                 }
-                auto value = var._value._data;
-                const auto type = value->getTypeString();
+                auto value = var.value.data;
+                const auto type = value->type_as_string();
 
                 variableArchive.Serialize("type", type);
                 if (strcmp(type, "array") == 0) {
-                    variableArchive.Serialize("value", value->getArray());
+                    variableArchive.Serialize("value", var.value.to_array());
                 } else {
-                    variableArchive.Serialize("value", value->getAsString());
+                    variableArchive.Serialize("value", value->to_string());
                 }
                 varArchive.Serialize(name.data(), variableArchive);
 
@@ -82,10 +83,12 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 
             case 0xed08ac32: { //CallStackItemSimple
                 auto stackItem = static_cast<const CallStackItemSimple*>(item.get());
-                ar.Serialize("fileName", stackItem->_content._fileName);
-                ar.Serialize("contentSample", stackItem->_content._content.substr(0, 100));
+                ar.Serialize("fileName", stackItem->_content.sourcefile);
+                ar.Serialize("contentSample", (std::string)stackItem->_content.content.substr(0, 100));
                 ar.Serialize("ip", stackItem->_currentInstruction);
-                ar.Serialize("lastInstruction", *(stackItem->_instructions.get(stackItem->_currentInstruction - 1)));
+                JsonArchive ar;
+                ::Serialize(*(stackItem->_instructions.get(stackItem->_currentInstruction - 1)), ar);
+                ar.Serialize("lastInstruction", ar);
                 //ar.Serialize("instructions", stackItem->_instructions);
             }   break;
 
@@ -95,9 +98,10 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 ar.Serialize("ip", stackItem->_ip);
                 ar.Serialize("final", stackItem->_code->_final);
                 ar.Serialize("compiled", stackItem->_code->_instructions._compiled);
-                ar.Serialize("contentSample", stackItem->_code->_instructions._string.substr(0, 100)); //#TODO send whole code over
-
-                ar.Serialize("lastInstruction", *(stackItem->_code->_instructions._code.get(stackItem->_ip - 1)));
+                ar.Serialize("contentSample", (std::string)stackItem->_code->_instructions._string.substr(0, 100)); //#TODO send whole code over
+                JsonArchive ar;
+                ::Serialize(*(stackItem->_code->_instructions._code.get(stackItem->_ip - 1)), ar);
+                ar.Serialize("lastInstruction", ar);
                 //ar.Serialize("instructions", stackItem->_code->_instructions._code);
             }   break;
             case 0x254c4241: { //CallStackItemArrayForEach
@@ -110,44 +114,31 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
     });
 }
 
-void GameData::Serialize(JsonArchive& ar) const {
-    const auto type = getTypeString();
+void Serialize(const GameData& gd, JsonArchive& ar) {
+    const auto type = gd.type_as_string();
     ar.Serialize("type", type);
     if (strcmp(type, "array") == 0) {
-        ar.Serialize("value", getArray());
+        ar.Serialize("value", gd.get_as_const_array());
     } else if (strcmp(type, "code") == 0) {
-        SourceDocPos x;
-        x._content = getAsString();
+        sourcedocpos x;
+        x.content = gd.get_as_string();
         ar.Serialize("value", Script::getScriptFromFirstLine(x, true));
     } else {
-        ar.Serialize("value", getAsString());
+        ar.Serialize("value", gd.get_as_string());
     }
 }
-
-void GameValue::Serialize(JsonArchive& ar) const {
-    if (_data)
-        _data->Serialize(ar);
+void Serialize(const game_value& gv, JsonArchive& ar) {
+    if (gv.data)
+        Serialize(*static_cast<const GameData*>(gv.data.get()), ar);
     else {
         ar.Serialize("type", "void");
         ar.Serialize("value", "NIL");
     }
 }
+void SerializeError(const intercept::types::game_state::game_evaluator& e,JsonArchive& ar) {
+    ar.Serialize("fileOffset", std::vector<uint32_t>{ e._errorPosition.sourceline, e._errorPosition.pos, Script::getScriptLineOffset(e._errorPosition) });
 
-const GameVariable* GameVarSpace::getVariable(const std::string& varName) const {
-    auto & var = _variables.get(varName.c_str());
-    if (!_variables.isNull(var)) {
-        return &var;
-    }
-    if (_parent) {
-        return _parent->getVariable(varName);
-    }
-    return nullptr;
-}
-
-void GameEvaluator::SerializeError(JsonArchive& ar) {
-    ar.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, Script::getScriptLineOffset(_errorPosition) });
-
-    ar.Serialize("type", _errorType);
+    ar.Serialize("type", e._errorType);
     //#TODO errorType enum
     /*
     "OK"
@@ -185,9 +176,17 @@ void GameEvaluator::SerializeError(JsonArchive& ar) {
 
 
 
-    ar.Serialize("message", _errorMessage);
-    ar.Serialize("filename", _errorPosition._sourceFile);
-    ar.Serialize("content", Script::getScriptFromFirstLine(_errorPosition));
+    ar.Serialize("message", e._errorMessage);
+    ar.Serialize("filename", e._errorPosition.sourcefile);
+    ar.Serialize("content", Script::getScriptFromFirstLine(e._errorPosition));
+}
+
+void GameNular::Serialize(JsonArchive &ar) const {
+    //ar.Serialize("name", _name);
+    JsonArchive op;
+    _operator->Serialize(op);
+    ar.Serialize("op", op);
+    _info.Serialize(ar);
 }
 
 void GameFunction::Serialize(JsonArchive &ar) const {
@@ -199,12 +198,12 @@ void GameFunction::Serialize(JsonArchive &ar) const {
     _info.Serialize(ar);
 }
 
-void GameNular::Serialize(JsonArchive &ar) const {
+void Serialize(const intercept::__internal::gsNular& n,JsonArchive &ar) {
     //ar.Serialize("name", _name);
     JsonArchive op;
-    _operator->Serialize(op);
+    n._operator->Serialize(op);
     ar.Serialize("op", op);
-    _info.Serialize(ar);
+    n._info.Serialize(ar);
 }
 
 void GameOperator::Serialize(JsonArchive &ar) const {
@@ -218,19 +217,19 @@ void GameOperator::Serialize(JsonArchive &ar) const {
     _info.Serialize(ar);
 }
 
-void RVScriptTypeInfo::SerializeFull(JsonArchive &ar) const {
-    ar.Serialize("name", _name);
-    ar.Serialize("typeName", _typeName);
-    ar.Serialize("readableName", _readableName);
-    ar.Serialize("desc", _description);
-    ar.Serialize("cat", _category);
+void SerializeFull(const script_type_info& t, JsonArchive &ar) {
+    ar.Serialize("name", t._name);
+    ar.Serialize("typeName", t._typeName);
+    ar.Serialize("readableName", t._readableName);
+    ar.Serialize("desc", t._description);
+    ar.Serialize("cat", t._category);
     //ar.Serialize("sig", _javaTypeLong);
     //ar.Serialize("j", _javaTypeShort);
-    ar.Serialize("name", _name);
+    ar.Serialize("name", t._name);
 }
 
-void RVScriptTypeInfo::Serialize(JsonArchive &ar) const {
-    ar.Serialize("type", _name);
+void Serialize(const script_type_info& t, JsonArchive &ar) {
+    ar.Serialize("type", t._name);
 }
 
 void NularOperator::Serialize(JsonArchive &ar) {
@@ -253,14 +252,14 @@ void RVScriptType::Serialize(JsonArchive& ar) {
 }
 
 std::vector<std::string> RVScriptType::getTypeNames() const {
-    std::vector<std::string> ars;
+    std::vector<std::string> ars;//#TODO should return r_string
 
     if (_type) {
-        ars.push_back(_type->_name);
+        ars.push_back((std::string)_type->_name);
     }
     if (_compoundType) {
         for (auto& it : *_compoundType) {
-            ars.push_back(it->_name);
+            ars.push_back((std::string)it->_name);
         }
     }
     return ars;
@@ -274,24 +273,25 @@ void ScriptCmdInfo::Serialize(JsonArchive &ar) const {
     ar.Serialize("cat", _category);
 }
 
-SourceDocPos CallStackItem::tryGetFilenameAndCode() {
+sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack_item& it) {
 
-    auto& type = typeid(*this);
+    auto& type = typeid(*&it);
     //#TODO X64 fails on this
+    __debugbreak();
     const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
     auto hash = type.hash_code();
 
     switch (hash) {
         case 0xed08ac32: { //CallStackItemSimple
-            auto stackItem = static_cast<const CallStackItemSimple*>(this);
+            auto stackItem = static_cast<const CallStackItemSimple*>(&it);
             //#TODO test if this is the correct instruction or if i should -1 this
-            auto & lastInstruction = (stackItem->_instructions.get(stackItem->_currentInstruction))->_scriptPos;
+            auto & lastInstruction = (stackItem->_instructions.get(stackItem->_currentInstruction))->sdp;
             return lastInstruction;
         }   break;
 
         case 0x224543d0: { //CallStackItemData
-            auto stackItem = static_cast<const CallStackItemData*>(this);
-            auto & lastInstruction = (stackItem->_code->_instructions._code.get(stackItem->_ip - 1))->_scriptPos;
+            auto stackItem = static_cast<const CallStackItemData*>(&it);
+            auto & lastInstruction = (stackItem->_code->_instructions._code.get(stackItem->_ip - 1))->sdp;
             return lastInstruction;
         }   break;
         case 0x254c4241: { //CallStackItemArrayForEach
@@ -299,5 +299,5 @@ SourceDocPos CallStackItem::tryGetFilenameAndCode() {
         } break;
     }
 
-    return SourceDocPos();
+    return sourcedocpos();
 }

@@ -24,5 +24,5 @@ public:
     void onShutdown() override;
     void dump() override;
 private:
-    std::map<RString, std::unordered_set<uint32_t>> scriptLines;
+    std::map<r_string, std::unordered_set<uint32_t>> scriptLines;
 };

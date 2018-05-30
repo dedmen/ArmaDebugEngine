@@ -149,11 +149,11 @@ void BreakPoint::executeActions(Debugger* dbg, const DebuggerInstructionInfo& in
 }
 
 bool BPCondition_Code::isMatching(Debugger*, BreakPoint*, const DebuggerInstructionInfo& info) {
-    auto rtn = info.context->callStack.back()->EvaluateExpression(code.c_str(), 10);
-    if (rtn.isNull())  return false; //#TODO this is code error.
+    auto rtn = info.context->callstack.back()->EvaluateExpression(code.c_str(), 10);
+    if (rtn.is_null())  return false; //#TODO this is code error.
     //We get a ptr to the IDebugValue of GameData. But we wan't the GameData vtable.    
     auto gdRtn = reinterpret_cast<GameData*>(rtn.get() - 2); //#TODO warning : 'reinterpret_cast' to class 'GameData *' from its base at non-zero offset 'IDebugValue *' behaves differently from 'static_cast'  -- use static_cast and remove ptr math
-    return gdRtn->getBool();
+    return gdRtn->get_as_bool();
 }
 
 void BPCondition_Code::Serialize(JsonArchive& ar) {
@@ -164,8 +164,8 @@ void BPCondition_Code::Serialize(JsonArchive& ar) {
 }
 
 void BPAction_ExecCode::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstructionInfo& info) {
-    info.context->callStack.back()->EvaluateExpression((code + " " + std::to_string(bp->hitcount) + ";" +
-        info.instruction->GetDebugName().data() +
+    info.context->callstack.back()->EvaluateExpression((code + " " + std::to_string(bp->hitcount) + ";" +
+        info.instruction->get_name().data() +
         "\"").c_str(), 10);
 }
 

@@ -5,6 +5,7 @@
 #include "Serialize.h"
 #include <condition_variable>
 #include "version.h"
+#include <functions.hpp>
 //std::array<const char*, 710> files{};
 Debugger::Debugger() {
     //BreakPoint bp(8);
@@ -213,7 +214,7 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
     //f.write(text.c_str(), text.length());
     //f.close();
     if (monitors.empty() && breakPoints.empty()) return;
-    instructionInfo.instruction->_scriptPos._sourceFile.lower();
+    instructionInfo.instruction->sdp.sourcefile.to_lower();
     checkForBreakpoint(instructionInfo);
 
     for (auto& it : monitors)
@@ -233,7 +234,7 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
     //    script->_fileName = instruction->_scriptPos._sourceFile;
     //auto callStackIndex = ctx->callStacksCount;
     //bool stackChangeImminent = dbg == "operator call" || dbg == "function call"; //This is a call instruction. This means next instruction will go into lower scope
-    if (false && currentContext == scriptExecutionContext::EventHandler && instructionInfo.context->callStack.count() > 3) {
+    if (false && currentContext == scriptExecutionContext::EventHandler && instructionInfo.context->callstack.count() > 3) {
         JsonArchive ar;
         instructionInfo.context->Serialize(ar);
         auto text = ar.to_string();
@@ -247,17 +248,17 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 
 void Debugger::onScriptError(GameState * gs) {
     BPAction_Halt hAction(haltType::error);
-    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,gs->_context ,gs });
+    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->current_context ,gs });
 }
 
 void Debugger::onScriptAssert(GameState* gs) {
     BPAction_Halt hAction(haltType::assert);
-    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,gs->_context ,gs });
+    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->current_context ,gs });
 }
 
 void Debugger::onScriptHalt(GameState* gs) {
     BPAction_Halt hAction(haltType::halt);
-    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,gs->_context ,gs });
+    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->current_context ,gs });
 }
 
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
@@ -267,10 +268,10 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
             //#TODO don't care about this if scriptVM stepping
             commandContinue(StepType::STContinue);
         }
-        auto level = instructionInfo.context->callStack.count();
+        auto level = instructionInfo.context->callstack.count();
         if (level <= stepInfo.stepLevel &&
             //Prevent stepOver from triggering in the same Line
-            (stepInfo.stepType == StepType::STOver ? stepInfo.stepLine != instructionInfo.instruction->_scriptPos._sourceLine : true)
+            (stepInfo.stepType == StepType::STOver ? stepInfo.stepLine != instructionInfo.instruction->sdp.sourceline : true)
             ) {
             BPAction_Halt hAction(haltType::step);
             hAction.execute(this, nullptr, instructionInfo);
@@ -282,13 +283,13 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     //    __debugbreak();
     std::shared_lock<std::shared_mutex> lk(breakPointsLock);
 	static bool doBreeak = true;
-	if (doBreeak && instructionInfo.instruction->_scriptPos._sourceFile.find("cba_fnc_currentunit") != std::string::npos) __debugbreak();
-	auto space = instructionInfo.instruction->_scriptPos._sourceFile.find(" ");
-	auto properPath = (space != std::string::npos) ? instructionInfo.instruction->_scriptPos._sourceFile.substr(0, space) : instructionInfo.instruction->_scriptPos._sourceFile;
+	if (doBreeak && instructionInfo.instruction->sdp.sourcefile.find("cba_fnc_currentunit") != std::string::npos) __debugbreak();
+	auto space = instructionInfo.instruction->sdp.sourcefile.find(" ");
+	auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp.sourcefile.substr(0, space) : instructionInfo.instruction->sdp.sourcefile;
     auto &found = breakPoints.get(properPath.data());
-    if (breakPoints.isNull(found) || found.empty()) return;
+    if (breakPoints.is_null(found) || found.empty()) return;
     for (auto& bp : found) {
-        if (bp.line == instructionInfo.instruction->_scriptPos._sourceLine) {
+        if (bp.line == instructionInfo.instruction->sdp.sourceline) {
             lk.unlock();//if this BP halt's adding/deleting breakpoints should still be possible
             bp.trigger(this, instructionInfo);
             lk.lock();
@@ -339,19 +340,19 @@ void Debugger::onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> 
 
     if (instructionInfo.instruction) {
         JsonArchive instructionAr;
-        instructionInfo.instruction->Serialize(instructionAr);
+        Serialize(*instructionInfo.instruction, instructionAr);
         ar.Serialize("instruction", instructionAr);
     } else if (type == haltType::error) {
         JsonArchive errorAr;
-        instructionInfo.gs->GEval->SerializeError(errorAr);
+        SerializeError(*instructionInfo.gs->eval, errorAr);
         ar.Serialize("error", errorAr);
     } else if (type == haltType::assert || type == haltType::halt) {
         JsonArchive assertAr;
 
-        auto& _errorPosition = instructionInfo.context->_lastInstructionPos; //#BUG context could be nullptr
+        auto& _errorPosition = instructionInfo.context->sdocpos; //#BUG context could be nullptr
 
-        assertAr.Serialize("fileOffset", { _errorPosition._sourceLine, _errorPosition._pos, Script::getScriptLineOffset(_errorPosition) });
-        assertAr.Serialize("filename", _errorPosition._sourceFile);
+        assertAr.Serialize("fileOffset", { _errorPosition.sourceline, _errorPosition.pos, Script::getScriptLineOffset(_errorPosition) });
+        assertAr.Serialize("filename", _errorPosition.sourcefile);
         assertAr.Serialize("content", Script::getScriptFromFirstLine(_errorPosition));
 
 
@@ -372,9 +373,9 @@ void Debugger::onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> 
     f.close();
     std::ofstream f2("P:\\breakScript.json", std::ios::out | std::ios::binary);
     if (instructionInfo.instruction) {
-        f2.write(instructionInfo.instruction->_scriptPos._content.data(), instructionInfo.instruction->_scriptPos._content.length());
+        f2.write(instructionInfo.instruction->sdp.content.data(), instructionInfo.instruction->sdp.content.length());
     } else {
-        f2.write(instructionInfo.gs->GEval->_errorPosition._content.data(), instructionInfo.gs->GEval->_errorPosition._content.length());
+        f2.write(instructionInfo.gs->eval->_errorPosition.content.data(), instructionInfo.gs->eval->_errorPosition.content.length());
     }
     f2.close();
 #endif
@@ -403,7 +404,7 @@ void Debugger::commandContinue(StepType stepType) {
             state = DebuggerState::running;
             goto jumpOut;
         }
-        stepInfo.stepLine = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->_scriptPos._sourceLine : breakStateInfo.instruction->context->_lastInstructionPos._sourceLine;
+        stepInfo.stepLine = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->sdp.sourceline : breakStateInfo.instruction->context->sdocpos.sourceline;
         stepInfo.context = breakStateInfo.instruction->context;
 
         switch (stepType) {
@@ -411,10 +412,10 @@ void Debugger::commandContinue(StepType stepType) {
                 stepInfo.stepLevel = std::numeric_limits<decltype(stepInfo.stepLevel)>::max();
                 break;
             case StepType::STOver:
-                stepInfo.stepLevel = breakStateInfo.instruction->context->callStack.count();
+                stepInfo.stepLevel = breakStateInfo.instruction->context->callstack.count();
                 break;
             case StepType::STOut:
-                stepInfo.stepLevel = breakStateInfo.instruction->context->callStack.count() - 1;
+                stepInfo.stepLevel = breakStateInfo.instruction->context->callstack.count() - 1;
                 break;
             default: break;
         }
@@ -449,10 +450,10 @@ void Debugger::SerializeHookIntegrity(JsonArchive& answer) {
     answer.Serialize("EnMouse", HI.enableMouse);
 }
 
-void Debugger::onScriptEcho(RString msg) {
-    OutputDebugString("echo: ");
-    OutputDebugString(msg.data());
-    OutputDebugString("\n");
+void Debugger::onScriptEcho(r_string msg) {
+    OutputDebugStringA("echo: ");
+    OutputDebugStringA(msg.data());
+    OutputDebugStringA("\n");
 }
 
 void Debugger::serializeScriptCommands(JsonArchive& answer) {
@@ -461,23 +462,23 @@ void Debugger::serializeScriptCommands(JsonArchive& answer) {
     JsonArchive types;
     for (auto& type : lastKnownGameState->_scriptTypes) {
         JsonArchive entry;
-        type->SerializeFull(entry);
-        types.Serialize(type->_name, entry);
+        SerializeFull(*type, entry);
+        types.Serialize(type->_name.c_str(), entry);
     }
     JsonArchive nulars;
-    lastKnownGameState->_scriptNulars.forEach([&](const GameNular& gn) {
+    lastKnownGameState->_scriptNulars.for_each([&](const intercept::__internal::gsNular& gn) {
         JsonArchive entry;
         gn.Serialize(entry);
-        nulars.Serialize(gn._operatorName, entry);
+        nulars.Serialize(gn._operatorName.c_str(), entry);
     });
     JsonArchive funcs;
-    lastKnownGameState->_scriptFunctions.forEach([&](const GameFunctions& gn) {
-        funcs.Serialize(gn._operatorName, gn);
+    lastKnownGameState->_scriptFunctions.for_each([&](const intercept::__internal::game_functions& gn) {
+        funcs.Serialize(gn._operatorName.c_str(), gn);
     });
     JsonArchive ops;
-    lastKnownGameState->_scriptOperators.forEach([&](const GameOperators& gn) {
+    lastKnownGameState->_scriptOperators.for_each([&](const intercept::__internal::game_operators& gn) {
         std::vector<JsonArchive> entries;
-        ops.Serialize(gn._operatorName, gn);
+        ops.Serialize(gn._operatorName.c_str(), gn);
     });
     answer.Serialize("nulars", nulars);
     answer.Serialize("functions", funcs);
@@ -515,8 +516,8 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
                 //});
             }
             if (scope & VariableScope::local || scope & VariableScope::callstack) {
-                if (breakStateInfo.instruction->gs->GEval->local) {
-                    auto var = breakStateInfo.instruction->gs->GEval->local->getVariable(varName);
+                if (breakStateInfo.instruction->gs->eval->local) {
+                    auto var = breakStateInfo.instruction->gs->eval->local->get_variable(varName);
                     if (var) {
                         output.emplace_back(var, VariableScope::local);
                         found = true;
@@ -525,7 +526,7 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
             }
         } else {
             if (scope & VariableScope::missionNamespace) {
-                auto& varSpace = breakStateInfo.instruction->gs->_namespaces[3]->_variables;
+                auto& varSpace = breakStateInfo.instruction->gs->namespaces[3]->_variables;
                 //std::ofstream v("P:\\vars");
                 //varSpace.forEach([&varName, &v](const GameVariable& it) {
                 //    if (it._name == varName.c_str()) __debugbreak();
@@ -533,16 +534,16 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
                 //});
                 //v.close();
                 auto &var = varSpace.get(varName.c_str());
-                if (!varSpace.isNull(var)) {
+                if (!varSpace.is_null(var)) {
                     output.emplace_back(&var, VariableScope::missionNamespace);
                     found = true;
                 }
 
             }
             if (scope & VariableScope::uiNamespace) {
-                auto& varSpace = breakStateInfo.instruction->gs->_namespaces[1]->_variables;
+                auto& varSpace = breakStateInfo.instruction->gs->namespaces[1]->_variables;
                 auto &var = varSpace.get(varName.c_str());
-                if (!varSpace.isNull(var)) {
+                if (!varSpace.is_null(var)) {
                     output.emplace_back(&var, VariableScope::uiNamespace);
                     found = true;
                 }
@@ -553,9 +554,9 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
             }
 
             if (scope & VariableScope::parsingNamespace) {
-                auto& varSpace = breakStateInfo.instruction->gs->_namespaces[2]->_variables;
+                auto& varSpace = breakStateInfo.instruction->gs->namespaces[2]->_variables;
                 auto &var = varSpace.get(varName.c_str());
-                if (!varSpace.isNull(var)) {
+                if (!varSpace.is_null(var)) {
                     output.emplace_back(&var, VariableScope::parsingNamespace);
                     found = true;
                 }
@@ -575,21 +576,21 @@ void Debugger::grabCurrentCode(JsonArchive& answer, const std::string& file) con
         answer.Serialize("exception", "getCurrentCode: Not in breakState!");
         return;
     }
-    if (breakStateInfo.instruction->instruction->_scriptPos._sourceFile != file.c_str()) {
+    if (breakStateInfo.instruction->instruction->sdp.sourcefile != file) {
 
-        breakStateInfo.instruction->context->callStack.forEachBackwards([&](const Ref<CallStackItem>& item) {
-            auto fileCode = item->tryGetFilenameAndCode();
-            if (!fileCode._content.isNull() && fileCode._sourceFile == file.c_str()) {
+        breakStateInfo.instruction->context->callstack.for_each_backwards([&](const ref<intercept::types::vm_context::callstack_item>& item) {
+            auto fileCode = tryGetFilenameAndCode(*item);
+            if (!fileCode.content.empty() && fileCode.sourcefile == file.c_str()) {
                 answer.Serialize("code", Script::getScriptFromFirstLine(fileCode));
-                answer.Serialize("fileName", fileCode._sourceFile);
+                answer.Serialize("fileName", fileCode.sourcefile);
                 return true;
             }
             return false;
         });
 
     }               
-    answer.Serialize("code", Script::getScriptFromFirstLine(breakStateInfo.instruction->instruction->_scriptPos));
-    answer.Serialize("fileName", breakStateInfo.instruction->instruction->_scriptPos._sourceFile);
+    answer.Serialize("code", Script::getScriptFromFirstLine(breakStateInfo.instruction->instruction->sdp));
+    answer.Serialize("fileName", breakStateInfo.instruction->instruction->sdp.sourcefile);
 }
 
 void Debugger::VariableInfo::Serialize(JsonArchive& ar) const {
@@ -597,8 +598,8 @@ void Debugger::VariableInfo::Serialize(JsonArchive& ar) const {
         ar.Serialize("type", "void");
         ar.Serialize("name", notFoundName);
     } else {
-        ar.Serialize("name", var->_name);
-        var->_value.Serialize(ar);
+        ar.Serialize("name", var->name);
+        ::Serialize(var->value, ar);
         ar.Serialize("ns", static_cast<int>(ns));
     }
 }
@@ -607,7 +608,7 @@ extern std::string gameVersionResource;
 void Debugger::productInfoStruct::Serialize(JsonArchive &ar) {
     ar.Serialize("gameType", gameType);
 
-    if (gameVersion.isNull()) {
+    if (gameVersion.empty()) {
         gameVersion = gameVersionResource;
     }
 

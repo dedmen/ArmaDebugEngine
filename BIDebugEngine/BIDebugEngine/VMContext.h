@@ -5,15 +5,20 @@
 #include <vector>
 #include "RVBaseTypes.h"
 
-class RV_GameInstruction;
+namespace intercept {
+    namespace types {
+        class game_instruction;
+    }
+}
+
 struct RV_VMContext;
 class RString;
 class Script;
 
 class Instruction {
 public:
-    RString debugName;
-    RString file;
+    r_string debugName;
+    r_string file;
     uint16_t line;
     uint16_t offset; //#TODO make 32bit
     std::chrono::high_resolution_clock::time_point execTime;
@@ -28,11 +33,11 @@ public:
     VMContext();
     ~VMContext();
 
-    std::shared_ptr<Script> getScriptByContent(RString content);
+    std::shared_ptr<Script> getScriptByContent(r_string content);
     void dbg_EnterContext();
     void dbg_LeaveContext();
     void dbg_instructionTimeDiff(std::chrono::high_resolution_clock::duration diff);
-    void addInstruction(RV_VMContext* ctx, RV_GameInstruction* instruction);
+    void addInstruction(RV_VMContext* ctx, intercept::types::game_instruction* instruction);
     bool isScriptVM{ false }; //is false for unscheduled scripts
     bool canBeDeleted{ true }; //scriptVM's are only deleted when they are finished
     std::map<uintptr_t, std::shared_ptr<Script>> contentPtrToScript;

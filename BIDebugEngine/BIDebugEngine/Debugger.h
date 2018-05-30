@@ -17,7 +17,7 @@ class Script;
 class VMContext;
 
 struct DebuggerInstructionInfo {
-    RV_GameInstruction* instruction;
+    game_instruction* instruction;
     RV_VMContext* context;
     GameState* gs;
 };
@@ -96,7 +96,7 @@ public:
     void commandContinue(StepType stepType); //Tells Breakpoint in breakState to Stop halting
     void setGameVersion(const char* productType, const char* productVersion);
     void SerializeHookIntegrity(JsonArchive& answer);
-    void onScriptEcho(RString msg);
+    void onScriptEcho(r_string msg);
     void serializeScriptCommands(JsonArchive& answer);
     HookIntegrity HI;
     GameState* lastKnownGameState;
@@ -105,11 +105,11 @@ public:
 
     struct VariableInfo {
         VariableInfo() {}
-        VariableInfo(const GameVariable* _var, VariableScope _ns) : var(_var), ns(_ns) {};
-        VariableInfo(RString _name) : var(nullptr), ns(VariableScope::invalid), notFoundName(_name) {};
-        const GameVariable* var;
+        VariableInfo(const game_variable* _var, VariableScope _ns) : var(_var), ns(_ns) {};
+        VariableInfo(r_string _name) : var(nullptr), ns(VariableScope::invalid), notFoundName(_name) {};
+        const game_variable* var;
         VariableScope ns;
-        RString notFoundName;
+        r_string notFoundName;
         void Serialize(JsonArchive& ar) const;
     };
     std::vector<VariableInfo> getVariables(VariableScope, std::vector<std::string>& varName) const;
@@ -126,9 +126,9 @@ public:
             _name = (b._name); for (auto &it : b) emplace_back(std::move(it));
             return *this;
         }
-        RString _name;
-        const char* getMapKey()const { return _name; }
-        breakPointList(const breakPointList& b) { if (!b._name.isNull()) __debugbreak(); }
+        r_string _name;
+        const char* get_map_key() const { return _name.c_str(); }
+        breakPointList(const breakPointList& b) { if (!b._name.empty()) __debugbreak(); }
     private:
 
         // disable copying
@@ -138,7 +138,7 @@ public:
 
     };
     std::shared_mutex breakPointsLock;
-    MapStringToClassNonRV<breakPointList, std::vector<breakPointList>> breakPoints; //All inputs have to be tolowered before accessing
+    map_string_to_class<breakPointList, auto_array<breakPointList>> breakPoints; //All inputs have to be tolowered before accessing
     std::vector<std::shared_ptr<IMonitorBase>> monitors;
     NetworkController nController;
     std::shared_ptr<std::pair<std::condition_variable, bool>> breakStateContinueEvent;
@@ -151,8 +151,8 @@ public:
         RV_VMContext* context;
     } stepInfo;
     struct productInfoStruct {
-        RString gameType;
-        RString gameVersion;
+        r_string gameType;
+        r_string gameVersion;
         void Serialize(JsonArchive &ar);
     } productInfo;
 };
