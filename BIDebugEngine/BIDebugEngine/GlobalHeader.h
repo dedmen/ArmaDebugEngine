@@ -83,11 +83,11 @@ enum class haltType {
     halt
 };
 
-#ifdef _DEBUG
-#define WAIT_FOR_DEBUGGER_ATTACHED while (!IsDebuggerPresent()) Sleep(1);
-#else
+//#ifdef _DEBUG
+//#define WAIT_FOR_DEBUGGER_ATTACHED while (!IsDebuggerPresent()) Sleep(1);
+//#else
 #define WAIT_FOR_DEBUGGER_ATTACHED 
-#endif
+//#endif
 
 
 typedef void EngineAlive(); //Call this periodically while in breakState

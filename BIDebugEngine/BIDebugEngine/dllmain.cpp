@@ -196,9 +196,9 @@ bool HookManager::placeHook(hookTypes type, const Pattern& pat, uintptr_t jmpTo,
 
     auto found = findPattern(pat);
     if (found == 0) {
-#ifdef _DEBUG
-        __debugbreak(); //#TODO report somehow
-#endif
+//#ifdef _DEBUG
+//        __debugbreak(); //#TODO report somehow
+//#endif
         return false;
     }
     jmpBackRef = placeHookTotalOffs(found, jmpTo) + jmpBackOffset;

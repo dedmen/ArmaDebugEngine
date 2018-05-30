@@ -417,7 +417,6 @@
     <ClCompile Include="NamedPipeServer.cpp" />
     <ClCompile Include="NetworkController.cpp" />
     <ClCompile Include="RVClasses.cpp" />
-    <ClCompile Include="RVContainer.cpp" />
     <ClCompile Include="RVIDebugInterface.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="Serialize.cpp" />

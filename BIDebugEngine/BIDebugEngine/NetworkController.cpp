@@ -73,7 +73,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                     }
                     bpVec.push_back(std::move(bp));
                 } else {
-                    GlobalDebugger.breakPoints.insert(std::move(bp));
+                    GlobalDebugger.breakPoints.insert(Debugger::breakPointList(std::move(bp)));
                 }
             } break;
             case NC_CommandType::delBreakpoint: {

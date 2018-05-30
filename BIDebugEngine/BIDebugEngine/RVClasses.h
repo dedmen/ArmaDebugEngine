@@ -47,20 +47,10 @@ void Serialize(const game_value&, JsonArchive& ar);
 
 class CallStackItemSimple : public vm_context::callstack_item {
 public:
-    auto_array<intercept::types::ref<game_instruction>> _instructions;
+	compact_array<ref<game_instruction>>* _instructions;
     int _currentInstruction;
     sourcedoc _content;
     bool _multipleInstructions;
-};
-
-class GameDataCode : public GameData {
-public:
-    struct {
-        r_string _string;
-        auto_array<intercept::types::ref<game_instruction>> _code;
-        bool _compiled;
-    } _instructions;
-    bool _final;
 };
 
 class DummyVClass {
@@ -70,7 +60,7 @@ public:
 
 class CallStackItemData : public vm_context::callstack_item {
 public:
-    intercept::types::ref<GameDataCode> _code; // compiled code
+    intercept::types::ref<game_data_code> _code; // compiled code
     int _ip; // instruction pointer
 };
 

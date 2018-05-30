@@ -84,9 +84,6 @@
     <ClCompile Include="Monitor.cpp">
       <Filter>Source Files\Debugger</Filter>
     </ClCompile>
-    <ClCompile Include="RVContainer.cpp">
-      <Filter>Source Files\BIDebugEngine</Filter>
-    </ClCompile>
     <ClCompile Include="RVIDebugInterface.cpp">
       <Filter>Source Files\BIDebugEngine</Filter>
     </ClCompile>

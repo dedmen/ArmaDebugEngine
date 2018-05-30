@@ -120,7 +120,7 @@ public:
     public:
         breakPointList() {}
         // breakPointList(const breakPointList& b) = delete;// : _name(b._name) { for (auto &it : b) emplace_back(std::move(it)); } //std::vector like's to still copy while passing rvalue-ref
-         //breakPointList(const BreakPoint& b) : _name(b.filename) {push_back(b); }
+        //breakPointList(BreakPoint& b) : _name(b.filename) {push_back(std::move(b)); }
         breakPointList(BreakPoint&& b) noexcept : _name(b.filename) { push_back(std::move(b)); }
         breakPointList& operator=(breakPointList&& b) noexcept {
             _name = (b._name); for (auto &it : b) emplace_back(std::move(it));
@@ -128,7 +128,9 @@ public:
         }
         r_string _name;
         const char* get_map_key() const { return _name.c_str(); }
-        breakPointList(const breakPointList& b) { if (!b._name.empty()) __debugbreak(); }
+        breakPointList(breakPointList& b) {
+            if (!b._name.empty() && !_name.empty()) __debugbreak();            _name = (b._name); for (auto &&it : b) emplace_back(std::move(it));
+        }
     private:
 
         // disable copying

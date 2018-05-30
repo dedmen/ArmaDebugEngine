@@ -5,8 +5,7 @@
 
 void Serialize(const game_instruction& in, JsonArchive& ar) {
 
-    auto& type = typeid(in); //#TODO does this work?
-    __debugbreak();
+    auto& type = typeid(in);
     //#TODO X64 may on this didn't try but I expect it to
     const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
     ar.Serialize("type", typeName);
@@ -81,27 +80,34 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
         }
 
         switch (hash) {
-
+#ifdef X64
+			case 0x796333d0f1231802: {
+#else
             case 0xed08ac32: { //CallStackItemSimple
-                auto stackItem = static_cast<const CallStackItemSimple*>(item.get());
+#endif
+                auto stackItem = static_cast<const CallStackItemSimple*     >(item.get());
                 ar.Serialize("fileName", stackItem->_content.sourcefile);
                 ar.Serialize("contentSample", (std::string)stackItem->_content.content.substr(0, 100));
                 ar.Serialize("ip", stackItem->_currentInstruction);
                 JsonArchive ar;
-                ::Serialize(*(stackItem->_instructions.get(stackItem->_currentInstruction - 1)), ar);
+                ::Serialize(*(stackItem->_instructions->get(stackItem->_currentInstruction - 1)), ar);
                 ar.Serialize("lastInstruction", ar);
                 //ar.Serialize("instructions", stackItem->_instructions);
             }   break;
 
+#ifdef X64
+            case 0x6a5a9847820cfc77: {
+#else
             case 0x224543d0: { //CallStackItemData
+#endif
                 auto stackItem = static_cast<const CallStackItemData*>(item.get());
 
                 ar.Serialize("ip", stackItem->_ip);
-                ar.Serialize("final", stackItem->_code->_final);
-                ar.Serialize("compiled", stackItem->_code->_instructions._compiled);
-                ar.Serialize("contentSample", (std::string)stackItem->_code->_instructions._string.substr(0, 100)); //#TODO send whole code over
+                ar.Serialize("final", stackItem->_code->is_final);
+                ar.Serialize("compiled", *stackItem->_code->instructions);
+                ar.Serialize("contentSample", (std::string)stackItem->_code->code_string.substr(0, 100)); //#TODO send whole code over
                 JsonArchive ar;
-                ::Serialize(*(stackItem->_code->_instructions._code.get(stackItem->_ip - 1)), ar);
+                ::Serialize(*(stackItem->_code->instructions->get(stackItem->_ip - 1)), ar);
                 ar.Serialize("lastInstruction", ar);
                 //ar.Serialize("instructions", stackItem->_code->_instructions._code);
             }   break;
@@ -109,7 +115,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 
             } break;
             default:
-                //__debugbreak(); 
+                __debugbreak(); 
                 return;
         }
     });
@@ -278,7 +284,7 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
 
     auto& type = typeid(*&it);
     //#TODO X64 fails on this
-    __debugbreak();
+    __debugbreak(); //Some place already has these
     const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
     auto hash = type.hash_code();
 
@@ -286,13 +292,13 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
         case 0xed08ac32: { //CallStackItemSimple
             auto stackItem = static_cast<const CallStackItemSimple*>(&it);
             //#TODO test if this is the correct instruction or if i should -1 this
-            auto & lastInstruction = (stackItem->_instructions.get(stackItem->_currentInstruction))->sdp;
+            const auto& lastInstruction = (stackItem->_instructions->get(stackItem->_currentInstruction))->sdp;
             return lastInstruction;
         }   break;
 
         case 0x224543d0: { //CallStackItemData
             auto stackItem = static_cast<const CallStackItemData*>(&it);
-            auto & lastInstruction = (stackItem->_code->_instructions._code.get(stackItem->_ip - 1))->sdp;
+            auto & lastInstruction = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp;
             return lastInstruction;
         }   break;
         case 0x254c4241: { //CallStackItemArrayForEach

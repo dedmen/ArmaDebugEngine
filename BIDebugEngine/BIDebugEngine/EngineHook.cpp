@@ -409,7 +409,7 @@ void EngineHook::placeHooks() {
 	HI.scriptAssert = assertHook.has_function();
 	HI.scriptHalt = haltHook.has_function();
 	HI.scriptEcho = echoHook.has_function();
-
+	HI.__instructionBreakpoint = GASM.ready;
 
 
 #else
