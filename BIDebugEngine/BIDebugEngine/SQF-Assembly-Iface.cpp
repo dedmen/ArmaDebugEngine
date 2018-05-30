@@ -1,6 +1,6 @@
 #include "SQF-Assembly-Iface.h"
 #include <intercept.hpp>
-
+#include <windows.h>
 
 
 static struct {
@@ -128,8 +128,6 @@ public:
 	virtual int stack_size(void* t) const { return 0; }
 	virtual r_string get_name() const { return ""sv; }
 };
-
-
 
 void SQF_Assembly_Iface::init() {
 	auto iface = intercept::client::host::request_plugin_interface("sqf_asm_devIf", 1);

@@ -14,6 +14,11 @@ public:
     //RString _name;
 };
 
+void printAllVariables(const intercept::types::vm_context::IDebugScope& s);
+std::string allVariablesToString(const intercept::types::vm_context::IDebugScope& s);
+
+
+
 enum class StepType {
     STContinue,
     STInto,

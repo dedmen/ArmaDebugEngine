@@ -1,6 +1,7 @@
 #include "RVClasses.h"
 #include "Serialize.h"
 #include "Script.h"
+#include <windows.h>
 
 void Serialize(const game_instruction& in, JsonArchive& ar) {
 

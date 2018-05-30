@@ -491,7 +491,7 @@ void EngineHook::placeHooks() {
 #endif
 
 
-        //MessageBox(error.c_str(), fatal ? ErrorMsgBoxType::error : ErrorMsgBoxType::warning);
+        MessageBox(error.c_str(), fatal ? ErrorMsgBoxType::error : ErrorMsgBoxType::warning);
     }
 
     //Tracker::trackPiwik();
@@ -557,7 +557,7 @@ void EngineHook::_scriptTerminated(uintptr_t scrVMPtr) {
     //scVM->debugPrint("Term " + std::to_string(myCtx->totalRuntime.count()));
     if (scVM->_context.callstack.count() - 1 > 0) {
         auto scope = scVM->_context.callstack.back();
-        scope->printAllVariables();
+        printAllVariables(*scope);
     }
     myCtx->canBeDeleted = true;
     currentContext = scriptExecutionContext::Invalid;

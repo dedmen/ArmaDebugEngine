@@ -1,15 +1,16 @@
 #include "RVIDebugInterface.h"
 #include <vector>
+#include <windows.h>
 
 char VarBuffer[1024];
-void intercept::types::vm_context::IDebugScope::printAllVariables() {
+void printAllVariables(const intercept::types::vm_context::IDebugScope& s) {
 
 
-    auto varC = varCount();
+    auto varC = s.varCount();
     std::vector<IDebugVariable*> vars;
     vars.resize(varC);
     IDebugVariable** vbase = vars.data();
-    getVariables(const_cast<const IDebugVariable**>(vbase), varC);
+    s.getVariables(const_cast<const IDebugVariable**>(vbase), varC);
 
     for (auto& var : vars) {
         var->getName(VarBuffer, 1023);
@@ -23,13 +24,13 @@ void intercept::types::vm_context::IDebugScope::printAllVariables() {
     }
 }
 
-std::string intercept::types::vm_context::IDebugScope::allVariablesToString() {
+std::string allVariablesToString(const intercept::types::vm_context::IDebugScope& s) {
     std::string output;
-    auto varC = varCount();
+    auto varC = s.varCount();
     std::vector<IDebugVariable*> vars;
     vars.resize(varC);
     IDebugVariable** vbase = vars.data();
-    getVariables(const_cast<const IDebugVariable**>(vbase), varC);
+    s.getVariables(const_cast<const IDebugVariable**>(vbase), varC);
 
     for (auto& var : vars) {
         var->getName(VarBuffer, 1023);

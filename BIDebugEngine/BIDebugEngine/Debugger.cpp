@@ -6,6 +6,8 @@
 #include <condition_variable>
 #include "version.h"
 #include <functions.hpp>
+#include <windows.h>
+
 //std::array<const char*, 710> files{};
 Debugger::Debugger() {
     //BreakPoint bp(8);
