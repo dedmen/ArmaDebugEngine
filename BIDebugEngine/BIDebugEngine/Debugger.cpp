@@ -7,6 +7,7 @@
 #include "version.h"
 #include <functions.hpp>
 #include <windows.h>
+#include <sqf.hpp>
 
 //std::array<const char*, 710> files{};
 Debugger::Debugger() {
@@ -253,33 +254,88 @@ void Debugger::onScriptError(GameState * gs) {
         BPAction_Halt hAction(haltType::error);
         hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->current_context ,gs });
     } else {
-
-        auto& context = *(RV_VMContext*)gs->current_context;
+		if (!gs->current_context) return;
+        auto& context = *gs->current_context;
         std::stringstream str;
 
-        str << "Error at" << "L" << context.sdocpos.sourceline << " (" << context.sdocpos.sourcefile << ")\nCallstack:";
+		bool dumpFullArray = gs->eval->local->get_variable("_debug_dumpFullArrays") != nullptr;
+
+		str << "Error at " << "L" << context.sdocpos.sourceline << " (" << context.sdocpos.sourcefile << ")\nCallstack:";
         intercept::sqf::diag_log(str.str());
-        str.clear();
+        str.str(std::string());
         for (auto& it : context.callstack) {
             if (!it) continue;
 
-            char fileBuffer[256] {0};
-            int line;
 
-            it->getSourceDocPosition(fileBuffer,255, line);
 
-            str << "\t[" << it->_scopeName << "] " << "L" << line << " (" << fileBuffer << ")";
+            r_string sourceFile;
+            int line{ 0 };
+
+            auto& type = typeid(*it.get());
+            auto hash = type.hash_code();
+
+            switch (hash) {
+#ifdef X64
+            case 0x796333d0f1231802: {
+#else
+            case 0xed08ac32: { //CallStackItemSimple
+#endif
+                auto stackItem = static_cast<const CallStackItemSimple*     >(it.get());
+
+                sourceFile = (stackItem->_instructions->get(stackItem->_currentInstruction - 1))->sdp.sourcefile;
+                line = (stackItem->_instructions->get(stackItem->_currentInstruction - 1))->sdp.sourceline;
+            }   break;
+
+#ifdef X64
+            case 0x6a5a9847820cfc77: {
+#else
+            case 0x224543d0: { //CallStackItemData
+#endif
+                auto stackItem = static_cast<const CallStackItemData*>(it.get());
+                sourceFile = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourcefile;
+                line = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourceline;
+
+            }   break;
+            case 0x254c4241: { //CallStackItemArrayForEach
+				continue;
+				//Level doesn't have any code. It's all inside a CallStackitemData one level lower
+            } break;
+#ifdef X64
+			case 0x2dc1ba43da7f1af7: {//CallStackItemArrayCount
+#else
+			case 0x1337: { //CallStackItemData
+#endif
+				continue;
+                //Level doesn't have any code. It's all inside a CallStackitemData one level lower
+			}
+            default:
+                char fileBuffer[256]{ 0 };
+
+                it->getSourceDocPosition(fileBuffer, 255, line);
+                sourceFile = fileBuffer;
+                //__debugbreak();
+            }
+
+
+
+			str << "\t[" << it->_scopeName << "] " << "L" << line << " (" << sourceFile << ")";
             intercept::sqf::diag_log(str.str());
-            str.clear();
+            str.str(std::string());
 
 
-            it->_varSpace.variables.for_each([&str](const game_variable& var) {
-                str << "\t\t" << var.name << ":" << static_cast<r_string>(var.value);
+            it->_varSpace.variables.for_each([&str, dumpFullArray](const game_variable& var) {
+                if (!dumpFullArray && var.value.type_enum() == game_data_type::ARRAY && var.value.size() > 50) {
+					str << "\t\t" << var.name << ": Array of " << var.value.size() << " elements. Not printed because too long. Set variable '_debug_dumpFullArrays' to dump force printing.";
+                } else {
+                    auto string = static_cast<std::string>(var.value).substr(0,200);
+                    std::replace(string.begin(), string.end(), '\n', ' ');
+					str << "\t\t" << var.name << ":" << string;
+                }
                 intercept::sqf::diag_log(str.str());
-                str.clear();
+                str.str(std::string());
             });
         }
-        intercept::sqf::diag_log("CALLSTACK END;;;"sv);
+        intercept::sqf::diag_log("CALLSTACK END;;;\n"sv);
 
     }
 
@@ -316,10 +372,10 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     //if (_strcmpi(instructionInfo.instruction->_scriptPos._sourceFile.data(), "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf") == 0)
     //    __debugbreak();
     std::shared_lock<std::shared_mutex> lk(breakPointsLock);
-	static bool doBreeak = false;
-	if (doBreeak && instructionInfo.instruction->sdp.sourcefile.find("cba_fnc_currentunit") != std::string::npos) __debugbreak();
-	auto space = instructionInfo.instruction->sdp.sourcefile.find(" ");
-	auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp.sourcefile.substr(0, space) : instructionInfo.instruction->sdp.sourcefile;
+    static bool doBreeak = true;
+    if (doBreeak && instructionInfo.instruction->sdp.sourcefile.find("dedmen\\") != std::string::npos) __debugbreak();
+    auto space = instructionInfo.instruction->sdp.sourcefile.find("[");
+    auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp.sourcefile.substr(0, space-1) : instructionInfo.instruction->sdp.sourcefile;
     auto &found = breakPoints.get(static_cast<std::string>(properPath).c_str());
     if (breakPoints.is_null(found) || found.empty()) return;
     for (auto& bp : found) {

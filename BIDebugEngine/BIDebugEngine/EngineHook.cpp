@@ -504,6 +504,16 @@ void EngineHook::placeHooks() {
     }
 
     //Tracker::trackPiwik();
+
+    std::thread([]() { //Don't ask.
+        while (true) {
+            while (!waitForErrorHandler)
+                std::this_thread::sleep_for(50ms);
+            auto gs = intercept::client::host::functions.get_engine_allocator()->gameState;
+            GlobalDebugger.onScriptError(gs);
+            waitForErrorHandler = false;
+        }
+    }).detach();
 }
 
 void EngineHook::removeHooks(bool leavePFrameHook) {
@@ -639,10 +649,12 @@ void EngineHook::_world_OnMissionEventEnd() {
     currentContext = scriptExecutionContext::Invalid;
 }
 
-void EngineHook::_onScriptError(uintptr_t gameSate) {
-    auto gs = reinterpret_cast<GameState *>(gameSate);
-    if (gs && gs->eval->_errorType != 0)
-        GlobalDebugger.onScriptError(gs);
+void EngineHook::_onScriptError(uintptr_t gameState) {
+    auto gs = reinterpret_cast<GameState *>(gameState);
+   if (gs && gs->eval->_errorType != 0) {
+       waitForErrorHandler = true;
+       while (waitForErrorHandler) _mm_pause(); //Don't ASK!!!!
+   }
 }
 
 void EngineHook::_onScriptAssert(uintptr_t gameState) {
