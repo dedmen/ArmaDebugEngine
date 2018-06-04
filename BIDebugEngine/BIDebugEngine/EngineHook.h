@@ -5,14 +5,7 @@
 #include <vector>
 #include <array>
 #include <functional>
-
-namespace intercept {
-	namespace types {
-		class game_instruction;
-		class game_state;
-		class vm_context;
-	}
-}
+#include <intercept.hpp>
 
 enum class hookTypes {
     worldSimulate,   //FrameEnd/FrameStart
@@ -95,7 +88,7 @@ public:
     void _onScriptError(uintptr_t gameState);
     void _onScriptAssert(uintptr_t gameState);
     void _onScriptHalt(uintptr_t gameState);
-    void _onScriptEcho(uintptr_t gameValue);
+    void _onScriptEcho(intercept::types::r_string message);
     void onShutdown();
     void onStartup();
 

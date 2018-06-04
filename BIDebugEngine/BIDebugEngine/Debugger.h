@@ -129,7 +129,8 @@ public:
         r_string _name;
         const char* get_map_key() const { return _name.c_str(); }
         breakPointList(breakPointList& b) {
-            if (!b._name.empty() && !_name.empty()) __debugbreak();            _name = (b._name); for (auto &&it : b) emplace_back(std::move(it));
+            if (!b._name.empty() && !_name.empty()) __debugbreak();
+            _name = (b._name); for (auto &&it : b) emplace_back(std::move(it));
         }
     private:
 

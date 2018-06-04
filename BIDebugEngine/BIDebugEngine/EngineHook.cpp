@@ -7,6 +7,8 @@
 #include "Tracker.h"
 #include <intercept.hpp>
 #include "SQF-Assembly-Iface.h"
+#include <future>
+using namespace std::chrono_literals;
 
 bool inScriptVM;
 extern "C" EngineHook GlobalEngineHook;
@@ -328,6 +330,8 @@ HookManager::Pattern pat_onScriptEcho{//01052800 1.68.140.940
 
 scriptExecutionContext currentContext = scriptExecutionContext::Invalid;
 MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create some invalid handler type
+std::atomic_bool waitForErrorHandler = false;
+
 
 void EngineHook::placeHooks() {
 
@@ -397,15 +401,18 @@ void EngineHook::placeHooks() {
     if (scriptPreprocessorDefineDefine) //else report error
         HI.scriptPreprocConstr = GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 0xA);
 
-	static auto assertHook = intercept::client::host::register_sqf_command("assert"sv, "", [](uintptr_t, game_value_parameter par) -> game_value {
+	static auto assertHook = intercept::client::host::register_sqf_command("assert"sv, "", [](uintptr_t gs, game_value_parameter par) -> game_value {
+		if ((bool)par) GlobalEngineHook._onScriptAssert(gs);
 		return {};
 	}, game_data_type::NOTHING, game_data_type::BOOL);
-	static auto haltHook = intercept::client::host::register_sqf_command("halt"sv, "", [](uintptr_t, game_value_parameter par) -> game_value {
+	static auto haltHook = intercept::client::host::register_sqf_command("halt"sv, "", [](uintptr_t gs) -> game_value {
+		GlobalEngineHook._onScriptHalt(gs);
 		return {};
-	}, game_data_type::NOTHING, game_data_type::BOOL);
-	static auto echoHook = intercept::client::host::register_sqf_command("echo"sv, "", [](uintptr_t, game_value_parameter par) -> game_value {
+	}, game_data_type::NOTHING);
+	static auto echoHook = intercept::client::host::register_sqf_command("echo"sv, "", [](uintptr_t gs, game_value_parameter par) -> game_value {
+		GlobalEngineHook._onScriptEcho(par);
 		return {};
-	}, game_data_type::NOTHING, game_data_type::BOOL);
+	}, game_data_type::NOTHING, game_data_type::STRING);
 	
 	
 	HI.scriptAssert = assertHook.has_function();
@@ -638,8 +645,8 @@ void EngineHook::_onScriptError(uintptr_t gameSate) {
         GlobalDebugger.onScriptError(gs);
 }
 
-void EngineHook::_onScriptAssert(uintptr_t gameSate) {
-    auto gs = reinterpret_cast<GameState *>(gameSate);
+void EngineHook::_onScriptAssert(uintptr_t gameState) {
+    auto gs = reinterpret_cast<GameState *>(gameState);
     GlobalDebugger.onScriptAssert(gs);
 }
 
@@ -648,11 +655,11 @@ void EngineHook::_onScriptHalt(uintptr_t gameSate) {
     GlobalDebugger.onScriptHalt(gs);
 }
 
-void EngineHook::_onScriptEcho(uintptr_t gameValue) {
-    auto gv = reinterpret_cast<GameValue *>(gameValue);
-    if (!gv->_data) return;
-    auto msg = gv->_data->get_as_string();
-    GlobalDebugger.onScriptEcho(msg);
+void EngineHook::_onScriptEcho(r_string message) {
+    //auto gv = reinterpret_cast<GameValue *>(gameValue);
+    //if (!gv->_data) return;
+    //auto msg = gv->_data->get_as_string();
+    GlobalDebugger.onScriptEcho(message);
 }
 
 void EngineHook::onShutdown() {

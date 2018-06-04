@@ -15,7 +15,7 @@ _TEXT    SEGMENT
     EXTERN ?_onScriptError@EngineHook@@QEAAX_K@Z:               PROC;    EngineHook::_onScriptError
     EXTERN ?_onScriptAssert@EngineHook@@QEAAX_K@Z:              PROC;    EngineHook::_onScriptAssert
     EXTERN ?_onScriptHalt@EngineHook@@QEAAX_K@Z:                PROC;    EngineHook::_onScriptHalt
-    EXTERN ?_onScriptEcho@EngineHook@@QEAAX_K@Z:                PROC;    EngineHook::_onScriptEcho
+    ;EXTERN ?_onScriptEcho@EngineHook@@QEAAX_K@Z:                PROC;    EngineHook::_onScriptEcho
 
     ;hool Enable fields    
     EXTERN hookEnabled_Instruction:                             qword
@@ -207,7 +207,7 @@ _TEXT    SEGMENT
 
     worldSimulate ENDP
 
-    COMMENT ü
+    COMMENT ï¿½
     ;##########
     PUBLIC _worldMissionEventStart
     _worldMissionEventStart PROC
@@ -249,7 +249,7 @@ _TEXT    SEGMENT
 
     _worldMissionEventEnd ENDP
 
-    ü;
+    ï¿½;
 
     ;##########
     PUBLIC onScriptError
@@ -382,7 +382,7 @@ _TEXT    SEGMENT
 
         mov     rdx, r8;                                            GameValue*
         mov     rcx, offset GlobalEngineHook;
-        call    ?_onScriptEcho@EngineHook@@QEAAX_K@Z;               EngineHook::_onScriptHalt;
+        ;call    ?_onScriptEcho@EngineHook@@QEAAX_K@Z;               EngineHook::_onScriptHalt;
 
         pop R11
         pop R10 
