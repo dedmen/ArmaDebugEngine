@@ -249,8 +249,40 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 }
 
 void Debugger::onScriptError(GameState * gs) {
-    BPAction_Halt hAction(haltType::error);
-    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->current_context ,gs });
+    if (nController.isClientConnected()) {
+        BPAction_Halt hAction(haltType::error);
+        hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->current_context ,gs });
+    } else {
+
+        auto& context = *(RV_VMContext*)gs->current_context;
+        std::stringstream str;
+
+        str << "Error at" << "L" << context.sdocpos.sourceline << " (" << context.sdocpos.sourcefile << ")\nCallstack:";
+        intercept::sqf::diag_log(str.str());
+        str.clear();
+        for (auto& it : context.callstack) {
+            if (!it) continue;
+
+            char fileBuffer[256] {0};
+            int line;
+
+            it->getSourceDocPosition(fileBuffer,255, line);
+
+            str << "\t[" << it->_scopeName << "] " << "L" << line << " (" << fileBuffer << ")";
+            intercept::sqf::diag_log(str.str());
+            str.clear();
+
+
+            it->_varSpace.variables.for_each([&str](const game_variable& var) {
+                str << "\t\t" << var.name << ":" << static_cast<r_string>(var.value);
+                intercept::sqf::diag_log(str.str());
+                str.clear();
+            });
+        }
+        intercept::sqf::diag_log("CALLSTACK END;;;"sv);
+
+    }
+
 }
 
 void Debugger::onScriptAssert(GameState* gs) {
@@ -373,7 +405,7 @@ void Debugger::onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> 
     std::ofstream f("P:\\break.json", std::ios::out | std::ios::binary);
     f.write(text.c_str(), text.length());
     f.close();
-    std::ofstream f2("P:\\breakScript.json", std::ios::out | std::ios::binary);
+    std::ofstream f2("P:\\break.sqf", std::ios::out | std::ios::binary);
     if (instructionInfo.instruction) {
         f2.write(instructionInfo.instruction->sdp.content.data(), instructionInfo.instruction->sdp.content.length());
     } else {

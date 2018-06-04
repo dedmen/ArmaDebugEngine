@@ -182,9 +182,11 @@ HookManager::Pattern pat_worldSimulate{//PROF ONLY
 
 
 
-HookManager::Pattern pat_onScriptError{
-    "xxxxxxxxxxxxxxx????xxx????xxxxxx?????xx????xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "\x48\x8B\xC4\x48\x89\x48\x08\x55\x48\x8D\x68\xA1\x48\x81\xEC\x00\x00\x00\x00\x48\x8B\x91\x00\x00\x00\x00\x48\x89\x55\x07\xF7\x42\x00\x00\x00\x00\x00\x0F\x84\x00\x00\x00\x00\x48\x89\x58\xF0\x48\x89\x70\xE8\x48\x89\x78\xE0\x48\x8B\x7A\x48\x4C\x89\x60\xD8\x4C\x89\x68\xD0\x4C\x89\x70\xC8"
+HookManager::Pattern pat_onScriptError{//1.68.140.940prof 1393640 base 0
+    //1.82.144.848 14130C3E0 base 0x140000000 -> 130C3E0 base 0 
+    //Be careful. There are two functions that are very similar. We want the one with only 1 arg
+    "xxxxxxxxxxxxxxxxx????xxx????xxx?????xx????xxxxxxxxxxxxxxxxxxxxxxxx",
+    "\x48\x8B\xC4\x48\x89\x48\x08\x55\x41\x55\x48\x8D\x68\xA1\x48\x81\xEC\x00\x00\x00\x00\x4C\x8B\xA9\x00\x00\x00\x00\x41\xF7\x45\x00\x00\x00\x00\x00\x0F\x84\x00\x00\x00\x00\x48\x89\x58\xE8\x49\x8B\x5D\x48\x48\x89\x70\xE0\x48\x89\x78\xD8\x4C\x89\x60\xD0\x4C\x89\x70\xC8"
 };
 
 HookManager::Pattern pat_scriptPreprocessorConstructor{// this is Preproc not FilePreproc!
@@ -288,7 +290,7 @@ HookManager::Pattern pat_worldMissionEventEnd{//00B1A0AB
     0x00B1A0AB - 0x00B1A090
 };
 
-HookManager::Pattern pat_onScriptError{//0106A590 1.68.140.940
+HookManager::Pattern pat_onScriptError{//0106A590 1.68.140.940. Offset is 01017110 with 0x0 base in perf build. This offset is probably from prof
     "xx?xxxxx?xx????xxx?xx?xxxx????xx?xx????xxxx?xxxx?xx?x",
     "\x83\xec\x00\x8b\xc1\x89\x44\x24\x00\x8b\x90\x00\x00\x00\x00\x89\x54\x24\x00\x8b\x42\x00\x85\xc0\x0f\x84\x00\x00\x00\x00\x83\xf8\x00\x0f\x84\x00\x00\x00\x00\x53\x56\x8b\x72\x00\x57\x85\xf6\x74\x00\x83\xc6\x00\xeb",
     0x0106A5B7 - 0x0106A590
@@ -388,7 +390,7 @@ void EngineHook::placeHooks() {
     //HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
     //has to jmpback 13CF0B6 wants 0x00000000013cf0af
 
-    //HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 5);
+    HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 7);
     scriptPreprocessorDefineDefine = GlobalHookManager.findPattern(pat_scriptPreprocessorDefineDefine);
 
     HI.scriptPreprocDefine = (scriptPreprocessorDefineDefine != 0);
