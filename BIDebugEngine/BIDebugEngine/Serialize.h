@@ -99,23 +99,23 @@ public:
         }
     }
 
-	template <class Type>
-	typename std::enable_if<!has_Serialize<Type>::value && !has_Serialize<typename Type::baseType>::value>::type
-		Serialize(const char* key, compact_array<Type>& value) {
-		auto &_array = (*pJson)[key];
-		if (isReading) {
-			if (!_array.is_array()) __debugbreak();
-			for (auto& it : _array) {
-				__debugbreak(); //#TODO AutoArray pushback
-			}
-		} else {
-            for (auto&& it : value) {
-				JsonArchive element;
-				::Serialize(*it, element);
-				_array.push_back(*element.pJson);
+    template <class Type>
+    typename std::enable_if<!has_Serialize<Type>::value && !has_Serialize<typename Type::baseType>::value>::type
+        Serialize(const char* key, compact_array<Type>& value) {
+        auto &_array = (*pJson)[key];
+        if (isReading) {
+            if (!_array.is_array()) __debugbreak();
+            for (auto& it : _array) {
+                __debugbreak(); //#TODO AutoArray pushback
             }
-		}
-	}
+        } else {
+            for (auto&& it : value) {
+                JsonArchive element;
+                ::Serialize(*it, element);
+                _array.push_back(*element.pJson);
+            }
+        }
+    }
 
 
 

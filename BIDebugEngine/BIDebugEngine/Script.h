@@ -4,9 +4,9 @@
 #include "RVBaseTypes.h"
 
 namespace intercept {
-	namespace types {
-		struct sourcedocpos;
-	}
+    namespace types {
+        struct sourcedocpos;
+    }
 }
 
 class Script {
@@ -18,8 +18,8 @@ public:
     r_string _content;
     r_string _fileName;
 
-	static uint32_t getScriptLineOffset(const intercept::types::sourcedocpos& pos);
-	static std::string getScriptFromFirstLine(const intercept::types::sourcedocpos& pos, bool compact = false);
+    static uint32_t getScriptLineOffset(const intercept::types::sourcedocpos& pos);
+    static std::string getScriptFromFirstLine(const intercept::types::sourcedocpos& pos, bool compact = false);
 
 };
 

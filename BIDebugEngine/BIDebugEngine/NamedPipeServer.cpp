@@ -60,7 +60,7 @@ void NamedPipeServer::writeMessage(std::string message) {
             if (waitResult == WAIT_TIMEOUT) {
                 errorCode = WAIT_TIMEOUT;
             } else {
-                return;	 //successful write. We dont need to handle any errors
+                return;     //successful write. We dont need to handle any errors
             }
         }
         if (errorCode == ERROR_BROKEN_PIPE) {
@@ -115,7 +115,7 @@ std::string NamedPipeServer::readMessageBlocking() {
 
                 }
 
-                return output;	 //successful read. We dont need to handle any errors
+                return output;     //successful read. We dont need to handle any errors
             }
         }
         if (errorCode == ERROR_BROKEN_PIPE) {
@@ -152,7 +152,7 @@ void NamedPipeServer::transactMessage(char* output, int outputSize, const char* 
                 if (written == 0)
                     errorCode = ERROR_NO_DATA;
                 else
-                    return;	 //successful read. We dont need to handle any errors
+                    return;     //successful read. We dont need to handle any errors
             }
         }
 

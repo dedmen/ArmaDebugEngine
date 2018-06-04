@@ -47,41 +47,41 @@ _TEXT    SEGMENT
     ;1.69.140.875 000000000133F0A0
     ;PUBLIC instructionBreakpoint
     ;instructionBreakpoint PROC
-	;
+    ;
     ;    push    rcx;
     ;    push    rdx;
     ;    push    r8;
     ;    push    r9;
-	;
+    ;
     ;    mov     rcx, hookEnabled_Instruction;                    Skip if hook is disabled
     ;    test    rcx, rcx;
     ;    jz      _return;
     ;    mov     r9, rbx; instructionBP_gameState
     ;    mov     r8, [rbp+0A0h]; instructionBP_VMContext
     ;    mov     rdx, r12; instructionBP_Instruction
-	;
+    ;
     ;    mov     rcx, offset GlobalEngineHook;
     ;    ; _scriptInstruction( rcx (this), rdx(instructionBP_Instruction), r8(instructionBP_VMContext), r9(instructionBP_gameState))  ;,instructionBP_IDebugScript was optimized out
-	;
+    ;
     ;    call    ?_scriptInstruction@EngineHook@@QEAAX_K000@Z;        EngineHook::_scriptInstruction
     ;_return:
-	;
-	;
-	;
+    ;
+    ;
+    ;
     ;    pop     r9;
     ;    pop     r8;
     ;    pop     rdx;
     ;    pop     rcx;
-	;
+    ;
     ;    mov     rax, [r13+8]; fixup
     ;    mov     rdx, [rbp+0A0h]
     ;    mov     rcx, r12
     ;    ;mov     rdi, [rdi+rax]
     ;    ;mov     rax, [r12]
     ;    ;mov     esi, [rdx+288h]
-	;
+    ;
     ;    jmp instructionBreakpointJmpBack;
-	;
+    ;
     ;instructionBreakpoint ENDP
     
     

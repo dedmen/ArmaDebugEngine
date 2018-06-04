@@ -47,7 +47,7 @@ void Serialize(const game_value&, JsonArchive& ar);
 
 class CallStackItemSimple : public vm_context::callstack_item {
 public:
-	compact_array<ref<game_instruction>>* _instructions;
+    compact_array<ref<game_instruction>>* _instructions;
     int _currentInstruction;
     sourcedoc _content;
     bool _multipleInstructions;
@@ -144,18 +144,18 @@ struct GameOperatorNameBase {
 public:
     r_string _operatorName;
 private:
-	std::array<size_t,
+    std::array<size_t,
 #if _WIN64 || __X86_64__
-		10
+        10
 #else
 #ifdef __linux__
-		8
+        8
 #else
-		11
+        11
 #endif
 #endif
-	> securityStuff{};  //Will scale with x64
-						//size_t securityStuff[11];
+    > securityStuff{};  //Will scale with x64
+                        //size_t securityStuff[11];
 };
 
 class ScriptCmdInfo {

@@ -10,8 +10,8 @@ void Serialize(const game_instruction& in, JsonArchive& ar) {
     const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
     ar.Serialize("type", typeName);
     ar.Serialize("name", in.get_name());
-	auto space = in.sdp.sourcefile.find("[");
-	auto properPath = (space != std::string::npos) ? in.sdp.sourcefile.substr(0, space-1) : in.sdp.sourcefile;
+    auto space = in.sdp.sourcefile.find("[");
+    auto properPath = (space != std::string::npos) ? in.sdp.sourcefile.substr(0, space-1) : in.sdp.sourcefile;
 
     ar.Serialize("filename", (std::string)properPath);
 
@@ -81,7 +81,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 
         switch (hash) {
 #ifdef X64
-			case 0x796333d0f1231802: {
+            case 0x796333d0f1231802: {
 #else
             case 0xed08ac32: { //CallStackItemSimple
 #endif

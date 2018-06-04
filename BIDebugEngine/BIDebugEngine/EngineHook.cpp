@@ -125,7 +125,7 @@ HookManager::Pattern pat_IsDebuggerAttached{ //PROF ONLY
 };
 
 //\x48\x8B\x0D\x00\x00\x00\x00\x48\x8B\x01\x48\xFF\x20 xxx????xxxxxx
-//\xCC\xCC\xCC	xxx								    
+//\xCC\xCC\xCC    xxx                                    
 //\x48\x8B\xD1\x48\x8B\x0D\x00\x00\x00\x00\x48\x8B\x01\x48\xFF\x60\x08 xxxxxx????xxxxxxx
 HookManager::Pattern pat_EngineAliveFnc{
     "xxx????xxxxxxxxxxxxxxx????xxxxxxx",
@@ -171,15 +171,15 @@ HookManager::Pattern pat_worldSimulate{//PROF ONLY
 //#TODO this onMissionEvent func only works for events without args. Need the other ones
 
 //HookManager::Pattern pat_worldMissionEventStart{//00B19E5C PROF ONLY
-//	"xxxxx?xx?xx?xxxxxxxxxxx??xxx?xx????x????x?x?xx?xx????????x????xx",
-//	"\x55\x8b\xec\x83\xe4\x00\x83\xec\x00\x8b\x45\x00\x53\x8b\xd9\x56\x8d\x34\x80\x57\x83\x7c\xb3\x00\x00\x89\x74\x24\x00\x0f\x8e\x00\x00\x00\x00\xa1\x00\x00\x00\x00\xa8\x00\x75\x00\x83\xc8\x00\xc7\x05\x00\x00\x00\x00\x00\x00\x00\x00\xa3\x00\x00\x00\x00\xc7\x05",
-//	0x00B19E5C - 0x00B19E50
+//    "xxxxx?xx?xx?xxxxxxxxxxx??xxx?xx????x????x?x?xx?xx????????x????xx",
+//    "\x55\x8b\xec\x83\xe4\x00\x83\xec\x00\x8b\x45\x00\x53\x8b\xd9\x56\x8d\x34\x80\x57\x83\x7c\xb3\x00\x00\x89\x74\x24\x00\x0f\x8e\x00\x00\x00\x00\xa1\x00\x00\x00\x00\xa8\x00\x75\x00\x83\xc8\x00\xc7\x05\x00\x00\x00\x00\x00\x00\x00\x00\xa3\x00\x00\x00\x00\xc7\x05",
+//    0x00B19E5C - 0x00B19E50
 //};
 //
 //HookManager::Pattern pat_worldMissionEventEnd{//00B1A0AB
-//	"xxx?xxx?xxxxxx?xx????xxxxx?xxxxxxx",
-//	"\x8b\x54\x24\x00\x85\xd2\x74\x00\xf0\x0f\xc1\x3a\x4f\x75\x00\x8b\x0d\x00\x00\x00\x00\x52\x8b\x01\xff\x50\x00\x5f\x5e\x5b\x8b\xe5\x5d\xc2",
-//	0x00B1A0AB - 0x00B1A090
+//    "xxx?xxx?xxxxxx?xx????xxxxx?xxxxxxx",
+//    "\x8b\x54\x24\x00\x85\xd2\x74\x00\xf0\x0f\xc1\x3a\x4f\x75\x00\x8b\x0d\x00\x00\x00\x00\x52\x8b\x01\xff\x50\x00\x5f\x5e\x5b\x8b\xe5\x5d\xc2",
+//    0x00B1A0AB - 0x00B1A090
 //};
 
 
@@ -342,20 +342,20 @@ void EngineHook::placeHooks() {
     //OutputDebugStringA("\t\tVersion: ");
     //OutputDebugStringA(productVersion ? productVersion : "");
     //OutputDebugStringA("\n");
-	//
+    //
     //if (!productType || !productVersion) {
     //    std::string error("Could not find gameVersion or gameType. This means this game version is likely incompatible! \n");
     //    error += "Version: " + std::string(productVersion ? productVersion : "NOT FOUND") + "\n";
     //    error += "Type: " + std::string(productType ? productType : "NOT FOUND") + "\n";
     //    if (productType && strncmp(productType, "", 2))
     //        error += "You are not running a Profiling version of Arma. This is needed for Arma Debug Engine to work!";
-	//	
+    //    
     //    //MessageBox(error.c_str(), ErrorMsgBoxType::error);
     //    return;
     //}
     //if (productType && strncmp(productType, "Arma3RetailProfile_DX11", 13)) {
     //    std::string error("You are not running a Profiling version of Arma. This is needed for Arma Debug Engine to work!\n\nFurther error messages might be caused by this.");
-	//
+    //
     //    //MessageBox(error.c_str(), ErrorMsgBoxType::warning);
     //}
 
@@ -369,27 +369,27 @@ void EngineHook::placeHooks() {
     HookIntegrity HI;
 #ifdef X64
 
-	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionNewExpression, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
-		GlobalEngineHook._scriptInstruction(instr, state, ctx);
-	});
-	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionConst, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
-		GlobalEngineHook._scriptInstruction(instr, state, ctx);
-	});
-	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionFunction, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
-		GlobalEngineHook._scriptInstruction(instr, state, ctx);
-	});
-	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionOperator, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
-		GlobalEngineHook._scriptInstruction(instr, state, ctx);
-	}); 
-	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionAssignment, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
-		GlobalEngineHook._scriptInstruction(instr, state, ctx);
-	});
-	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionVariable, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
-		GlobalEngineHook._scriptInstruction(instr, state, ctx);
-	});
-	GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionArray, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
-		GlobalEngineHook._scriptInstruction(instr, state, ctx);
-	});
+    GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionNewExpression, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+        GlobalEngineHook._scriptInstruction(instr, state, ctx);
+    });
+    GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionConst, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+        GlobalEngineHook._scriptInstruction(instr, state, ctx);
+    });
+    GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionFunction, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+        GlobalEngineHook._scriptInstruction(instr, state, ctx);
+    });
+    GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionOperator, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+        GlobalEngineHook._scriptInstruction(instr, state, ctx);
+    }); 
+    GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionAssignment, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+        GlobalEngineHook._scriptInstruction(instr, state, ctx);
+    });
+    GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionVariable, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+        GlobalEngineHook._scriptInstruction(instr, state, ctx);
+    });
+    GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionArray, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+        GlobalEngineHook._scriptInstruction(instr, state, ctx);
+    });
 
     //HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
     //has to jmpback 13CF0B6 wants 0x00000000013cf0af
@@ -401,24 +401,24 @@ void EngineHook::placeHooks() {
     if (scriptPreprocessorDefineDefine) //else report error
         HI.scriptPreprocConstr = GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 0xA);
 
-	static auto assertHook = intercept::client::host::register_sqf_command("assert"sv, "", [](uintptr_t gs, game_value_parameter par) -> game_value {
-		if ((bool)par) GlobalEngineHook._onScriptAssert(gs);
-		return {};
-	}, game_data_type::NOTHING, game_data_type::BOOL);
-	static auto haltHook = intercept::client::host::register_sqf_command("halt"sv, "", [](uintptr_t gs) -> game_value {
-		GlobalEngineHook._onScriptHalt(gs);
-		return {};
-	}, game_data_type::NOTHING);
-	static auto echoHook = intercept::client::host::register_sqf_command("echo"sv, "", [](uintptr_t gs, game_value_parameter par) -> game_value {
-		GlobalEngineHook._onScriptEcho(par);
-		return {};
-	}, game_data_type::NOTHING, game_data_type::STRING);
-	
-	
-	HI.scriptAssert = assertHook.has_function();
-	HI.scriptHalt = haltHook.has_function();
-	HI.scriptEcho = echoHook.has_function();
-	HI.__instructionBreakpoint = GASM.ready;
+    static auto assertHook = intercept::client::host::register_sqf_command("assert"sv, "", [](uintptr_t gs, game_value_parameter par) -> game_value {
+        if ((bool)par) GlobalEngineHook._onScriptAssert(gs);
+        return {};
+    }, game_data_type::NOTHING, game_data_type::BOOL);
+    static auto haltHook = intercept::client::host::register_sqf_command("halt"sv, "", [](uintptr_t gs) -> game_value {
+        GlobalEngineHook._onScriptHalt(gs);
+        return {};
+    }, game_data_type::NOTHING);
+    static auto echoHook = intercept::client::host::register_sqf_command("echo"sv, "", [](uintptr_t gs, game_value_parameter par) -> game_value {
+        GlobalEngineHook._onScriptEcho(par);
+        return {};
+    }, game_data_type::NOTHING, game_data_type::STRING);
+    
+    
+    HI.scriptAssert = assertHook.has_function();
+    HI.scriptHalt = haltHook.has_function();
+    HI.scriptEcho = echoHook.has_function();
+    HI.__instructionBreakpoint = GASM.ready;
 
 
 #else
@@ -459,7 +459,7 @@ void EngineHook::placeHooks() {
     GlobalDebugger.setHookIntegrity(HI);
 
     if (!
-        (	//HI.__scriptVMConstructor
+        (    //HI.__scriptVMConstructor
             //&& HI.__scriptVMSimulateStart
             //&& HI.__scriptVMSimulateEnd
             //&& 
@@ -478,21 +478,21 @@ void EngineHook::placeHooks() {
         std::string error("Some hooks have failed. Certain functionality might not be available.\n\n");
 
         bool fatal = false;
-        if (!HI.__scriptVMConstructor) 	  error += "SMVCON	\tFAILED MINOR	\n\tEffect: Not important\n\n";
-        if (!HI.__scriptVMSimulateStart)  error += "SVMSIMST\tFAILED MINOR	\n\tEffect: Not important\n\n";
-        if (!HI.__scriptVMSimulateEnd)	  error += "SVMSIMEN\tFAILED MINOR	\n\tEffect: Not important\n\n";
-        if (!HI.__instructionBreakpoint) { error += "INSTRBP	\tFAILED FATAL	\n\tEffect: No Breakpoints possible.\n\n"; fatal = true; }
-        if (!HI.__worldSimulate)		  error += "WSIM	\tFAILED MINOR	\n\tEffect: Not important\n\n";
-        if (!HI.__worldMissionEventStart) error += "WMEVS	\tFAILED MINOR	\n\tEffect: Not important\n\n";
-        if (!HI.__worldMissionEventEnd)	  error += "WMEVE	\tFAILED MINOR	\n\tEffect: Not important\n\n";
-        if (!HI.__onScriptError)		  error += "SCRERR	\tFAILED WARNING	\n\tEffect: script Error will not trigger a Breakpoint\n\n";
-        if (!HI.scriptPreprocDefine)	  error += "PREDEF	\tFAILED WARNING	\n\tEffect: Preprocessor Macro \"DEBUG\" will not be available\n\n";
-        if (!HI.scriptPreprocConstr)	  error += "PRECON	\tFAILED WARNING	\n\tEffect: Preprocessor Macro \"DEBUG\" will not be available\n\n";
-        if (!HI.scriptAssert)			  error += "SCRASS	\tFAILED WARNING	\n\tEffect: Script Command \"assert\" will not trigger a break\n\n";
-        if (!HI.scriptHalt)				  error += "SCRHALT	\tFAILED WARNING	\n\tEffect: Script Command \"halt\" will not trigger a break\n\n";
-        if (!HI.scriptEcho)				  error += "SCRECHO	\tFAILED WARNING	\n\tEffect: Script Command \"echo\" will not echo anything\n\n";
-        if (!HI.engineAlive)			  error += "ALIVE	\tFAILED WARNING	\n\tEffect: Game might think it froze if a breakpoint is triggered\n\n";
-        if (!HI.enableMouse)			  error += "ENMOUSE	\tFAILED WARNING	\n\tEffect: Mouse might be stuck in Game and has to be Freed by opening Task-Manager via CTRL+ALT+DEL\n\n";
+        if (!HI.__scriptVMConstructor)       error += "SMVCON    \tFAILED MINOR    \n\tEffect: Not important\n\n";
+        if (!HI.__scriptVMSimulateStart)  error += "SVMSIMST\tFAILED MINOR    \n\tEffect: Not important\n\n";
+        if (!HI.__scriptVMSimulateEnd)      error += "SVMSIMEN\tFAILED MINOR    \n\tEffect: Not important\n\n";
+        if (!HI.__instructionBreakpoint) { error += "INSTRBP    \tFAILED FATAL    \n\tEffect: No Breakpoints possible.\n\n"; fatal = true; }
+        if (!HI.__worldSimulate)          error += "WSIM    \tFAILED MINOR    \n\tEffect: Not important\n\n";
+        if (!HI.__worldMissionEventStart) error += "WMEVS    \tFAILED MINOR    \n\tEffect: Not important\n\n";
+        if (!HI.__worldMissionEventEnd)      error += "WMEVE    \tFAILED MINOR    \n\tEffect: Not important\n\n";
+        if (!HI.__onScriptError)          error += "SCRERR    \tFAILED WARNING    \n\tEffect: script Error will not trigger a Breakpoint\n\n";
+        if (!HI.scriptPreprocDefine)      error += "PREDEF    \tFAILED WARNING    \n\tEffect: Preprocessor Macro \"DEBUG\" will not be available\n\n";
+        if (!HI.scriptPreprocConstr)      error += "PRECON    \tFAILED WARNING    \n\tEffect: Preprocessor Macro \"DEBUG\" will not be available\n\n";
+        if (!HI.scriptAssert)              error += "SCRASS    \tFAILED WARNING    \n\tEffect: Script Command \"assert\" will not trigger a break\n\n";
+        if (!HI.scriptHalt)                  error += "SCRHALT    \tFAILED WARNING    \n\tEffect: Script Command \"halt\" will not trigger a break\n\n";
+        if (!HI.scriptEcho)                  error += "SCRECHO    \tFAILED WARNING    \n\tEffect: Script Command \"echo\" will not echo anything\n\n";
+        if (!HI.engineAlive)              error += "ALIVE    \tFAILED WARNING    \n\tEffect: Game might think it froze if a breakpoint is triggered\n\n";
+        if (!HI.enableMouse)              error += "ENMOUSE    \tFAILED WARNING    \n\tEffect: Mouse might be stuck in Game and has to be Freed by opening Task-Manager via CTRL+ALT+DEL\n\n";
         if (fatal) error += "\n A Fatal error occured. Your Game version is not compatible with ArmaDebugEngine. Please tell a dev.";
 
 #ifdef X64
@@ -684,9 +684,9 @@ void EngineHook::onStartup() {
 }
 
 void intercept::pre_start() {
-	
-	GASM.init();
-	GlobalEngineHook.placeHooks();
-	GlobalDebugger.onStartup();
+    
+    GASM.init();
+    GlobalEngineHook.placeHooks();
+    GlobalDebugger.onStartup();
 
 }

@@ -37,7 +37,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
             size = GetFileVersionInfoSize(fileName, &handle);
             BYTE* versionInfo = new BYTE[size];
             if (GetFileVersionInfo(fileName, handle, size, versionInfo)) {
-                UINT    			len = 0;
+                UINT                len = 0;
                 VS_FIXEDFILEINFO*   vsfi = nullptr;
                 VerQueryValue(versionInfo, L"\\", reinterpret_cast<void**>(&vsfi), &len);
 
@@ -72,88 +72,88 @@ BOOL APIENTRY _RawDllMain(HMODULE, DWORD reason, LPVOID) {
     WAIT_FOR_DEBUGGER_ATTACHED;
 
 
-	//Intercept Loader - Written by me
-	MODULEINFO modInfo = { nullptr };
-	HMODULE hModule = GetModuleHandleA(nullptr);
-	GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
-	const uintptr_t baseAddress = reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll);
-	const uintptr_t moduleSize = static_cast<uintptr_t>(modInfo.SizeOfImage);
+    //Intercept Loader - Written by me
+    MODULEINFO modInfo = { nullptr };
+    HMODULE hModule = GetModuleHandleA(nullptr);
+    GetModuleInformation(GetCurrentProcess(), hModule, &modInfo, sizeof(MODULEINFO));
+    const uintptr_t baseAddress = reinterpret_cast<uintptr_t>(modInfo.lpBaseOfDll);
+    const uintptr_t moduleSize = static_cast<uintptr_t>(modInfo.SizeOfImage);
 
 
-	auto findInMemory = [baseAddress, moduleSize](const char* pattern, size_t patternLength) ->uintptr_t {
-		const uintptr_t base = baseAddress;
-		const uintptr_t size = moduleSize;
-		for (uintptr_t i = 0; i < size - patternLength; i++) {
-			bool found = true;
-			for (uintptr_t j = 0; j < patternLength; j++) {
-				found &= pattern[j] == *reinterpret_cast<char*>(base + i + j);
-				if (!found)
-					break;
-			}
-			if (found)
-				return base + i;
-		}
-		return 0;
-	};
+    auto findInMemory = [baseAddress, moduleSize](const char* pattern, size_t patternLength) ->uintptr_t {
+        const uintptr_t base = baseAddress;
+        const uintptr_t size = moduleSize;
+        for (uintptr_t i = 0; i < size - patternLength; i++) {
+            bool found = true;
+            for (uintptr_t j = 0; j < patternLength; j++) {
+                found &= pattern[j] == *reinterpret_cast<char*>(base + i + j);
+                if (!found)
+                    break;
+            }
+            if (found)
+                return base + i;
+        }
+        return 0;
+    };
 
-	auto findInMemoryPattern = [baseAddress, moduleSize](const char* pattern, const char* mask, uintptr_t offset = 0) {
-		const uintptr_t base = baseAddress;
-		const uintptr_t size = moduleSize;
+    auto findInMemoryPattern = [baseAddress, moduleSize](const char* pattern, const char* mask, uintptr_t offset = 0) {
+        const uintptr_t base = baseAddress;
+        const uintptr_t size = moduleSize;
 
-		const uintptr_t patternLength = static_cast<uintptr_t>(strlen(mask));
+        const uintptr_t patternLength = static_cast<uintptr_t>(strlen(mask));
 
-		for (uintptr_t i = 0; i < size - patternLength; i++) {
-			bool found = true;
-			for (uintptr_t j = 0; j < patternLength; j++) {
-				found &= mask[j] == '?' || pattern[j] == *reinterpret_cast<char*>(base + i + j);
-				if (!found)
-					break;
-			}
-			if (found)
-				return base + i + offset;
-		}
-		return static_cast<uintptr_t>(0x0u);
-	};
+        for (uintptr_t i = 0; i < size - patternLength; i++) {
+            bool found = true;
+            for (uintptr_t j = 0; j < patternLength; j++) {
+                found &= mask[j] == '?' || pattern[j] == *reinterpret_cast<char*>(base + i + j);
+                if (!found)
+                    break;
+            }
+            if (found)
+                return base + i + offset;
+        }
+        return static_cast<uintptr_t>(0x0u);
+    };
 
-	auto getRTTIName = [](uintptr_t vtable) -> const char* {
-		class v1 {
-			virtual void doStuff() {}
-		};
-		class v2 : public v1 {
-			virtual void doStuff() {}
-		};
-		v2* v = (v2*) vtable;
-		auto& typex = typeid(*v);
+    auto getRTTIName = [](uintptr_t vtable) -> const char* {
+        class v1 {
+            virtual void doStuff() {}
+        };
+        class v2 : public v1 {
+            virtual void doStuff() {}
+        };
+        v2* v = (v2*) vtable;
+        auto& typex = typeid(*v);
 #ifdef __GNUC__
-		auto test = typex.name();
+        auto test = typex.name();
 #else
-		auto test = typex.raw_name();
+        auto test = typex.raw_name();
 #endif
-		return test;
-	};
+        return test;
+    };
 
 
 
-	auto future_stringOffset =findInMemory("tbb4malloc_bi", 13);
+    auto future_stringOffset =findInMemory("tbb4malloc_bi", 13);
 
 
 
-	auto future_allocatorVtablePtr = [&]() {
-		uintptr_t stringOffset = future_stringOffset;
+    auto future_allocatorVtablePtr = [&]() {
+        uintptr_t stringOffset = future_stringOffset;
 #ifndef __linux__
-		return (findInMemory(reinterpret_cast<char*>(&stringOffset), sizeof(uintptr_t)) - sizeof(uintptr_t));
+        return (findInMemory(reinterpret_cast<char*>(&stringOffset), sizeof(uintptr_t)) - sizeof(uintptr_t));
 #else
-		uintptr_t vtableStart = stringOffset - (0x09D20C70 - 0x09D20BE8);
-		return vtableStart;
-		//return (findInMemory(reinterpret_cast<char*>(&vtableStart), 4));
+        uintptr_t vtableStart = stringOffset - (0x09D20C70 - 0x09D20BE8);
+        return vtableStart;
+        //return (findInMemory(reinterpret_cast<char*>(&vtableStart), 4));
 #endif
 
-	}();
+    }();
 
-	const uintptr_t allocatorVtablePtr = future_allocatorVtablePtr;
+    const uintptr_t allocatorVtablePtr = future_allocatorVtablePtr;
 
 
-	engineAlloc = allocatorVtablePtr;
+    engineAlloc = allocatorVtablePtr;
 
     return TRUE;
 }

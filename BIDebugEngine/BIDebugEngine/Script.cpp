@@ -71,7 +71,7 @@ std::string Script::getScriptFromFirstLine(const intercept::types::sourcedocpos&
         if (*(nameEnd + 1) == '\r') nameEnd++;
         curPos = nameEnd + 2;
         //if (inWantedFile && *curPos == '\n') {
-        //	curPos++;
+        //    curPos++;
         //}//after each #include there is a newline which we also don't want
 
 
