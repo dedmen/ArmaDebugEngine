@@ -161,6 +161,7 @@
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Async</ExceptionHandling>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -254,6 +255,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

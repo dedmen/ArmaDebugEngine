@@ -413,7 +413,10 @@ void EngineHook::placeHooks() {
         GlobalEngineHook._onScriptEcho(par);
         return {};
     }, game_data_type::NOTHING, game_data_type::STRING);
-    
+    static auto dumpStack = intercept::client::host::register_sqf_command("ade_dumpCallstack"sv, "", [](uintptr_t gs) -> game_value {
+        GlobalDebugger.dumpStackToRPT(reinterpret_cast<GameState*>(gs));
+        return {};
+    }, game_data_type::NOTHING);
     
     HI.scriptAssert = assertHook.has_function();
     HI.scriptHalt = haltHook.has_function();

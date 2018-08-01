@@ -84,6 +84,7 @@ public:
     std::shared_ptr<VMContext> getVMContext(RV_VMContext* vm);
     void writeFrameToFile(uint32_t frameCounter);
     void onInstruction(DebuggerInstructionInfo& instructionInfo);
+    void dumpStackToRPT(GameState* gs);
     void onScriptError(GameState* gs);
     void onScriptAssert(GameState* gs);
     void onScriptHalt(GameState* gs);
