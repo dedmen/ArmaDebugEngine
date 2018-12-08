@@ -70,6 +70,7 @@ struct HookIntegrity {
     bool scriptEcho{ false };
     bool engineAlive{ false };
     bool enableMouse{ false };
+    bool preprocRedirect{ false };
 };
 
 
@@ -99,6 +100,7 @@ public:
     void SerializeHookIntegrity(JsonArchive& answer);
     void onScriptEcho(r_string msg);
     void serializeScriptCommands(JsonArchive& answer);
+    std::map<VariableScope, std::vector<r_string>> getAvailableVariables(VariableScope scope_);
     HookIntegrity HI;
     GameState* lastKnownGameState;
 

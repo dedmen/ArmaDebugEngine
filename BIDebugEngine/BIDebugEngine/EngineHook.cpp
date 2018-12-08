@@ -413,7 +413,11 @@ void EngineHook::placeHooks() {
         GlobalEngineHook._onScriptEcho(par);
         return {};
     }, game_data_type::NOTHING, game_data_type::STRING);
-    static auto dumpStack = intercept::client::host::register_sqf_command("ade_dumpCallstack"sv, "", [](uintptr_t gs) -> game_value {
+    static auto preprocHook = intercept::client::host::register_sqf_command("preprocessFile"sv, "", [](uintptr_t gs, game_value_parameter par) -> game_value {
+        return intercept::sqf::preprocess_file_line_numbers(par);
+    }, game_data_type::NOTHING, game_data_type::STRING);
+    static auto dumpCallstack = intercept::client::host::register_sqf_command("ade_dumpCallstack"sv, "", [](uintptr_t gs) -> game_value {
+        intercept::sqf::diag_log("ArmaDebugEngine Forced callstrack");
         GlobalDebugger.dumpStackToRPT(reinterpret_cast<GameState*>(gs));
         return {};
     }, game_data_type::NOTHING);
@@ -421,6 +425,7 @@ void EngineHook::placeHooks() {
     HI.scriptAssert = assertHook.has_function();
     HI.scriptHalt = haltHook.has_function();
     HI.scriptEcho = echoHook.has_function();
+    HI.preprocRedirect = preprocHook.has_function();
     HI.__instructionBreakpoint = GASM.ready;
 
 
@@ -477,7 +482,8 @@ void EngineHook::placeHooks() {
             && HI.scriptHalt
             && HI.scriptEcho
             && HI.engineAlive
-            && HI.enableMouse)) {
+            && HI.enableMouse
+            && HI.preprocRedirect)) {
         std::string error("Some hooks have failed. Certain functionality might not be available.\n\n");
 
         bool fatal = false;
@@ -496,6 +502,7 @@ void EngineHook::placeHooks() {
         if (!HI.scriptEcho)                  error += "SCRECHO    \tFAILED WARNING    \n\tEffect: Script Command \"echo\" will not echo anything\n\n";
         if (!HI.engineAlive)              error += "ALIVE    \tFAILED WARNING    \n\tEffect: Game might think it froze if a breakpoint is triggered\n\n";
         if (!HI.enableMouse)              error += "ENMOUSE    \tFAILED WARNING    \n\tEffect: Mouse might be stuck in Game and has to be Freed by opening Task-Manager via CTRL+ALT+DEL\n\n";
+        if (!HI.preprocRedirect)              error += "PREPROCRDIR    \tFAILED WARNING    \n\tEffect: Line Numbers of CfgFunctions scripts that use #include will be wrong and breakpoints will not work.\n\n";
         if (fatal) error += "\n A Fatal error occured. Your Game version is not compatible with ArmaDebugEngine. Please tell a dev.";
 
 #ifdef X64

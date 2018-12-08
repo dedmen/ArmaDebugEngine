@@ -546,6 +546,7 @@ void Debugger::SerializeHookIntegrity(JsonArchive& answer) {
     answer.Serialize("ScrHalt", HI.scriptHalt);
     answer.Serialize("Alive", HI.engineAlive);
     answer.Serialize("EnMouse", HI.enableMouse);
+    answer.Serialize("PREPROCRDIR", HI.preprocRedirect);
 }
 
 void Debugger::onScriptEcho(r_string msg) {
@@ -583,6 +584,59 @@ void Debugger::serializeScriptCommands(JsonArchive& answer) {
     answer.Serialize("operators", ops);
     answer.Serialize("types", types);
 
+}
+
+std::map<VariableScope, std::vector<r_string>> Debugger::getAvailableVariables(VariableScope scope) {
+    std::map<VariableScope, std::vector<r_string>> ret;
+    auto gs = intercept::client::host::functions.get_engine_allocator()->gameState;
+    if (scope & VariableScope::local) {
+        std::vector<r_string> list;
+        if (gs->eval->local) {
+            gs->eval->local->variables.for_each([&](const game_variable& var) {
+                list.push_back(var.name);
+            });
+        }
+        ret[VariableScope::local] = std::move(list);
+    }
+
+    if (scope & VariableScope::missionNamespace) {
+        std::vector<r_string> list;
+        auto& varSpace = gs->namespaces[3]->_variables;
+
+        varSpace.for_each([&](const game_variable& var) {
+            list.push_back(var.name);
+        });
+        ret[VariableScope::missionNamespace] = std::move(list);
+    }
+
+    if (scope & VariableScope::uiNamespace) {
+        std::vector<r_string> list;
+        auto& varSpace = gs->namespaces[1]->_variables;
+        varSpace.for_each([&](const game_variable& var) {
+            list.push_back(var.name);
+        });
+        ret[VariableScope::uiNamespace] = std::move(list);
+    }
+
+    if (scope & VariableScope::profileNamespace) {
+        std::vector<r_string> list;
+        auto& varSpace = gs->namespaces[0]->_variables;
+        varSpace.for_each([&](const game_variable& var) {
+            list.push_back(var.name);
+        });
+        ret[VariableScope::profileNamespace] = std::move(list);
+    }
+
+    if (scope & VariableScope::parsingNamespace) {
+        std::vector<r_string> list;
+        auto& varSpace = gs->namespaces[2]->_variables;
+        varSpace.for_each([&](const game_variable& var) {
+            list.push_back(var.name);
+        });
+        ret[VariableScope::parsingNamespace] = std::move(list);
+    }
+
+    return ret;
 }
 
 std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, std::vector<std::string>& varNames) const {

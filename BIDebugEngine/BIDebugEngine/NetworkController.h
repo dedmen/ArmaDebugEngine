@@ -12,7 +12,8 @@ enum class NC_CommandType {
     setHookEnable,
     getVariable,
     getCurrentCode, //While in breakState returns full preproced code of last Instructions script file
-    getAllScriptCommands
+    getAllScriptCommands,
+    getAvailableVariables
 };
 
 enum class NC_OutgoingCommandType {
@@ -25,7 +26,8 @@ enum class NC_OutgoingCommandType {
     halt_scriptHalt,
     halt_placeholder,
     ContinueExecution,
-    VariableReturn //returning from getVariable
+    VariableReturn, //returning from getVariable
+    AvailableVariablesReturn, //returning from getAvailableVariables
 };
 
 class NetworkController {

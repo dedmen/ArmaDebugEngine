@@ -126,12 +126,20 @@ public:
         if (isReading) {
             if (_array.is_array()) {
                 for (auto& it : _array) {
-                    value.push_back(it);
+                    if constexpr (std::is_convertible_v<Type, r_string>)
+                        value.emplace_back(r_string(it.get<std::string>()));
+                    else
+                        value.push_back(it);
                 }
             }
         } else {
-            for (Type& it : value)
-                _array.push_back(it);
+            for (Type& it : value) {
+                if constexpr (std::is_convertible_v<Type, r_string>)
+                    _array.push_back(it.data());
+                else
+                    _array.push_back(it);
+            }
+                
         }
     }
 

@@ -150,7 +150,31 @@ void NetworkController::incomingMessage(const std::string& message) {
                 GlobalDebugger.serializeScriptCommands(answer);
                 sendMessage(answer.to_string());
                 } break;
+            case NC_CommandType::getAvailableVariables: {
+                JsonArchive ar(packet["data"]);
+                uint16_t scope;
+                ar.Serialize("scope", scope);//VariableScope::callstack not supported
+                auto var = GlobalDebugger.getAvailableVariables(static_cast<VariableScope>(scope));
 
+                JsonArchive dataAr;
+
+                if (static_cast<VariableScope>(scope) & VariableScope::local)
+                    dataAr.Serialize("2", var[VariableScope::local]);
+                if (static_cast<VariableScope>(scope) & VariableScope::missionNamespace)
+                    dataAr.Serialize("4", var[VariableScope::missionNamespace]);
+                if (static_cast<VariableScope>(scope) & VariableScope::uiNamespace)
+                    dataAr.Serialize("8", var[VariableScope::uiNamespace]);
+                if (static_cast<VariableScope>(scope) & VariableScope::profileNamespace)
+                    dataAr.Serialize("16", var[VariableScope::profileNamespace]);
+                if (static_cast<VariableScope>(scope) & VariableScope::parsingNamespace)
+                    dataAr.Serialize("32", var[VariableScope::parsingNamespace]);
+
+                JsonArchive answer;
+                answer.Serialize("data", dataAr);
+                answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::AvailableVariablesReturn));
+
+                sendMessage(answer.to_string());
+            } break;
         }
     }
     catch (std::exception &ex) {
