@@ -702,7 +702,12 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
             }
 
             if (scope & VariableScope::profileNamespace) {
-
+                auto& varSpace = breakStateInfo.instruction->gs->namespaces[0]->_variables;
+                auto &var = varSpace.get(varName.c_str());
+                if (!varSpace.is_null(var)) {
+                    output.emplace_back(&var, VariableScope::parsingNamespace);
+                    found = true;
+                }
             }
 
             if (scope & VariableScope::parsingNamespace) {
