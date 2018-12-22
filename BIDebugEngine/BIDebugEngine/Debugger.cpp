@@ -334,7 +334,7 @@ void Debugger::dumpStackToRPT(GameState* gs) {
         });
         }
     intercept::sqf::diag_log("CALLSTACK END;;;\n"sv);
-    intercept::sqf::hint("ArmaDebugEngine: Stack Dumped");
+    //intercept::sqf::hint("ArmaDebugEngine: Stack Dumped"); //This doesn't work before UI is ready, ex preStart
     intercept::sqf::system_chat("ArmaDebugEngine: Stack Dumped");
 }
 
