@@ -332,10 +332,72 @@ void Debugger::dumpStackToRPT(GameState* gs) {
             intercept::sqf::diag_log(str.str());
             str.str(std::string());
         });
-        }
+    }
     intercept::sqf::diag_log("CALLSTACK END;;;\n"sv);
     //intercept::sqf::hint("ArmaDebugEngine: Stack Dumped"); //This doesn't work before UI is ready, ex preStart
     intercept::sqf::system_chat("ArmaDebugEngine: Stack Dumped");
+}
+
+auto_array<std::pair<r_string, uint32_t>> Debugger::getCallstackRaw(GameState* gs) {
+    auto_array<std::pair<r_string, uint32_t>> res;
+
+    if (!gs->current_context) return res;
+    auto& context = *gs->current_context;
+
+    for (auto& it : context.callstack) {
+        if (!it) continue;
+
+        r_string sourceFile;
+        int line{ 0 };
+
+        auto& type = typeid(*it.get());
+        auto hash = type.hash_code();
+
+        switch (hash) {
+#ifdef X64
+        case 0x796333d0f1231802: {
+#else
+        case 0xed08ac32: { //CallStackItemSimple
+#endif
+            auto stackItem = static_cast<const CallStackItemSimple*>(it.get());
+
+            sourceFile = (stackItem->_instructions->get(stackItem->_currentInstruction - 1))->sdp.sourcefile;
+            line = (stackItem->_instructions->get(stackItem->_currentInstruction - 1))->sdp.sourceline;
+        }   break;
+
+#ifdef X64
+        case 0x6a5a9847820cfc77: {
+#else
+        case 0x224543d0: { //CallStackItemData
+#endif
+            auto stackItem = static_cast<const CallStackItemData*>(it.get());
+            sourceFile = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourcefile;
+            line = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourceline;
+
+        }   break;
+        case 0x254c4241: { //CallStackItemArrayForEach
+            continue;
+            //Level doesn't have any code. It's all inside a CallStackitemData one level lower
+        } break;
+#ifdef X64
+        case 0x2dc1ba43da7f1af7: {//CallStackItemArrayCount
+#else
+        case 0x1337: { //CallStackItemData
+#endif
+            continue;
+            //Level doesn't have any code. It's all inside a CallStackitemData one level lower
+        }
+        default:
+            char fileBuffer[256]{ 0 };
+
+            it->getSourceDocPosition(fileBuffer, 255, line);
+            sourceFile = fileBuffer;
+            //__debugbreak();
+        }
+
+        res.emplace_back(sourceFile, line);
+    }
+    return res;
 }
 
 

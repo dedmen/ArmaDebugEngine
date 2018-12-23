@@ -86,6 +86,7 @@ public:
     void writeFrameToFile(uint32_t frameCounter);
     void onInstruction(DebuggerInstructionInfo& instructionInfo);
     void dumpStackToRPT(GameState* gs);
+    static auto_array<std::pair<r_string, uint32_t>> getCallstackRaw(GameState* gs);
     void onScriptError(GameState* gs);
     void onScriptAssert(GameState* gs);
     void onScriptHalt(GameState* gs);

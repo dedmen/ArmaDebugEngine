@@ -706,7 +706,7 @@ void intercept::pre_start() {
 void dumpStack()
 {
     auto gs = intercept::client::host::functions.get_engine_allocator()->gameState;
-    if (gs && gs->eval->_errorType != 0) {
+    if (gs) {
         waitForErrorHandler = true;
         while (waitForErrorHandler) _mm_pause(); //Don't ASK!!!!
     }
@@ -714,4 +714,5 @@ void dumpStack()
 
 void intercept::register_interfaces() {
     client::host::register_plugin_interface("BIDebugEngine_dumpCallstack", 1, &dumpStack);
+    client::host::register_plugin_interface("BIDebugEngine_getCallstack", 1, &Debugger::getCallstackRaw);
 }
