@@ -64,6 +64,43 @@ public:
     int _ip; // instruction pointer
 };
 
+class CallStackItemArrayForEach : public vm_context::callstack_item {
+public:
+    intercept::types::ref<game_data_code> _code; // compiled code
+    intercept::types::ref<game_data_array> _array;
+    int _forEachIndex; 
+};
+
+class CallStackItemForBASIC : public vm_context::callstack_item {
+public:
+    r_string _varName;
+    float _varValue;
+    float _to;
+    float _step;
+    intercept::types::ref<game_data_code> _code; // compiled code
+};
+
+class CallStackItemApply : public vm_context::callstack_item {
+public:
+    intercept::types::ref<game_data_code> _code; // compiled code
+    intercept::types::ref<game_data_array> _array;
+    intercept::types::ref<game_data_array> _array2; //output array maybe
+    int _forEachIndex;
+};
+
+class CallStackItemArrayFindCond : public vm_context::callstack_item {
+public:
+    intercept::types::ref<game_data_code> _code; // compiled code
+    intercept::types::ref<game_data_array> _array;
+    int _forEachIndex;
+};
+
+
+
+
+
+
+
 struct RV_VMContext : public vm_context {
 
     const game_variable* getVariable(std::string varName);

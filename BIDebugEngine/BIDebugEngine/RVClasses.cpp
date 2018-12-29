@@ -89,9 +89,9 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 ar.Serialize("fileName", stackItem->_content.sourcefile);
                 ar.Serialize("contentSample", (std::string)stackItem->_content.content.substr(0, 100));
                 ar.Serialize("ip", stackItem->_currentInstruction);
-                JsonArchive ar;
-                ::Serialize(*(stackItem->_instructions->get(stackItem->_currentInstruction - 1)), ar);
-                ar.Serialize("lastInstruction", ar);
+                JsonArchive arInst;
+                ::Serialize(*(stackItem->_instructions->get(stackItem->_currentInstruction - 1)), arInst);
+                ar.Serialize("lastInstruction", arInst);
                 //ar.Serialize("instructions", stackItem->_instructions);
             }   break;
 
@@ -106,17 +106,58 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 ar.Serialize("final", stackItem->_code->is_final);
                 ar.Serialize("compiled", *stackItem->_code->instructions);
                 ar.Serialize("contentSample", (std::string)stackItem->_code->code_string.substr(0, 100)); //#TODO send whole code over
-                JsonArchive ar;
-                ::Serialize(*(stackItem->_code->instructions->get(stackItem->_ip - 1)), ar);
-                ar.Serialize("lastInstruction", ar);
+                JsonArchive arInst;
+                ::Serialize(*(stackItem->_code->instructions->get(stackItem->_ip - 1)), arInst);
+                ar.Serialize("lastInstruction", arInst);
                 //ar.Serialize("instructions", stackItem->_code->_instructions._code);
             }   break;
+
+
+
+#ifdef X64
+            case 0x648cf398b08788b9: {
+#else
             case 0x254c4241: { //CallStackItemArrayForEach
+#endif
+                auto stackItem = static_cast<const CallStackItemArrayForEach*>(item.get());
+
+                ar.Serialize("forEachIndex", stackItem->_forEachIndex);
+            } break;
+
+            case 0x1d75078e7c270ec2: { //CallStackItemApply
+                auto stackItem = static_cast<const CallStackItemApply*>(item.get());
+                ar.Serialize("forEachIndex", stackItem->_forEachIndex);
+            } break;
+            case 0x64fd66ac9d9a6063: { //CallStackRepeat (while)
+            } break;
+            case 0xec123abb0b8aec96: { //CallStackItemConditionSelect (select)
+                auto stackItem = static_cast<const CallStackItemApply*>(item.get());
+                //Yes, that's a different name, but both have the same layout.
+                ar.Serialize("forEachIndex", stackItem->_forEachIndex);
+            } break;
+            case 0x51097d4e8ac94aa9: { //CallStackItemForBASIC (for step)
+                auto stackItem = static_cast<const CallStackItemForBASIC*>(item.get());
+
+                ar.Serialize("varName", stackItem->_varName);
+                ar.Serialize("varValue", stackItem->_varValue);
+                ar.Serialize("to", stackItem->_to);
+                ar.Serialize("step", stackItem->_step);
 
             } break;
+
+            case 0x9a611c77f320c98b: { //CallStackItemFor
+            } break;
+
+            case 0x9ec7cbd761a5b791: { //CallStackItemArrayFindCond (findIf)
+                auto stackItem = static_cast<const CallStackItemArrayFindCond*>(item.get());
+                ar.Serialize("forEachIndex", stackItem->_forEachIndex);
+            } break;
+                
+
+
             default:
-                __debugbreak(); 
-                return;
+                //__debugbreak(); 
+                break;
         }
     });
 }
