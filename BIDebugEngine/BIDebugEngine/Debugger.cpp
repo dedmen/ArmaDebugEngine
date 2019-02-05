@@ -251,11 +251,11 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 }
 
 void Debugger::dumpStackToRPT(GameState* gs) {
-    if (!gs->current_context) return;
-    auto& context = *gs->current_context;
+    if (!gs->get_vm_context()) return;
+    auto& context = *gs->get_vm_context();
     std::stringstream str;
 
-    bool dumpFullArray = gs->eval->local->get_variable("_debug_dumpFullArrays") != nullptr;
+    bool dumpFullArray = gs->get_evaluator()->local->get_variable("_debug_dumpFullArrays") != nullptr;
 
     str << "Error at " << "L" << context.sdocpos.sourceline << " (" << context.sdocpos.sourcefile << ")\nCallstack:";
     intercept::sqf::diag_log(str.str());
@@ -341,8 +341,8 @@ void Debugger::dumpStackToRPT(GameState* gs) {
 auto_array<std::pair<r_string, uint32_t>> Debugger::getCallstackRaw(GameState* gs) {
     auto_array<std::pair<r_string, uint32_t>> res;
 
-    if (!gs->current_context) return res;
-    auto& context = *gs->current_context;
+    if (!gs->get_vm_context()) return res;
+    auto& context = *gs->get_vm_context();
 
     for (auto& it : context.callstack) {
         if (!it) continue;
@@ -404,7 +404,7 @@ auto_array<std::pair<r_string, uint32_t>> Debugger::getCallstackRaw(GameState* g
 void Debugger::onScriptError(GameState * gs) {
     if (nController.isClientConnected()) {
         BPAction_Halt hAction(haltType::error);
-        hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->current_context ,gs });
+        hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->get_vm_context(), gs });
     } else {
         dumpStackToRPT(gs);
     }
@@ -413,12 +413,12 @@ void Debugger::onScriptError(GameState * gs) {
 
 void Debugger::onScriptAssert(GameState* gs) {
     BPAction_Halt hAction(haltType::assert);
-    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->current_context ,gs });
+    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->get_vm_context(), gs });
 }
 
 void Debugger::onScriptHalt(GameState* gs) {
     BPAction_Halt hAction(haltType::halt);
-    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->current_context ,gs });
+    hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->get_vm_context(), gs });
 }
 
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
@@ -504,7 +504,7 @@ void Debugger::onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> 
         ar.Serialize("instruction", instructionAr);
     } else if (type == haltType::error) {
         JsonArchive errorAr;
-        SerializeError(*instructionInfo.gs->eval, errorAr);
+        SerializeError(*instructionInfo.gs->get_evaluator(), errorAr);
         ar.Serialize("error", errorAr);
     } else if (type == haltType::assert || type == haltType::halt) {
         JsonArchive assertAr;
@@ -535,7 +535,7 @@ void Debugger::onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> 
     if (instructionInfo.instruction) {
         f2.write(instructionInfo.instruction->sdp.content.data(), instructionInfo.instruction->sdp.content.length());
     } else {
-        f2.write(instructionInfo.gs->eval->_errorPosition.content.data(), instructionInfo.gs->eval->_errorPosition.content.length());
+        f2.write(instructionInfo.gs->get_evaluator()->_errorPosition.content.data(), instructionInfo.gs->get_evaluator()->_errorPosition.content.length());
     }
     f2.close();
 #endif
@@ -621,23 +621,23 @@ void Debugger::serializeScriptCommands(JsonArchive& answer) {
     if (!lastKnownGameState) return;
 
     JsonArchive types;
-    for (auto& type : lastKnownGameState->_scriptTypes) {
+    for (auto& type : lastKnownGameState->get_script_types()) {
         JsonArchive entry;
         SerializeFull(*type, entry);
         types.Serialize(type->_name.c_str(), entry);
     }
     JsonArchive nulars;
-    lastKnownGameState->_scriptNulars.for_each([&](const intercept::__internal::gsNular& gn) {
+    lastKnownGameState->get_script_nulars().for_each([&](const intercept::__internal::gsNular& gn) {
         JsonArchive entry;
         gn.Serialize(entry);
         nulars.Serialize(gn._operatorName.c_str(), entry);
     });
     JsonArchive funcs;
-    lastKnownGameState->_scriptFunctions.for_each([&](const intercept::__internal::game_functions& gn) {
+    lastKnownGameState->get_script_functions().for_each([&](const intercept::__internal::game_functions& gn) {
         funcs.Serialize(gn._operatorName.c_str(), gn);
     });
     JsonArchive ops;
-    lastKnownGameState->_scriptOperators.for_each([&](const intercept::__internal::game_operators& gn) {
+    lastKnownGameState->get_script_operators().for_each([&](const intercept::__internal::game_operators& gn) {
         std::vector<JsonArchive> entries;
         ops.Serialize(gn._operatorName.c_str(), gn);
     });
@@ -653,8 +653,8 @@ std::map<VariableScope, std::vector<r_string>> Debugger::getAvailableVariables(V
     auto gs = intercept::client::host::functions.get_engine_allocator()->gameState;
     if (scope & VariableScope::local) {
         std::vector<r_string> list;
-        if (gs->eval->local) {
-            gs->eval->local->variables.for_each([&](const game_variable& var) {
+        if (gs->get_evaluator()->local) {
+            gs->get_evaluator()->local->variables.for_each([&](const game_variable& var) {
                 list.push_back(var.name);
             });
         }
@@ -663,7 +663,7 @@ std::map<VariableScope, std::vector<r_string>> Debugger::getAvailableVariables(V
 
     if (scope & VariableScope::missionNamespace) {
         std::vector<r_string> list;
-        auto& varSpace = gs->namespaces[3]->_variables;
+        auto& varSpace = gs->get_global_namespace(game_state::namespace_type::mission)->_variables;
 
         varSpace.for_each([&](const game_variable& var) {
             list.push_back(var.name);
@@ -673,7 +673,7 @@ std::map<VariableScope, std::vector<r_string>> Debugger::getAvailableVariables(V
 
     if (scope & VariableScope::uiNamespace) {
         std::vector<r_string> list;
-        auto& varSpace = gs->namespaces[1]->_variables;
+        auto& varSpace = gs->get_global_namespace(game_state::namespace_type::ui)->_variables;
         varSpace.for_each([&](const game_variable& var) {
             list.push_back(var.name);
         });
@@ -682,7 +682,7 @@ std::map<VariableScope, std::vector<r_string>> Debugger::getAvailableVariables(V
 
     if (scope & VariableScope::profileNamespace) {
         std::vector<r_string> list;
-        auto& varSpace = gs->namespaces[0]->_variables;
+        auto& varSpace = gs->get_global_namespace(game_state::namespace_type::profile)->_variables;
         varSpace.for_each([&](const game_variable& var) {
             list.push_back(var.name);
         });
@@ -691,7 +691,7 @@ std::map<VariableScope, std::vector<r_string>> Debugger::getAvailableVariables(V
 
     if (scope & VariableScope::parsingNamespace) {
         std::vector<r_string> list;
-        auto& varSpace = gs->namespaces[2]->_variables;
+        auto& varSpace = gs->get_global_namespace(game_state::namespace_type::parsing)->_variables;
         varSpace.for_each([&](const game_variable& var) {
             list.push_back(var.name);
         });
@@ -730,8 +730,8 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
                 //});
             }
             if (scope & VariableScope::local || scope & VariableScope::callstack) {
-                if (breakStateInfo.instruction->gs->eval->local) {
-                    auto var = breakStateInfo.instruction->gs->eval->local->get_variable(varName);
+                if (breakStateInfo.instruction->gs->get_evaluator()->local) {
+                    auto var = breakStateInfo.instruction->gs->get_evaluator()->local->get_variable(varName);
                     if (var) {
                         output.emplace_back(var, VariableScope::local);
                         found = true;
@@ -740,7 +740,7 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
             }
         } else {
             if (scope & VariableScope::missionNamespace) {
-                auto& varSpace = breakStateInfo.instruction->gs->namespaces[3]->_variables;
+                auto& varSpace = breakStateInfo.instruction->gs->get_global_namespace(game_state::namespace_type::mission)->_variables;
                 //std::ofstream v("P:\\vars");
                 //varSpace.forEach([&varName, &v](const GameVariable& it) {
                 //    if (it._name == varName.c_str()) __debugbreak();
@@ -755,7 +755,7 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
 
             }
             if (scope & VariableScope::uiNamespace) {
-                auto& varSpace = breakStateInfo.instruction->gs->namespaces[1]->_variables;
+                auto& varSpace = breakStateInfo.instruction->gs->get_global_namespace(game_state::namespace_type::ui)->_variables;
                 auto &var = varSpace.get(varName.c_str());
                 if (!varSpace.is_null(var)) {
                     output.emplace_back(&var, VariableScope::uiNamespace);
@@ -764,7 +764,7 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
             }
 
             if (scope & VariableScope::profileNamespace) {
-                auto& varSpace = breakStateInfo.instruction->gs->namespaces[0]->_variables;
+                auto& varSpace = breakStateInfo.instruction->gs->get_global_namespace(game_state::namespace_type::profile)->_variables;
                 auto &var = varSpace.get(varName.c_str());
                 if (!varSpace.is_null(var)) {
                     output.emplace_back(&var, VariableScope::parsingNamespace);
@@ -773,7 +773,7 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
             }
 
             if (scope & VariableScope::parsingNamespace) {
-                auto& varSpace = breakStateInfo.instruction->gs->namespaces[2]->_variables;
+                auto& varSpace = breakStateInfo.instruction->gs->get_global_namespace(game_state::namespace_type::parsing)->_variables;
                 auto &var = varSpace.get(varName.c_str());
                 if (!varSpace.is_null(var)) {
                     output.emplace_back(&var, VariableScope::parsingNamespace);

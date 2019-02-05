@@ -401,24 +401,24 @@ void EngineHook::placeHooks() {
     if (scriptPreprocessorDefineDefine) //else report error
         HI.scriptPreprocConstr = GlobalHookManager.placeHook(hookTypes::scriptPreprocessorConstructor, pat_scriptPreprocessorConstructor, reinterpret_cast<uintptr_t>(scriptPreprocessorConstructor), scriptPreprocessorConstructorJmpBack, 0xA);
 
-    static auto assertHook = intercept::client::host::register_sqf_command("assert"sv, "", [](uintptr_t gs, game_value_parameter par) -> game_value {
-        if ((bool)par) GlobalEngineHook._onScriptAssert(gs);
+    static auto assertHook = intercept::client::host::register_sqf_command("assert"sv, "", [](game_state& gs, game_value_parameter par) -> game_value {
+        if ((bool)par) GlobalEngineHook._onScriptAssert(reinterpret_cast<uintptr_t>(&gs));
         return {};
     }, game_data_type::NOTHING, game_data_type::BOOL);
-    static auto haltHook = intercept::client::host::register_sqf_command("halt"sv, "", [](uintptr_t gs) -> game_value {
-        GlobalEngineHook._onScriptHalt(gs);
+    static auto haltHook = intercept::client::host::register_sqf_command("halt"sv, "", [](game_state& gs) -> game_value {
+        GlobalEngineHook._onScriptHalt(reinterpret_cast<uintptr_t>(&gs));
         return {};
     }, game_data_type::NOTHING);
-    static auto echoHook = intercept::client::host::register_sqf_command("echo"sv, "", [](uintptr_t gs, game_value_parameter par) -> game_value {
+    static auto echoHook = intercept::client::host::register_sqf_command("echo"sv, "", [](game_state& gs, game_value_parameter par) -> game_value {
         GlobalEngineHook._onScriptEcho(par);
         return {};
     }, game_data_type::NOTHING, game_data_type::STRING);
-    static auto preprocHook = intercept::client::host::register_sqf_command("preprocessFile"sv, "", [](uintptr_t gs, game_value_parameter par) -> game_value {
+    static auto preprocHook = intercept::client::host::register_sqf_command("preprocessFile"sv, "", [](game_state&, game_value_parameter par) -> game_value {
         return intercept::sqf::preprocess_file_line_numbers(par);
     }, game_data_type::NOTHING, game_data_type::STRING);
-    static auto dumpCallstack = intercept::client::host::register_sqf_command("ade_dumpCallstack"sv, "", [](uintptr_t gs) -> game_value {
+    static auto dumpCallstack = intercept::client::host::register_sqf_command("ade_dumpCallstack"sv, "", [](game_state& gs) -> game_value {
         intercept::sqf::diag_log("ArmaDebugEngine Forced callstrack");
-        GlobalDebugger.dumpStackToRPT(reinterpret_cast<GameState*>(gs));
+        GlobalDebugger.dumpStackToRPT(&gs);
         return {};
     }, game_data_type::NOTHING);
     
@@ -661,7 +661,7 @@ void EngineHook::_world_OnMissionEventEnd() {
 
 void EngineHook::_onScriptError(uintptr_t gameState) {
     auto gs = reinterpret_cast<GameState *>(gameState);
-   if (gs && gs->eval->_errorType != 0) {
+   if (gs && gs->get_evaluator()->_errorType != game_state::game_evaluator::evaluator_error_type::ok) {
        waitForErrorHandler = true;
        while (waitForErrorHandler) _mm_pause(); //Don't ASK!!!!
    }
