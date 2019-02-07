@@ -170,7 +170,7 @@ void Serialize(const GameData& gd, JsonArchive& ar) {
     } else if (strcmp(type, "code") == 0) {
         sourcedocpos x;
         x.content = gd.get_as_string();
-        ar.Serialize("value", Script::getScriptFromFirstLine(x, true));
+        ar.Serialize("value", "<code>"); //Script::getScriptFromFirstLine(x, true)
     } else {
         ar.Serialize("value", gd.get_as_string());
     }

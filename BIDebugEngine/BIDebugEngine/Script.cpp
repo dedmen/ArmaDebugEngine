@@ -53,10 +53,10 @@ std::string Script::getScriptFromFirstLine(const intercept::types::sourcedocpos&
     auto readLineMacro = [&]() {
         curPos += 6;
         auto numberEnd = std::find(curPos, end, ' ');
-        auto number = std::stoi(std::string(*curPos, numberEnd - curPos));
+        auto number = std::stoi(std::string(curPos, numberEnd));
         curPos = numberEnd + 2;
         auto nameEnd = std::find(curPos, end, '"');
-        std::string name(*curPos, nameEnd - curPos);
+        std::string name(curPos, nameEnd);
         std::transform(name.begin(), name.end(), name.begin(), tolower);
         if (needSourceFile) {
             needSourceFile = false;
@@ -91,7 +91,7 @@ std::string Script::getScriptFromFirstLine(const intercept::types::sourcedocpos&
         if (*curPos == '#') return readLineMacro();
         auto lineEnd = std::find(curPos, end, '\n') + 1;
         if (inWantedFile) {
-            output.append(*curPos, lineEnd - curPos);
+            output.append(curPos, lineEnd);
             curLine++;
         }
         //line is curPos -> lineEnd

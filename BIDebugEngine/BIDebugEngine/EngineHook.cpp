@@ -694,7 +694,7 @@ void EngineHook::onStartup() {
 }
 
 void intercept::pre_start() {
-    
+    sqf::diag_log("Arma Debug Engine preStart");
     GASM.init();
     GlobalEngineHook.placeHooks();
     GlobalDebugger.onStartup();
