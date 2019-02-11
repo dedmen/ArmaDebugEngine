@@ -255,7 +255,7 @@ void Debugger::dumpStackToRPT(GameState* gs) {
     auto& context = *gs->get_vm_context();
     std::stringstream str;
 
-    bool dumpFullArray = (gs->eval && gs->eval->local) ? gs->eval->local->get_variable("_debug_dumpFullArrays") != nullptr : false;
+    bool dumpFullArray = (gs->get_evaluator() && gs->get_evaluator()->local) ? gs->get_evaluator()->local->get_variable("_debug_dumpFullArrays") != nullptr : false;
 
     str << "Error at " << "L" << context.sdocpos.sourceline << " (" << context.sdocpos.sourcefile << ")\nCallstack:";
     intercept::sqf::diag_log(str.str());
