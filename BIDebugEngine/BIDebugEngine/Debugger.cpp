@@ -289,8 +289,8 @@ void Debugger::dumpStackToRPT(GameState* gs) {
         case 0x224543d0: { //CallStackItemData
 #endif
             auto stackItem = static_cast<const CallStackItemData*>(it.get());
-            sourceFile = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourcefile;
-            line = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourceline;
+            sourceFile = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile;
+            line = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline;
 
         }   break;
         case 0x254c4241: { //CallStackItemArrayForEach
@@ -371,8 +371,8 @@ auto_array<std::pair<r_string, uint32_t>> Debugger::getCallstackRaw(GameState* g
         case 0x224543d0: { //CallStackItemData
 #endif
             auto stackItem = static_cast<const CallStackItemData*>(it.get());
-            sourceFile = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourcefile;
-            line = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourceline;
+            sourceFile = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile;
+            line = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline;
 
         }   break;
         case 0x254c4241: { //CallStackItemArrayForEach
@@ -684,7 +684,8 @@ std::map<VariableScope, std::vector<r_string>> Debugger::getAvailableVariables(V
 
     if (scope & VariableScope::profileNamespace) {
         std::vector<r_string> list;
-        auto& varSpace = gs->get_global_namespace(game_state::namespace_type::profile)->_variables;
+        intercept::client::invoker_lock lock;
+        auto& varSpace = intercept::sqf::profile_namespace().get_as<game_data_namespace>()->_variables;
         varSpace.for_each([&](const game_variable& var) {
             list.push_back(var.name);
         });
@@ -766,7 +767,8 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
             }
 
             if (scope & VariableScope::profileNamespace) {
-                auto& varSpace = breakStateInfo.instruction->gs->get_global_namespace(game_state::namespace_type::profile)->_variables;
+                intercept::client::invoker_lock lock;
+                auto& varSpace = intercept::sqf::profile_namespace().get_as<game_data_namespace>()->_variables;
                 auto &var = varSpace.get(varName.c_str());
                 if (!varSpace.is_null(var)) {
                     output.emplace_back(&var, VariableScope::parsingNamespace);

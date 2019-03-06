@@ -93,9 +93,11 @@ public:
                 __debugbreak(); //#TODO AutoArray pushback
             }
         } else {
-            value.for_each([&_array](Type& value) {
-                _array.push_back(value);
-            });
+            for (auto&& it : value) {
+                JsonArchive element;
+                ::Serialize(*it, element);
+                _array.push_back(*element.pJson);
+            }
         }
     }
 
