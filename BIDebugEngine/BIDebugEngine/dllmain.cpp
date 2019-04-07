@@ -16,7 +16,7 @@ struct IUnknown; //Clang compiler error in windows.h
 
 
 int intercept::api_version() {
-    return 1;
+    return INTERCEPT_SDK_API_VERSION;
 }
 
 extern uintptr_t engineAlloc;
