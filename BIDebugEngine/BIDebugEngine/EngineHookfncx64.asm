@@ -268,9 +268,8 @@ _TEXT    SEGMENT
         mov     rax, rsp;                                           Fixup
         mov     [rax+8], rcx
         push    rbp
-        push    r13
         lea     rbp, [rax-5Fh]
-        sub     rsp, 88h
+        sub     rsp, 0E0h
         jmp     onScriptErrorJmpBack;
     onScriptError ENDP
 

@@ -185,10 +185,12 @@ HookManager::Pattern pat_worldSimulate{//PROF ONLY
 
 
 HookManager::Pattern pat_onScriptError{//1.68.140.940prof 1393640 base 0
-    //1.82.144.848 14130C3E0 base 0x140000000 -> 130C3E0 base 0 
+    //1.82.144.848 14130C3E0 base 0x140000000 -> 130C3E0 base 0
+    //1.92.145.639 141327680 base 0x140000000
+    //1.94.145.986013EFB80 b0
     //Be careful. There are two functions that are very similar. We want the one with only 1 arg
-    "xxxxxxxxxxxxxxxxx????xxx????xxx?????xx????xxxxxxxxxxxxxxxxxxxxxxxx",
-    "\x48\x8B\xC4\x48\x89\x48\x08\x55\x41\x55\x48\x8D\x68\xA1\x48\x81\xEC\x00\x00\x00\x00\x4C\x8B\xA9\x00\x00\x00\x00\x41\xF7\x45\x00\x00\x00\x00\x00\x0F\x84\x00\x00\x00\x00\x48\x89\x58\xE8\x49\x8B\x5D\x48\x48\x89\x70\xE0\x48\x89\x78\xD8\x4C\x89\x60\xD0\x4C\x89\x70\xC8"
+    "xxxxxxxxxxxxxxx????xxx????xxxxxx?????xx",
+    "\x48\x8B\xC4\x48\x89\x48\x08\x55\x48\x8D\x68\xA1\x48\x81\xEC\x00\x00\x00\x00\x48\x8B\x91\x00\x00\x00\x00\x48\x89\x55\xD7\xF7\x42\x00\x00\x00\x00\x00\x0F\x84"
 };
 
 HookManager::Pattern pat_scriptPreprocessorConstructor{// this is Preproc not FilePreproc!
@@ -394,7 +396,7 @@ void EngineHook::placeHooks() {
     //HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
     //has to jmpback 13CF0B6 wants 0x00000000013cf0af
 
-    HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 7);
+    HI.__onScriptError = GlobalHookManager.placeHook(hookTypes::onScriptError, pat_onScriptError, reinterpret_cast<uintptr_t>(onScriptError), onScriptErrorJmpBack, 5);
     scriptPreprocessorDefineDefine = GlobalHookManager.findPattern(pat_scriptPreprocessorDefineDefine);
 
     HI.scriptPreprocDefine = (scriptPreprocessorDefineDefine != 0);
