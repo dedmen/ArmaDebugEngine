@@ -90,7 +90,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 ar.Serialize("contentSample", (std::string)stackItem->_content.content.substr(0, 100));
                 ar.Serialize("ip", stackItem->_currentInstruction);
                 JsonArchive arInst;
-                ::Serialize(*(stackItem->_instructions.get(stackItem->_currentInstruction - 1)), arInst);
+                ::Serialize(*(stackItem->_instructions->get(stackItem->_currentInstruction - 1)), arInst);
                 ar.Serialize("lastInstruction", arInst);
                 //ar.Serialize("instructions", stackItem->_instructions);
             }   break;
@@ -333,7 +333,7 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
         case 0xed08ac32: { //CallStackItemSimple
             auto stackItem = static_cast<const CallStackItemSimple*>(&it);
             //#TODO test if this is the correct instruction or if i should -1 this
-            const auto& lastInstruction = (stackItem->_instructions.get(stackItem->_currentInstruction))->sdp;
+            const auto& lastInstruction = (stackItem->_instructions->get(stackItem->_currentInstruction))->sdp;
             return lastInstruction;
         }   break;
 
