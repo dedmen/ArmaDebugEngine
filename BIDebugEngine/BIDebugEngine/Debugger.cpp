@@ -279,8 +279,8 @@ void Debugger::dumpStackToRPT(GameState* gs) {
 #endif
             auto stackItem = static_cast<const CallStackItemSimple*>(it.get());
 
-            sourceFile = (stackItem->_instructions->get(stackItem->_currentInstruction - 1))->sdp.sourcefile;
-            line = (stackItem->_instructions->get(stackItem->_currentInstruction - 1))->sdp.sourceline;
+            sourceFile = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourcefile;
+            line = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourceline;
         }   break;
 
 #ifdef X64
@@ -361,8 +361,8 @@ auto_array<std::pair<r_string, uint32_t>> Debugger::getCallstackRaw(GameState* g
 #endif
             auto stackItem = static_cast<const CallStackItemSimple*>(it.get());
 
-            sourceFile = (stackItem->_instructions->get(stackItem->_currentInstruction - 1))->sdp.sourcefile;
-            line = (stackItem->_instructions->get(stackItem->_currentInstruction - 1))->sdp.sourceline;
+            sourceFile = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourcefile;
+            line = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourceline;
         }   break;
 
 #ifdef X64

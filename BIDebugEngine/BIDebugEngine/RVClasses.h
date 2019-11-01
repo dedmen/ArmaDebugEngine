@@ -47,7 +47,7 @@ void Serialize(const game_value&, JsonArchive& ar);
 
 class CallStackItemSimple : public vm_context::callstack_item {
 public:
-    ref<compact_array<ref<game_instruction>>> _instructions;
+    auto_array<ref<game_instruction>> _instructions;
     int _currentInstruction;
     sourcedoc _content;
     bool _multipleInstructions;
