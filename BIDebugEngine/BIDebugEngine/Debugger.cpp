@@ -289,8 +289,8 @@ void Debugger::dumpStackToRPT(GameState* gs) {
         case 0x224543d0: { //CallStackItemData
 #endif
             auto stackItem = static_cast<const CallStackItemData*>(it.get());
-            sourceFile = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourcefile;
-            line = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourceline;
+            sourceFile = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile;
+            line = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline;
 
         }   break;
         case 0x254c4241: { //CallStackItemArrayForEach
@@ -371,8 +371,8 @@ auto_array<std::pair<r_string, uint32_t>> Debugger::getCallstackRaw(GameState* g
         case 0x224543d0: { //CallStackItemData
 #endif
             auto stackItem = static_cast<const CallStackItemData*>(it.get());
-            sourceFile = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourcefile;
-            line = (stackItem->_code->instructions->get(stackItem->_ip - 1))->sdp.sourceline;
+            sourceFile = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile;
+            line = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline;
 
         }   break;
         case 0x254c4241: { //CallStackItemArrayForEach
