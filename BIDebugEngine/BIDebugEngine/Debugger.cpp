@@ -441,20 +441,30 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     if (breakPoints.empty()) return;
     //if (_strcmpi(instructionInfo.instruction->_scriptPos._sourceFile.data(), "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf") == 0)
     //    __debugbreak();
-    std::shared_lock<std::shared_mutex> lk(breakPointsLock);
-    static bool doBreeak = true;
-    if (doBreeak && instructionInfo.instruction->sdp.sourcefile.find("dedmen\\") != std::string::npos) __debugbreak();
-    auto space = instructionInfo.instruction->sdp.sourcefile.find("[");
-    auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp.sourcefile.substr(0, space-1) : instructionInfo.instruction->sdp.sourcefile;
-    auto &found = breakPoints.get(static_cast<std::string>(properPath).c_str());
-    if (breakPoints.is_null(found) || found.empty()) return;
-    for (auto& bp : found) {
-        if (bp.line == instructionInfo.instruction->sdp.sourceline) {
-            lk.unlock();//if this BP halt's adding/deleting breakpoints should still be possible
-            bp.trigger(this, instructionInfo);
-            lk.lock();
-        }
 
+    std::optional<BreakPoint> foundBp = [&]() -> std::optional<BreakPoint> {
+        std::shared_lock<std::shared_mutex> lk(breakPointsLock);
+
+        static bool doBreak = true;
+        if (doBreak && instructionInfo.instruction->sdp.sourcefile.find("dedmen\\") != std::string::npos) __debugbreak();
+        auto space = instructionInfo.instruction->sdp.sourcefile.find("[");
+        auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp.sourcefile.substr(0, space - 1) : instructionInfo.instruction->sdp.sourcefile;
+
+        //auto& found = breakPoints.get(static_cast<std::string>(properPath).c_str());
+        //if (breakPoints.is_null(found) || found.empty()) return {};
+        auto foundItr = breakPoints.find(static_cast<std::string>(properPath));
+        if (foundItr == breakPoints.end()) return {};
+        auto& found = foundItr->second;
+
+        auto foundBpItr = std::find_if(found.begin(), found.end(), [source_line = instructionInfo.instruction->sdp.sourceline](const auto& bp) { return bp.line == source_line;  });
+        if (foundBpItr != found.end()) {
+            return *foundBpItr;
+        }
+        return {};
+    }();
+
+    if (foundBp) {
+        foundBp->trigger(this, instructionInfo);
     }
 }
 

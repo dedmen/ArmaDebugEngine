@@ -87,36 +87,18 @@ enum class BPAction_types {
 
 
 
-
-
 class BreakPoint {
 public:
-    BreakPoint(uint16_t line);
-    BreakPoint(BreakPoint& bp) { *this = std::move(bp);}//should never happen
-    BreakPoint() {};
+    BreakPoint(uint16_t _line = 0) :line(_line) {}
 
-    BreakPoint(BreakPoint&& other) noexcept : line(other.line), condition(std::move(other.condition)), action(std::move(other.action)) {}
-
-    BreakPoint& operator=(BreakPoint&& other) {
-        condition = std::move(other.condition);
-        action = std::move(other.action);
-        line = std::move(other.line);
-        return *this;
-    }
-    BreakPoint& operator=(BreakPoint& other) {
-        __debugbreak(); //This should not happen
-        return *this;
-    }
     const char* get_map_key() const { return filename.c_str(); }
-    ~BreakPoint();
     void Serialize(JsonArchive& ar);
     bool trigger(Debugger*, const DebuggerInstructionInfo&);
     void executeActions(Debugger*, const DebuggerInstructionInfo&);
     r_string filename;
     uint16_t line{ 0 };
     uint16_t hitcount{ 0 };
-    std::unique_ptr<IBreakPointCondition> condition;
-    std::unique_ptr<IBreakPointAction> action;
+    std::shared_ptr<IBreakPointCondition> condition;
+    std::shared_ptr<IBreakPointAction> action;
     std::string label;
 };
-

@@ -28,14 +28,22 @@ void NetworkController::init() {
     pipeThread = new std::thread([this]() {
         server.open();
 
-        server.messageReadFailed.connect([this]() {clientConnected = false; });
+        server.messageReadFailed.connect([this]() {
+            clientConnected = false;
+            // If client disconnects unfreeze
+            GlobalDebugger.commandContinue(StepType::STContinue);
+        });
 
         while (pipeThreadShouldRun) {
             auto msg = server.readMessageBlocking();
 
             if (!msg.empty()) {
                 clientConnected = true;
-                incomingMessage(msg);
+                std::istringstream ss(msg);
+                std::string token;
+                while (std::getline(ss, token)) {
+                    incomingMessage(token);
+                }
             }
 
             //server.messageRead(msg);
@@ -62,8 +70,11 @@ void NetworkController::incomingMessage(const std::string& message) {
                 bp.Serialize(ar);
                 bp.filename.to_lower();
                 std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
-                auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename.c_str());
-                if (!GlobalDebugger.breakPoints.is_null(bpVec)) {
+                //auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename.c_str());
+                //if (!GlobalDebugger.breakPoints.is_null(bpVec)) {
+                auto foundItr = GlobalDebugger.breakPoints.find(bp.filename.c_str());
+                if (foundItr != GlobalDebugger.breakPoints.end()) {
+                    auto& bpVec = foundItr->second;
                     auto vecFound = std::find_if(bpVec.begin(), bpVec.end(), [lineNumber = bp.line](const BreakPoint& bp) {
                         return lineNumber == bp.line;
                     });
@@ -73,7 +84,8 @@ void NetworkController::incomingMessage(const std::string& message) {
                     }
                     bpVec.push_back(std::move(bp));
                 } else {
-                    GlobalDebugger.breakPoints.insert(Debugger::breakPointList(std::move(bp)));
+                    // GlobalDebugger.breakPoints.insert(Debugger::breakPointList(std::move(bp)));
+                    GlobalDebugger.breakPoints.emplace(std::string{bp.filename.c_str()}, std::move(bp));
                 }
             } break;
             case NC_CommandType::delBreakpoint: {
@@ -84,8 +96,11 @@ void NetworkController::incomingMessage(const std::string& message) {
                 ar.Serialize("filename", fileName);
                 std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
                 std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
-                auto &found = GlobalDebugger.breakPoints.get(fileName.c_str());
-                if (!GlobalDebugger.breakPoints.is_null(found)) {
+                //auto &found = GlobalDebugger.breakPoints.get(fileName.c_str());
+                //if (!GlobalDebugger.breakPoints.is_null(found)) {
+                auto foundItr = GlobalDebugger.breakPoints.find(fileName);
+                if (foundItr != GlobalDebugger.breakPoints.end()) {
+                    auto& found = foundItr->second;
                     auto vecFound = std::find_if(found.begin(), found.end(), [lineNumber](const BreakPoint& bp) {
                         return lineNumber == bp.line;
                     });
@@ -93,7 +108,8 @@ void NetworkController::incomingMessage(const std::string& message) {
                         found.erase(vecFound);
                     }
                     if (found.empty())
-                        GlobalDebugger.breakPoints.remove(fileName.c_str());
+                        GlobalDebugger.breakPoints.erase(fileName);
+                        //GlobalDebugger.breakPoints.remove(fileName.c_str());
                 }
             } break;
             case NC_CommandType::BPContinue: {
@@ -136,6 +152,7 @@ void NetworkController::incomingMessage(const std::string& message) {
 #else
                 answer.Serialize("arch", "X86");
 #endif
+                answer.Serialize("state", GlobalDebugger.state);
 
                 GlobalDebugger.productInfo.Serialize(answer);
                 JsonArchive HI;

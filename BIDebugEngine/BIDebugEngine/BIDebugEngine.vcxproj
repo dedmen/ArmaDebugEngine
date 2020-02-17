@@ -133,6 +133,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>$(ProjectName)_x64</TargetName>
+    <OutDir>C:\Users\billw\Documents\GitHub\ArmaDebugEngine\@Arma Debug Engine\intercept</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug141|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -451,6 +452,7 @@
     <ClInclude Include="VMContext.h" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="..\..\intercept\src\Intercept.natvis" />
     <Natvis Include="BIDebugEngine.natvis" />
   </ItemGroup>
   <ItemGroup>
