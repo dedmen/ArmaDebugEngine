@@ -29,7 +29,7 @@ void BreakPoint::Serialize(JsonArchive& ar) {
 
                 case BPCondition_types::invalid: break;
                 case BPCondition_types::Code: {
-                    condition = std::make_unique<BPCondition_Code>();
+                    condition = std::make_shared<BPCondition_Code>();
                     JsonArchive condJsonAr(condJson);
                     condition->Serialize(condJsonAr);
                 } break;
@@ -43,18 +43,18 @@ void BreakPoint::Serialize(JsonArchive& ar) {
 
                 case BPAction_types::invalid: break;
                 case BPAction_types::ExecCode: {
-                    action = std::make_unique<BPAction_ExecCode>();
+                    action = std::make_shared<BPAction_ExecCode>();
                     JsonArchive actJsonAr(actJson);
                     action->Serialize(actJsonAr);
                 } break;
                 default: break;
                 case BPAction_types::Halt: {
-                    action = std::make_unique<BPAction_Halt>(haltType::breakpoint);
+                    action = std::make_shared<BPAction_Halt>(haltType::breakpoint);
                     JsonArchive actJsonAr(actJson);
                     action->Serialize(actJsonAr);
                 } break;
                 case BPAction_types::LogCallstack: {
-                    action = std::make_unique<BPAction_LogCallstack>();
+                    action = std::make_shared<BPAction_LogCallstack>();
                     JsonArchive actJsonAr(actJson);
                     action->Serialize(actJsonAr);
                 } break;

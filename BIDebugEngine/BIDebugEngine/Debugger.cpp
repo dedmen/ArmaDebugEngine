@@ -448,13 +448,15 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp.sourcefile.substr(0, space-1) : instructionInfo.instruction->sdp.sourcefile;
     auto &found = breakPoints.get(static_cast<std::string>(properPath).c_str());
     if (breakPoints.is_null(found) || found.empty()) return;
-    for (auto& bp : found) {
-        if (bp.line == instructionInfo.instruction->sdp.sourceline) {
-            lk.unlock();//if this BP halt's adding/deleting breakpoints should still be possible
-            bp.trigger(this, instructionInfo);
-            lk.lock();
-        }
+    std::vector<BreakPoint> BPsToTrigger;
+    std::copy_if(found.begin(), found.end(), std::back_inserter(BPsToTrigger), [line = instructionInfo.instruction->sdp.sourceline](const BreakPoint& bp) {
+        return bp.line == line;
+    });
 
+    for (auto& bp : BPsToTrigger) {
+        lk.unlock();//if this BP halt's adding/deleting breakpoints should still be possible
+        bp.trigger(this, instructionInfo);
+        lk.lock();
     }
 }
 
