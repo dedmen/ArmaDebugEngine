@@ -59,7 +59,6 @@ void NetworkController::incomingMessage(const std::string& message) {
     try {
         auto packet = json::parse(message.c_str());
         NC_CommandType command = static_cast<NC_CommandType>(packet.value<int>("command", 0));
-        command;
 
         switch (command) {
 
@@ -123,7 +122,6 @@ void NetworkController::incomingMessage(const std::string& message) {
                 hookEnabled_Instruction = hookEnabled_Instruction;
             } break;
             case NC_CommandType::getVariable: {
-
                 JsonArchive ar(packet["data"]);
                 uint16_t scope;
                 std::vector<std::string> variableNames;
@@ -132,6 +130,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                 auto var = GlobalDebugger.getVariables(static_cast<VariableScope>(scope), variableNames);
 
                 JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 answer.Serialize("data", var);
                 answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::VariableReturn));
 
@@ -139,11 +138,14 @@ void NetworkController::incomingMessage(const std::string& message) {
             } break;
             case NC_CommandType::getCurrentCode: {
                 JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 GlobalDebugger.grabCurrentCode(answer, packet.value<std::string>("file", ""));
                 sendMessage(answer.to_string());
             } break;
             case NC_CommandType::getVersionInfo: {
                 JsonArchive answer;
+                
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::versionInfo));
                 answer.Serialize("build", DBG_BUILD);
                 answer.Serialize("version", DBG_VERSION);
@@ -164,6 +166,7 @@ void NetworkController::incomingMessage(const std::string& message) {
             } break;
             case NC_CommandType::getAllScriptCommands: {
                 JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 GlobalDebugger.serializeScriptCommands(answer);
                 sendMessage(answer.to_string());
                 } break;
@@ -187,6 +190,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                     dataAr.Serialize("32", var[VariableScope::parsingNamespace]);
 
                 JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 answer.Serialize("data", dataAr);
                 answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::AvailableVariablesReturn));
 
