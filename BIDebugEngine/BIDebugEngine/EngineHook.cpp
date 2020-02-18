@@ -334,6 +334,21 @@ scriptExecutionContext currentContext = scriptExecutionContext::Invalid;
 MissionEventType currentEventHandler = MissionEventType::Ended; //#TODO create some invalid handler type
 std::atomic_bool waitForErrorHandler = false;
 
+std::string get_command_line();
+
+std::optional<std::string> getCommandLineParam(std::string_view needle) {
+    std::string commandLine = get_command_line();
+    const auto found = commandLine.find(needle);
+    if (found != std::string::npos) {
+        const auto spacePos = commandLine.find(' ', found + needle.length() + 1);
+        const auto valueLength = spacePos - (found + needle.length() + 1);
+        auto adapterStr = commandLine.substr(found + needle.length() + 1, valueLength);
+        if (adapterStr.back() == '"')
+            adapterStr = adapterStr.substr(0, adapterStr.length() - 1);
+        return adapterStr;
+    }
+    return {};
+}
 
 void EngineHook::placeHooks() {
 
@@ -485,7 +500,10 @@ void EngineHook::placeHooks() {
             && HI.scriptEcho
             && HI.engineAlive
             && HI.enableMouse
-            && HI.preprocRedirect)) {
+            && HI.preprocRedirect)
+        &&
+        !getCommandLineParam("-server"sv) //not on server which might be headless
+        ) {
         std::string error("Some hooks have failed. Certain functionality might not be available.\n\n");
 
         bool fatal = false;
