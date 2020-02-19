@@ -275,7 +275,7 @@ bool HookManager::MatchPattern(uintptr_t addr, const char* pattern, const char* 
 
 uintptr_t HookManager::findPattern(const char* pattern, const char* mask, uintptr_t offset /*= 0*/) {
     uintptr_t base = engineBase;
-    uint32_t size = engineSize;
+    auto size = engineSize;
 
     uintptr_t patternLength = (DWORD) strlen(mask);
 

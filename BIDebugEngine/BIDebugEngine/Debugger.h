@@ -145,8 +145,8 @@ public:
 
     };
     std::shared_mutex breakPointsLock;
-    std::unordered_map<std::string, breakPointList> breakPoints;
     //map_string_to_class<breakPointList, auto_array<breakPointList>> breakPoints; // All inputs have to be tolowered before accessing
+    std::unordered_map<std::string, breakPointList> breakPoints; // All inputs have to be tolowered before accessing
     std::vector<std::shared_ptr<IMonitorBase>> monitors;
     NetworkController nController;
     std::shared_ptr<std::pair<std::condition_variable, bool>> breakStateContinueEvent;
