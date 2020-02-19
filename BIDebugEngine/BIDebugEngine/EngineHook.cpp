@@ -530,7 +530,7 @@ void EngineHook::placeHooks() {
 #endif
 
 
-        // MessageBox(error.c_str(), fatal ? ErrorMsgBoxType::error : ErrorMsgBoxType::warning);
+        MessageBox(error.c_str(), fatal ? ErrorMsgBoxType::error : ErrorMsgBoxType::warning);
     }
 
     //Tracker::trackPiwik();
