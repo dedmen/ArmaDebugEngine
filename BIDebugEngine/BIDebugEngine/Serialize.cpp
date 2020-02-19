@@ -10,7 +10,7 @@ Serialize::Serialize() {
 Serialize::~Serialize() {}
 
 std::string JsonArchive::to_string() {
-    return pJson->dump(4);
+    return pJson->dump(); // keep it all on one line, no prettifying or there will be no way for clients to separate the objects
 }
 
 void JsonArchive::Serialize(const char* key, const r_string& value) {

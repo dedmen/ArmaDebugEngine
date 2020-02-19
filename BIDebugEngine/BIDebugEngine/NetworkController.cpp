@@ -206,7 +206,7 @@ void NetworkController::incomingMessage(const std::string& message) {
 }
 
 void NetworkController::sendMessage(const std::string& message) {
-    server.writeMessage(message);
+    server.writeMessage(message + "\n");
 }
 
 void NetworkController::onShutdown() {
