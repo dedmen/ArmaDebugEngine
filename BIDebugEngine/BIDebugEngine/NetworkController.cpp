@@ -119,7 +119,7 @@ void NetworkController::incomingMessage(const std::string& message) {
             case NC_CommandType::MonitorDump: for (auto& it : GlobalDebugger.monitors) it->dump(); break;
             case NC_CommandType::setHookEnable: {
                 hookEnabled_Simulate = packet.value<int>("state", 1);
-                hookEnabled_Instruction = hookEnabled_Instruction;
+                hookEnabled_Instruction = packet.value<int>("state", 1);
             } break;
             case NC_CommandType::getVariable: {
                 JsonArchive ar(packet["data"]);

@@ -193,6 +193,20 @@ public:
         }
     }
 
+    //Generic serialization. Calls Type::Serialize
+    template <class Type>
+    typename std::enable_if<has_Serialize<Type>::value && !std::is_convertible<Type, rv_arraytype>::value>::type
+        Serialize(const char* key, std::shared_ptr<Type>& value) {
+        if (isReading) {
+            __debugbreak(); //not implemented
+        }
+        else {
+            JsonArchive element;
+            if (value)
+                value->Serialize(element);
+            (*pJson)[key] = *element.pJson;
+        }
+    }
 
     //Generic serialization. Calls Type::Serialize
     template <class Type>
