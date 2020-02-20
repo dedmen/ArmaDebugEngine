@@ -217,7 +217,7 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
     //auto text = ar.to_string();
     //f.write(text.c_str(), text.length());
     //f.close();
-    if (monitors.empty() && breakPoints.empty()) return;
+    if (monitors.empty() && breakPoints.empty() || state == DebuggerState::waitForHalt) return;
     instructionInfo.instruction->sdp.sourcefile.to_lower();
     checkForBreakpoint(instructionInfo);
 
@@ -422,6 +422,11 @@ void Debugger::onScriptHalt(GameState* gs) {
 }
 
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
+    if (state == DebuggerState::waitForHalt) {
+        BPAction_Halt hAction(haltType::halt);
+        hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr, (RV_VMContext*)lastKnownGameState->get_vm_context(), lastKnownGameState });
+        return;
+    }
 
     if (state == DebuggerState::stepState) {
         if (instructionInfo.context != stepInfo.context) { //Lost context. Can't step anymore

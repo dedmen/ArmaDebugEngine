@@ -188,6 +188,12 @@ void NetworkController::incomingMessage(const std::string& message) {
 
                 sendMessage(answer.to_string());
             } break;
+
+            case NC_CommandType::haltNow: {
+                GlobalDebugger.state = DebuggerState::waitForHalt;
+            } break;
+
+
         }
     }
     catch (std::exception &ex) {

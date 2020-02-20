@@ -13,7 +13,8 @@ enum class NC_CommandType {
     getVariable,
     getCurrentCode, //While in breakState returns full preproced code of last Instructions script file
     getAllScriptCommands,
-    getAvailableVariables
+    getAvailableVariables,
+    haltNow //Triggers halt on next possible instruction
 };
 
 enum class NC_OutgoingCommandType {
