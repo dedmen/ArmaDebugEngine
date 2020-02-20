@@ -448,11 +448,11 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
         return;
     }
 
-    if (state == DebuggerState::stepState) {
-        if (instructionInfo.context != stepInfo.context) { //Lost context. Can't step anymore
-            //#TODO don't care about this if scriptVM stepping
-            commandContinue(StepType::STContinue);
-        }
+    if (state == DebuggerState::stepState && instructionInfo.context != stepInfo.context) {
+        //if (instructionInfo.context != stepInfo.context) { //Lost context. Can't step anymore
+        //    //#TODO don't care about this if scriptVM stepping
+        //    commandContinue(StepType::STContinue);
+        //}
         auto level = instructionInfo.context->callstack.count();
         if (level <= stepInfo.stepLevel &&
             //Prevent stepOver from triggering in the same Line
