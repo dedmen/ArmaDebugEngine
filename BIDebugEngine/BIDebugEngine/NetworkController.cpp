@@ -28,14 +28,22 @@ void NetworkController::init() {
     pipeThread = new std::thread([this]() {
         server.open();
 
-        server.messageReadFailed.connect([this]() {clientConnected = false; });
+        server.messageReadFailed.connect([this]() {
+            clientConnected = false;
+            // If client disconnects unfreeze
+            GlobalDebugger.commandContinue(StepType::STContinue);
+        });
 
         while (pipeThreadShouldRun) {
             auto msg = server.readMessageBlocking();
 
             if (!msg.empty()) {
                 clientConnected = true;
-                incomingMessage(msg);
+                std::istringstream ss(msg);
+                std::string token;
+                while (std::getline(ss, token)) {
+                    incomingMessage(token);
+                }
             }
 
             //server.messageRead(msg);
@@ -51,7 +59,6 @@ void NetworkController::incomingMessage(const std::string& message) {
     try {
         auto packet = json::parse(message.c_str());
         NC_CommandType command = static_cast<NC_CommandType>(packet.value<int>("command", 0));
-        command;
 
         switch (command) {
 
@@ -62,8 +69,11 @@ void NetworkController::incomingMessage(const std::string& message) {
                 bp.Serialize(ar);
                 bp.filename.to_lower();
                 std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
-                auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename.c_str());
-                if (!GlobalDebugger.breakPoints.is_null(bpVec)) {
+                //auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename.c_str());
+                //if (!GlobalDebugger.breakPoints.is_null(bpVec)) {
+                auto foundItr = GlobalDebugger.breakPoints.find(bp.filename.c_str());
+                if (foundItr != GlobalDebugger.breakPoints.end()) {
+                    auto& bpVec = foundItr->second;
                     auto vecFound = std::find_if(bpVec.begin(), bpVec.end(), [lineNumber = bp.line](const BreakPoint& bp) {
                         return lineNumber == bp.line;
                     });
@@ -73,7 +83,8 @@ void NetworkController::incomingMessage(const std::string& message) {
                     }
                     bpVec.push_back(std::move(bp));
                 } else {
-                    GlobalDebugger.breakPoints.insert(Debugger::breakPointList(std::move(bp)));
+                    // GlobalDebugger.breakPoints.insert(Debugger::breakPointList(std::move(bp)));
+                    GlobalDebugger.breakPoints.emplace(std::string{bp.filename.c_str()}, std::move(bp));
                 }
             } break;
             case NC_CommandType::delBreakpoint: {
@@ -84,8 +95,11 @@ void NetworkController::incomingMessage(const std::string& message) {
                 ar.Serialize("filename", fileName);
                 std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
                 std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
-                auto &found = GlobalDebugger.breakPoints.get(fileName.c_str());
-                if (!GlobalDebugger.breakPoints.is_null(found)) {
+                //auto &found = GlobalDebugger.breakPoints.get(fileName.c_str());
+                //if (!GlobalDebugger.breakPoints.is_null(found)) {
+                auto foundItr = GlobalDebugger.breakPoints.find(fileName);
+                if (foundItr != GlobalDebugger.breakPoints.end()) {
+                    auto& found = foundItr->second;
                     auto vecFound = std::find_if(found.begin(), found.end(), [lineNumber](const BreakPoint& bp) {
                         return lineNumber == bp.line;
                     });
@@ -93,7 +107,8 @@ void NetworkController::incomingMessage(const std::string& message) {
                         found.erase(vecFound);
                     }
                     if (found.empty())
-                        GlobalDebugger.breakPoints.remove(fileName.c_str());
+                        GlobalDebugger.breakPoints.erase(fileName);
+                        //GlobalDebugger.breakPoints.remove(fileName.c_str());
                 }
             } break;
             case NC_CommandType::BPContinue: {
@@ -107,7 +122,6 @@ void NetworkController::incomingMessage(const std::string& message) {
                 hookEnabled_Instruction = packet.value<int>("state", 1);
             } break;
             case NC_CommandType::getVariable: {
-
                 JsonArchive ar(packet["data"]);
                 uint16_t scope;
                 std::vector<std::string> variableNames;
@@ -116,6 +130,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                 auto var = GlobalDebugger.getVariables(static_cast<VariableScope>(scope), variableNames);
 
                 JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 answer.Serialize("data", var);
                 answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::VariableReturn));
 
@@ -123,11 +138,14 @@ void NetworkController::incomingMessage(const std::string& message) {
             } break;
             case NC_CommandType::getCurrentCode: {
                 JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 GlobalDebugger.grabCurrentCode(answer, packet.value<std::string>("file", ""));
                 sendMessage(answer.to_string());
             } break;
             case NC_CommandType::getVersionInfo: {
                 JsonArchive answer;
+                
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::versionInfo));
                 answer.Serialize("build", DBG_BUILD);
                 answer.Serialize("version", DBG_VERSION);
@@ -136,6 +154,7 @@ void NetworkController::incomingMessage(const std::string& message) {
 #else
                 answer.Serialize("arch", "X86");
 #endif
+                answer.Serialize("state", GlobalDebugger.state);
 
                 GlobalDebugger.productInfo.Serialize(answer);
                 JsonArchive HI;
@@ -147,6 +166,7 @@ void NetworkController::incomingMessage(const std::string& message) {
             } break;
             case NC_CommandType::getAllScriptCommands: {
                 JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 GlobalDebugger.serializeScriptCommands(answer);
                 sendMessage(answer.to_string());
                 } break;
@@ -170,6 +190,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                     dataAr.Serialize("32", var[VariableScope::parsingNamespace]);
 
                 JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 answer.Serialize("data", dataAr);
                 answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::AvailableVariablesReturn));
 
@@ -185,7 +206,7 @@ void NetworkController::incomingMessage(const std::string& message) {
 }
 
 void NetworkController::sendMessage(const std::string& message) {
-    server.writeMessage(message);
+    server.writeMessage(message + "\n");
 }
 
 void NetworkController::onShutdown() {

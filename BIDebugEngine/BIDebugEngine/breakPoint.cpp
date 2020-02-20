@@ -7,11 +7,6 @@
 #include <chrono>
 using namespace std::chrono_literals;
 
-BreakPoint::BreakPoint(uint16_t _line) :line(_line) {}
-
-
-BreakPoint::~BreakPoint() {}
-
 void BreakPoint::Serialize(JsonArchive& ar) {
     ar.Serialize("filename", filename);
     ar.Serialize("line", line);

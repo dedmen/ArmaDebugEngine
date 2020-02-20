@@ -441,22 +441,27 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     if (breakPoints.empty()) return;
     //if (_strcmpi(instructionInfo.instruction->_scriptPos._sourceFile.data(), "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf") == 0)
     //    __debugbreak();
+
     std::shared_lock<std::shared_mutex> lk(breakPointsLock);
     static bool doBreeak = true;
     if (doBreeak && instructionInfo.instruction->sdp.sourcefile.find("dedmen\\") != std::string::npos) __debugbreak();
     auto space = instructionInfo.instruction->sdp.sourcefile.find("[");
     auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp.sourcefile.substr(0, space-1) : instructionInfo.instruction->sdp.sourcefile;
-    auto &found = breakPoints.get(static_cast<std::string>(properPath).c_str());
-    if (breakPoints.is_null(found) || found.empty()) return;
+    auto foundItr = breakPoints.find(static_cast<std::string>(properPath).c_str());
+
+    if (foundItr == breakPoints.end() || foundItr->second.empty()) return;
+
+    const auto& found = foundItr->second;
+
     std::vector<BreakPoint> BPsToTrigger;
     std::copy_if(found.begin(), found.end(), std::back_inserter(BPsToTrigger), [line = instructionInfo.instruction->sdp.sourceline](const BreakPoint& bp) {
         return bp.line == line;
     });
+    // We don't need to remain locked anymore
+    lk.unlock();
 
     for (auto& bp : BPsToTrigger) {
-        lk.unlock();//if this BP halt's adding/deleting breakpoints should still be possible
         bp.trigger(this, instructionInfo);
-        lk.lock();
     }
 }
 
@@ -576,10 +581,10 @@ void Debugger::commandContinue(StepType stepType) {
                 stepInfo.stepLevel = std::numeric_limits<decltype(stepInfo.stepLevel)>::max();
                 break;
             case StepType::STOver:
-                stepInfo.stepLevel = breakStateInfo.instruction->context->callstack.count();
+                stepInfo.stepLevel = static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.count());
                 break;
             case StepType::STOut:
-                stepInfo.stepLevel = breakStateInfo.instruction->context->callstack.count() - 1;
+                stepInfo.stepLevel = static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.count() - 1);
                 break;
             default: break;
         }

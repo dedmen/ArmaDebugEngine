@@ -208,7 +208,6 @@ public:
         }
     }
 
-
     template <class Type>
     typename std::enable_if<!has_Serialize<Type>::value && !std::is_convertible<Type, rv_arraytype>::value>::type
         Serialize(const char* key, Type& value) {
