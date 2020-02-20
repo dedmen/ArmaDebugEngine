@@ -484,8 +484,11 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     if (doBreeak && instructionInfo.instruction->sdp.sourcefile.find("dedmen\\") != std::string::npos) __debugbreak();
     auto space = instructionInfo.instruction->sdp.sourcefile.find("[");
     auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp.sourcefile.substr(0, space-1) : instructionInfo.instruction->sdp.sourcefile;
-    auto &found = breakPoints.get(properPath);
-    if (breakPoints.is_null(found) || found.empty()) return;
+    auto foundItr = breakPoints.find(static_cast<std::string>(properPath).c_str());
+
+    if (foundItr == breakPoints.end() || foundItr->second.empty()) return;
+
+    const auto& found = foundItr->second;
 
     std::vector<BreakPoint> BPsToTrigger;
     std::copy_if(found.begin(), found.end(), std::back_inserter(BPsToTrigger), [line = instructionInfo.instruction->sdp.sourceline](const BreakPoint& bp) {
