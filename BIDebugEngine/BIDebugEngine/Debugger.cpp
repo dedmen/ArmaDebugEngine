@@ -352,7 +352,11 @@ void Debugger::executeScriptInHalt(r_string script) {
 
    
     ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::ExecuteCodeResult));
-    ar.Serialize("data", *gdRtn);
+
+    JsonArchive data;
+    Serialize(*gdRtn, data);
+
+    ar.Serialize("data", data);
 
     auto text = ar.to_string();
     nController.sendMessage(text);
