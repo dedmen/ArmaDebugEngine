@@ -171,10 +171,17 @@ void Serialize(const GameData& gd, JsonArchive& ar) {
         sourcedocpos x;
         x.content = gd.get_as_string();
         ar.Serialize("value", "<code>"); //Script::getScriptFromFirstLine(x, true)
-    } else {
+    } else if (strcmp(type, "float") == 0) {
+        ar.Serialize("value", gd.get_as_number());
+    } else if (strcmp(type, "bool") == 0) {
+        ar.Serialize("value", gd.get_as_bool());
+    } else if (strcmp(type, "string") == 0) {
         ar.Serialize("value", gd.get_as_string());
+    } else {
+        ar.Serialize("value", gd.to_string());
     }
 }
+
 void Serialize(const game_value& gv, JsonArchive& ar) {
     if (gv.data)
         Serialize(*static_cast<const GameData*>(gv.data.get()), ar);
