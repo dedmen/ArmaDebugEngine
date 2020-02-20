@@ -14,7 +14,8 @@ enum class NC_CommandType {
     getCurrentCode, //While in breakState returns full preproced code of last Instructions script file
     getAllScriptCommands,
     getAvailableVariables,
-    haltNow //Triggers halt on next possible instruction
+    haltNow, //Triggers halt on next possible instruction
+    ExecuteCode //Executes code while halted, in current context and returns result
 };
 
 enum class NC_OutgoingCommandType {
@@ -30,7 +31,8 @@ enum class NC_OutgoingCommandType {
     VariableReturn, //returning from getVariable
     AvailableVariablesReturn, //returning from getAvailableVariables
     BreakpointLog, //A log breakpoint was triggered
-    LogMessage //A log message from the game, for example from echo script command
+    LogMessage, //A log message from the game, for example from echo script command
+    ExecuteCodeResult //Result of ExecuteCode command
 };
 
 class NetworkController {

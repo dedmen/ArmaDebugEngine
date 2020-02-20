@@ -193,6 +193,17 @@ void NetworkController::incomingMessage(const std::string& message) {
                 GlobalDebugger.state = DebuggerState::waitForHalt;
             } break;
 
+            case NC_CommandType::ExecuteCode: {
+                //I don't verify that debugger is halted... please be nice.
+                //#TODO ^
+                JsonArchive ar(packet["data"]);
+
+                r_string script;
+                ar.Serialize("script", script);
+
+
+                GlobalDebugger.executeScriptInHalt(script);
+            } break;
 
         }
     }
