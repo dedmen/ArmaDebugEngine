@@ -241,9 +241,19 @@ void BPAction_Halt::Serialize(JsonArchive& ar) {
     }
 }
 
-void BPAction_LogCallstack::execute(Debugger*, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo) {
+void BPAction_LogCallstack::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstructionInfo& instructionInfo) {
     JsonArchive ar;
     instructionInfo.context->Serialize(ar);
+    if (basePath == "send") {
+        JsonArchive arComplete;
+        ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::BreakpointLog));
+        ar.Serialize("data", ar);
+
+        auto text = ar.to_string();
+        dbg->nController.sendMessage(text);
+        return;
+    }
+
     auto text = ar.to_string();
     std::ofstream f(basePath + bp->label + std::to_string(bp->hitcount) + ".json", std::ios::out | std::ios::binary);
     f.write(text.c_str(), text.length());
