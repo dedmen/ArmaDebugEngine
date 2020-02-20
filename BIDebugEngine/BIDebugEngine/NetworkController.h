@@ -28,7 +28,8 @@ enum class NC_OutgoingCommandType {
     ContinueExecution,
     VariableReturn, //returning from getVariable
     AvailableVariablesReturn, //returning from getAvailableVariables
-    BreakpointLog //A log breakpoint was triggered
+    BreakpointLog, //A log breakpoint was triggered
+    LogMessage //A log message from the game, for example from echo script command
 };
 
 class NetworkController {

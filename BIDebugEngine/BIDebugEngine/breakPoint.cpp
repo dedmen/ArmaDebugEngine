@@ -246,8 +246,8 @@ void BPAction_LogCallstack::execute(Debugger* dbg, BreakPoint* bp, const Debugge
     instructionInfo.context->Serialize(ar);
     if (basePath == "send") {
         JsonArchive arComplete;
-        ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::BreakpointLog));
-        ar.Serialize("data", ar);
+        arComplete.Serialize("command", static_cast<int>(NC_OutgoingCommandType::BreakpointLog));
+        arComplete.Serialize("data", ar);
 
         auto text = ar.to_string();
         dbg->nController.sendMessage(text);

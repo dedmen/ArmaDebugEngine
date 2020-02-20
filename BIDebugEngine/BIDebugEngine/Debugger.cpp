@@ -631,6 +631,11 @@ void Debugger::SerializeHookIntegrity(JsonArchive& answer) {
 }
 
 void Debugger::onScriptEcho(r_string msg) {
+    JsonArchive ar;
+    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::LogMessage));
+    ar.Serialize("message", msg);
+    nController.sendMessage(ar.to_string());
+
     OutputDebugStringA("echo: ");
     OutputDebugStringA(msg.data());
     OutputDebugStringA("\n");
