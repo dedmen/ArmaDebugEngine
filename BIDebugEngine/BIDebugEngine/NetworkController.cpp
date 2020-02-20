@@ -69,7 +69,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                 bp.Serialize(ar);
                 bp.filename.to_lower();
                 std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
-                auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename.c_str());
+                auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename);
                 if (!GlobalDebugger.breakPoints.is_null(bpVec)) {
                     auto vecFound = std::find_if(bpVec.begin(), bpVec.end(), [lineNumber = bp.line](const BreakPoint& bp) {
                         return lineNumber == bp.line;
@@ -86,12 +86,13 @@ void NetworkController::incomingMessage(const std::string& message) {
             case NC_CommandType::delBreakpoint: {
                 JsonArchive ar(packet["data"]);
                 uint16_t lineNumber;
-                std::string fileName;
+                r_string fileName;
                 ar.Serialize("line", lineNumber);
                 ar.Serialize("filename", fileName);
-                std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
+                fileName.to_lower();
+                //std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
                 std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
-                auto &found = GlobalDebugger.breakPoints.get(fileName.c_str());
+                auto &found = GlobalDebugger.breakPoints.get(fileName);
                 if (!GlobalDebugger.breakPoints.is_null(found)) {
                     auto vecFound = std::find_if(found.begin(), found.end(), [lineNumber](const BreakPoint& bp) {
                         return lineNumber == bp.line;
