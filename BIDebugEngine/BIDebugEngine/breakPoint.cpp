@@ -28,6 +28,11 @@ void BreakPoint::Serialize(JsonArchive& ar) {
                     JsonArchive condJsonAr(condJson);
                     condition->Serialize(condJsonAr);
                 } break;
+                 case BPCondition_types::HitCount: {
+                    condition = std::make_shared<BPCondition_HitCount>();
+                    JsonArchive condJsonAr(condJson);
+                    condition->Serialize(condJsonAr);
+                } break;
                 default: break;
             }
         }
@@ -146,7 +151,7 @@ void BreakPoint::executeActions(Debugger* dbg, const DebuggerInstructionInfo& in
 bool BPCondition_Code::isMatching(Debugger*, BreakPoint*, const DebuggerInstructionInfo& info) {
     auto rtn = info.context->callstack.back()->EvaluateExpression(code.c_str(), 10);
     if (rtn.is_null())  return false; //#TODO this is code error.
-    //We get a ptr to the IDebugValue of GameData. But we wan't the GameData vtable.    
+    //We get a ptr to the IDebugValue of GameData. But we wan't the GameData vtable.
     auto gdRtn = reinterpret_cast<GameData*>(rtn.get() - 2); //#TODO warning : 'reinterpret_cast' to class 'GameData *' from its base at non-zero offset 'IDebugValue *' behaves differently from 'static_cast'  -- use static_cast and remove ptr math
     return gdRtn->get_as_bool();
 }
@@ -156,6 +161,24 @@ void BPCondition_Code::Serialize(JsonArchive& ar) {
         ar.Serialize("type", static_cast<int>(BPCondition_types::Code));
     }
     ar.Serialize("code", code);
+}
+
+bool BPCondition_HitCount::isMatching(Debugger*, BreakPoint*, const DebuggerInstructionInfo&) {
+    currentCount++;
+
+    if (count == currentCount) {
+        currentCount = 0;
+        return true;
+    }
+
+    return false;
+}
+
+void BPCondition_HitCount::Serialize(JsonArchive& ar) {
+    if (!ar.reading()) {
+        ar.Serialize("type", static_cast<int>(BPCondition_types::HitCount));
+    }
+    ar.Serialize("count", count);
 }
 
 void BPAction_ExecCode::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstructionInfo& info) {

@@ -29,6 +29,17 @@ private:
     std::string code;
 };
 
+class BPCondition_HitCount : public IBreakPointCondition { //Executes code and check if return value is true
+public:
+    virtual ~BPCondition_HitCount() {};
+
+    bool isMatching(Debugger*, BreakPoint*, const DebuggerInstructionInfo&) override;
+    void Serialize(JsonArchive& ar) override;
+private:
+    uint64_t currentCount;
+    uint64_t count;
+};
+
 //Beware when adding hitcount condition. Hitcount is only incremented when condition is matching.
 
 class IBreakPointAction {
@@ -75,7 +86,8 @@ private:
 
 enum class BPCondition_types {
     invalid,
-    Code
+    Code,
+    HitCount
 };
 
 enum class BPAction_types {
