@@ -578,7 +578,9 @@ void Debugger::commandContinue(StepType stepType) {
                 stepInfo.stepLevel = std::numeric_limits<decltype(stepInfo.stepLevel)>::max();
                 break;
             case StepType::STOver:
-                stepInfo.stepLevel = static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.count());
+                stepInfo.stepLevel = std::numeric_limits<decltype(stepInfo.stepLevel)>::max();
+
+                    //static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.count());
                 break;
             case StepType::STOut:
                 stepInfo.stepLevel = static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.count() - 1);
