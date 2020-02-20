@@ -153,6 +153,8 @@ public:
     BreakStateInfo breakStateInfo;
     struct {
         StepType stepType;
+        r_string originFile;
+        uint16_t originLevel;
         uint16_t stepLine;
         uint8_t stepLevel;
         RV_VMContext* context;

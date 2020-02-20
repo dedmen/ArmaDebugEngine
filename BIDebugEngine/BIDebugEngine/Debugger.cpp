@@ -432,7 +432,15 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
         if (level <= stepInfo.stepLevel &&
             //Prevent stepOver from triggering in the same Line
             (stepInfo.stepType == StepType::STOver ? stepInfo.stepLine != instructionInfo.instruction->sdp.sourceline : true)
+            &&
+            (
+                //Don't trigger stepOver halt if it step into a lower scope in a different file (call for example)
+                stepInfo.stepType != StepType::STOver ||
+                stepInfo.originFile != instructionInfo.instruction->sdp.sourcefile ||
+                level <= stepInfo.originLevel
+            )
             ) {
+
             BPAction_Halt hAction(haltType::step);
             hAction.execute(this, nullptr, instructionInfo);
             return; //We already halted here. Don't care if there are more breakpoints here.
@@ -570,6 +578,9 @@ void Debugger::commandContinue(StepType stepType) {
             state = DebuggerState::running;
             goto jumpOut;
         }
+
+        stepInfo.originFile = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->sdp.sourcefile : breakStateInfo.instruction->context->sdocpos.sourcefile;
+        stepInfo.originLevel = breakStateInfo.instruction->context->callstack.count();
         stepInfo.stepLine = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->sdp.sourceline : breakStateInfo.instruction->context->sdocpos.sourceline;
         stepInfo.context = breakStateInfo.instruction->context;
 
