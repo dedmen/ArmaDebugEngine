@@ -36,3 +36,5 @@ build-DisplayTest-Qt_5_5_MSVC2015x86-Release
 build-DisplayTest-Qt_5_5_MSVC2015x86-Debug
 
 build-NamedPipeTester-Qt_5_5_MSVC2015x86-Debug
+
+BIDebugEngine/BIDebugEngine/BIDebugEngine.vcxproj.user

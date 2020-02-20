@@ -163,19 +163,20 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 }
 
 void Serialize(const GameData& gd, JsonArchive& ar) {
-    const auto type = gd.type_as_string();
-    ar.Serialize("type", type);
-    if (strcmp(type, "array") == 0) {
+    const auto type = std::string_view(gd.type_as_string());
+    ar.Serialize("type", type.data());
+
+    if (type == "array"sv) {
         ar.Serialize("value", gd.get_as_const_array());
-    } else if (strcmp(type, "code") == 0) {
+    } else if (type == "code") {
         sourcedocpos x;
         x.content = gd.get_as_string();
         ar.Serialize("value", "<code>"); //Script::getScriptFromFirstLine(x, true)
-    } else if (strcmp(type, "float") == 0) {
+    } else if (type == "float") {
         ar.Serialize("value", gd.get_as_number());
-    } else if (strcmp(type, "bool") == 0) {
+    } else if (type == "bool") {
         ar.Serialize("value", gd.get_as_bool());
-    } else if (strcmp(type, "string") == 0) {
+    } else if (type == "string") {
         ar.Serialize("value", gd.get_as_string());
     } else {
         ar.Serialize("value", gd.to_string());
