@@ -51,24 +51,31 @@ public:
     int _currentInstruction;
     sourcedoc _content;
     bool _multipleInstructions;
+
+    static constexpr size_t type_hash = 0x796333d0f1231802;
 };
 
-class DummyVClass {
-public:
-    virtual void Dummy() {};
-};
 
 class CallStackItemData : public vm_context::callstack_item {
 public:
     intercept::types::ref<game_data_code> _code; // compiled code
     int _ip; // instruction pointer
+
+    static constexpr size_t type_hash = 0x6a5a9847820cfc77;
 };
 
 class CallStackItemArrayForEach : public vm_context::callstack_item {
 public:
     intercept::types::ref<game_data_code> _code; // compiled code
     intercept::types::ref<game_data_array> _array;
-    int _forEachIndex; 
+    int _forEachIndex;
+
+    static constexpr size_t type_hash = 0x648cf398b08788b9;
+};
+
+class CallStackItemArrayCount : public vm_context::callstack_item {
+public:
+    static constexpr size_t type_hash = 0x2dc1ba43da7f1af7;
 };
 
 class CallStackItemForBASIC : public vm_context::callstack_item {
@@ -78,6 +85,8 @@ public:
     float _to;
     float _step;
     intercept::types::ref<game_data_code> _code; // compiled code
+
+    static constexpr size_t type_hash = 0x51097d4e8ac94aa9;
 };
 
 class CallStackItemApply : public vm_context::callstack_item {
@@ -86,6 +95,13 @@ public:
     intercept::types::ref<game_data_array> _array;
     intercept::types::ref<game_data_array> _array2; //output array maybe
     int _forEachIndex;
+
+    static constexpr size_t type_hash = 0x1d75078e7c270ec2;
+};
+
+class CallStackItemConditionSelect : public CallStackItemApply {
+public:
+    static constexpr size_t type_hash = 0xec123abb0b8aec96;
 };
 
 class CallStackItemArrayFindCond : public vm_context::callstack_item {
@@ -93,8 +109,19 @@ public:
     intercept::types::ref<game_data_code> _code; // compiled code
     intercept::types::ref<game_data_array> _array;
     int _forEachIndex;
+
+    static constexpr size_t type_hash = 0x9ec7cbd761a5b791;
 };
 
+class CallStackItemFor : public vm_context::callstack_item {
+public:
+    static constexpr size_t type_hash = 0x9a611c77f320c98b;
+};
+
+class CallStackRepeat : public vm_context::callstack_item {
+public:
+    static constexpr size_t type_hash = 0x64fd66ac9d9a6063;
+};
 
 
 
@@ -105,6 +132,9 @@ struct RV_VMContext : public vm_context {
 
     const game_variable* getVariable(std::string varName);
     void Serialize(JsonArchive& ar);
+
+    template <class CallstackVisitor >
+    void visit_callstack(CallstackVisitor&& vistor) const;
 };
 
 
@@ -136,6 +166,11 @@ void SerializeError(const intercept::types::game_state::game_evaluator&, JsonArc
 
 void SerializeFull(const script_type_info& t, JsonArchive &ar);
 void Serialize(const script_type_info& t, JsonArchive &ar);
+
+class DummyVClass {
+public:
+    virtual void Dummy() {};
+};
 
 class RVScriptType : public DummyVClass {
 public:

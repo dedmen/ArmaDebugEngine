@@ -69,8 +69,11 @@ void NetworkController::incomingMessage(const std::string& message) {
                 bp.Serialize(ar);
                 bp.filename.to_lower();
                 std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
-                auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename);
-                if (!GlobalDebugger.breakPoints.is_null(bpVec)) {
+                //auto &bpVec = GlobalDebugger.breakPoints.get(bp.filename.c_str());
+                //if (!GlobalDebugger.breakPoints.is_null(bpVec)) {
+                auto foundItr = GlobalDebugger.breakPoints.find(bp.filename);
+                if (foundItr != GlobalDebugger.breakPoints.end()) {
+                    auto& bpVec = foundItr->second;
                     auto vecFound = std::find_if(bpVec.begin(), bpVec.end(), [lineNumber = bp.line](const BreakPoint& bp) {
                         return lineNumber == bp.line;
                     });
@@ -81,7 +84,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                     bpVec.push_back(std::move(bp));
                 } else {
                     // GlobalDebugger.breakPoints.insert(Debugger::breakPointList(std::move(bp)));
-                    GlobalDebugger.breakPoints.emplace(std::string{bp.filename.c_str()}, std::move(bp));
+                    GlobalDebugger.breakPoints.emplace(bp.filename, std::move(bp));
                 }
             } break;
             case NC_CommandType::delBreakpoint: {
@@ -93,8 +96,11 @@ void NetworkController::incomingMessage(const std::string& message) {
                 fileName.to_lower();
                 //std::transform(fileName.begin(), fileName.end(), fileName.begin(), ::tolower);
                 std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
-                auto &found = GlobalDebugger.breakPoints.get(fileName);
-                if (!GlobalDebugger.breakPoints.is_null(found)) {
+                //auto &found = GlobalDebugger.breakPoints.get(fileName.c_str());
+                //if (!GlobalDebugger.breakPoints.is_null(found)) {
+                auto foundItr = GlobalDebugger.breakPoints.find(fileName);
+                if (foundItr != GlobalDebugger.breakPoints.end()) {
+                    auto& found = foundItr->second;
                     auto vecFound = std::find_if(found.begin(), found.end(), [lineNumber](const BreakPoint& bp) {
                         return lineNumber == bp.line;
                     });
