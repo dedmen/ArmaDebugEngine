@@ -103,7 +103,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                     }
                     if (found.empty())
                         //GlobalDebugger.breakPoints.erase(fileName);
-                        GlobalDebugger.breakPoints.remove(fileName.c_str());
+                        GlobalDebugger.breakPoints.remove(fileName);
                 }
             } break;
             case NC_CommandType::BPContinue: {

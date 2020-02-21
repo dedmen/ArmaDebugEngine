@@ -41,75 +41,21 @@ const game_variable* RV_VMContext::getVariable(std::string varName) {
     return value;
 }
 
-struct RV_VMContext_SerializeVisitor
-{
-    RV_VMContext_SerializeVisitor(JsonArchive& ar) : ar(ar) {}
-    
-    void visit(const CallStackItemSimple* stackItem, int) {
-        ar.Serialize("fileName", stackItem->_content.sourcefile);
-        ar.Serialize("contentSample", (std::string)stackItem->_content.content.substr(0, 100));
-        ar.Serialize("ip", stackItem->_currentInstruction);
-        JsonArchive arInst;
-        ::Serialize(*(stackItem->_instructions.get(stackItem->_currentInstruction - 1)), arInst);
-        ar.Serialize("lastInstruction", arInst);
-    }
-
-    void visit(const CallStackItemData* stackItem, int) {
-        ar.Serialize("ip", stackItem->_ip);
-        ar.Serialize("final", stackItem->_code->is_final);
-        ar.Serialize("compiled", stackItem->_code->instructions);
-        ar.Serialize("contentSample", (std::string)stackItem->_code->code_string.substr(0, 100)); //#TODO send whole code over
-        JsonArchive arInst;
-        ::Serialize(*(stackItem->_code->instructions.get(stackItem->_ip - 1)), arInst);
-        ar.Serialize("lastInstruction", arInst);
-    }
-
-    void visit(const CallStackItemArrayForEach* stackItem, int) {
-        ar.Serialize("forEachIndex", stackItem->_forEachIndex);
-    }
-
-    void visit(const CallStackItemArrayCount* stackItem, int) {}
-
-    void visit(const CallStackItemForBASIC* stackItem, int) {
-        ar.Serialize("varName", stackItem->_varName);
-        ar.Serialize("varValue", stackItem->_varValue);
-        ar.Serialize("to", stackItem->_to);
-        ar.Serialize("step", stackItem->_step);
-    }
-
-    void visit(const CallStackItemApply* stackItem, int) {
-        ar.Serialize("forEachIndex", stackItem->_forEachIndex);
-    }
-
-    void visit(const CallStackItemConditionSelect* stackItem, int) {
-        ar.Serialize("forEachIndex", stackItem->_forEachIndex);
-    }
-
-    void visit(const CallStackItemArrayFindCond* stackItem, int) {
-        ar.Serialize("forEachIndex", stackItem->_forEachIndex);
-    }
-
-    void visit(const CallStackItemFor* stackItem, int) {}
-
-    void visit(const CallStackRepeat* stackItem, int) {}
-
-    bool done() const { return false; }
-
-private:
-    JsonArchive& ar;
-};
-
 void RV_VMContext::Serialize(JsonArchive& ar) {
+
+
     ar.Serialize("callstack", callstack, [](JsonArchive& ar, const ref<callstack_item>& item) {
         auto& type = typeid(*item.get());
         //#TODO X64 fails on this
         const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
 
         ar.Serialize("type", typeName);
+        auto hash = type.hash_code();
         {
             JsonArchive varArchive;
 
             item->_varSpace.variables.for_each([&varArchive](const game_variable& var) {
+
                 JsonArchive variableArchive;
 
                 auto name = var.name;
@@ -132,7 +78,73 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
             });
             ar.Serialize("variables", varArchive);
         }
-        visit_callstack_item(RV_VMContext_SerializeVisitor(ar), item);
+
+        switch (hash) {
+            case CallStackItemSimple::type_hash: {
+                auto stackItem = static_cast<const CallStackItemSimple*>(item.get());
+                ar.Serialize("fileName", stackItem->_content.sourcefile);
+                ar.Serialize("contentSample", (std::string)stackItem->_content.content.substr(0, 100));
+                ar.Serialize("ip", stackItem->_currentInstruction);
+                JsonArchive arInst;
+                ::Serialize(*(stackItem->_instructions.get(stackItem->_currentInstruction - 1)), arInst);
+                ar.Serialize("lastInstruction", arInst);
+                //ar.Serialize("instructions", stackItem->_instructions);
+            }   break;
+
+            case CallStackItemData::type_hash: {
+                auto stackItem = static_cast<const CallStackItemData*>(item.get());
+
+                ar.Serialize("ip", stackItem->_ip);
+                ar.Serialize("final", stackItem->_code->is_final);
+                ar.Serialize("compiled", stackItem->_code->instructions);
+                ar.Serialize("contentSample", (std::string)stackItem->_code->code_string.substr(0, 100)); //#TODO send whole code over
+                JsonArchive arInst;
+                ::Serialize(*(stackItem->_code->instructions.get(stackItem->_ip - 1)), arInst);
+                ar.Serialize("lastInstruction", arInst);
+                //ar.Serialize("instructions", stackItem->_code->_instructions._code);
+            }   break;
+
+            case CallStackItemArrayForEach::type_hash: {
+                auto stackItem = static_cast<const CallStackItemArrayForEach*>(item.get());
+
+                ar.Serialize("forEachIndex", stackItem->_forEachIndex);
+            } break;
+
+            case CallStackItemApply::type_hash: {
+                auto stackItem = static_cast<const CallStackItemApply*>(item.get());
+                ar.Serialize("forEachIndex", stackItem->_forEachIndex);
+            } break;
+
+            case CallStackRepeat::type_hash: {
+            } break;
+
+            case CallStackItemConditionSelect::type_hash: {
+                auto stackItem = static_cast<const CallStackItemConditionSelect*>(item.get());
+                //Yes, that's a different name, but both have the same layout.
+                ar.Serialize("forEachIndex", stackItem->_forEachIndex);
+            } break;
+
+            case CallStackItemForBASIC::type_hash: {
+                auto stackItem = static_cast<const CallStackItemForBASIC*>(item.get());
+                ar.Serialize("varName", stackItem->_varName);
+                ar.Serialize("varValue", stackItem->_varValue);
+                ar.Serialize("to", stackItem->_to);
+                ar.Serialize("step", stackItem->_step);
+
+            } break;
+
+            case CallStackItemFor::type_hash: {
+            } break;
+
+            case CallStackItemArrayFindCond::type_hash: {
+                auto stackItem = static_cast<const CallStackItemArrayFindCond*>(item.get());
+                ar.Serialize("forEachIndex", stackItem->_forEachIndex);
+            } break;
+
+            default:
+                //__debugbreak(); 
+                break;
+        }
     });
 }
 
@@ -312,19 +324,20 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
     auto hash = type.hash_code();
 
     switch (hash) {
-        case 0xed08ac32: { //CallStackItemSimple
+        case CallStackItemSimple::type_hash: {
             auto stackItem = static_cast<const CallStackItemSimple*>(&it);
             //#TODO test if this is the correct instruction or if i should -1 this
             const auto& lastInstruction = (stackItem->_instructions.get(stackItem->_currentInstruction))->sdp;
             return lastInstruction;
         }   break;
 
-        case 0x224543d0: { //CallStackItemData
+        case CallStackItemData::type_hash: { //CallStackItemData
             auto stackItem = static_cast<const CallStackItemData*>(&it);
             auto & lastInstruction = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp;
             return lastInstruction;
         }   break;
-        case 0x254c4241: { //CallStackItemArrayForEach
+
+        case CallStackItemArrayForEach::type_hash: { //CallStackItemArrayForEach
 
         } break;
     }

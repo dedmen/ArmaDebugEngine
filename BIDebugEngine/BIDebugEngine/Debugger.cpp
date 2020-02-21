@@ -250,48 +250,43 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 
 }
 
-
-namespace {
-    struct RawCallstackVisitor
-    {
-        void visit(const CallStackItemSimple* stackItem, int) {
-            sourceFile = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourcefile;
-            sourceLine = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourceline;
-        }
-
-        void visit(const CallStackItemData* stackItem, int) {
-            sourceFile = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile;
-            sourceLine = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline;
-        }
-
-        void visit(const CallStackItemArrayForEach* stackItem, int) {
-            //Level doesn't have any code. It's all inside a CallStackitemData one level lower
-        }
-
-        void visit(const CallStackItemArrayCount* stackItem, int) {
-            //Level doesn't have any code. It's all inside a CallStackitemData one level lower
-        }
-
-        void visit(CallStackItemForBASIC* stackItem, int) { default_visit(stackItem); }
-        void visit(CallStackItemApply* stackItem, int) { default_visit(stackItem); }
-        void visit(CallStackItemConditionSelect* stackItem, int) { default_visit(stackItem); }
-        void visit(CallStackItemArrayFindCond* stackItem, int) { default_visit(stackItem); }
-        void visit(CallStackItemFor* stackItem, int) { default_visit(stackItem); }
-        void visit(CallStackRepeat* stackItem, int) { default_visit(stackItem); }
-
-        void default_visit(vm_context::callstack_item* stackItem) {
-            int line{ 0 };
-            char fileBuffer[256]{ 0 };
-            stackItem->getSourceDocPosition(fileBuffer, 255, line);
-            sourceFile = fileBuffer;
-            sourceLine = line;
-        }
-
-        r_string sourceFile;
-        uint32_t sourceLine;
+StackFrameSourceLocation Debugger::getCallstackLocation(const ref<vm_context::callstack_item>& item)
+{
+    switch (typeid(item.get()).hash_code()) {
+    case CallStackItemSimple::type_hash: {
+        auto stackItem = static_cast<const CallStackItemSimple*>(item.get());
+        return StackFrameSourceLocation{
+            (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourcefile,
+            (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourceline
+        };
+    };
+    case CallStackItemData::type_hash: {
+        auto stackItem = static_cast<const CallStackItemData*>(item.get());
+        return StackFrameSourceLocation{
+            (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile,
+            (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline
+        };
+    };
+    case CallStackItemArrayForEach::type_hash: {
+        //Level doesn't have any code. It's all inside a CallStackitemData one level lower
+        return { {},0 };
+    };
+    case CallStackItemArrayCount::type_hash: {
+        //Level doesn't have any code. It's all inside a CallStackitemData one level lower
+        return { {},0 };
+    };
+    default: {
+        char fileBuffer[256]{ 0 };
+        int line;
+        item->getSourceDocPosition(fileBuffer, 255, line);
+        return StackFrameSourceLocation{
+            fileBuffer,
+            static_cast<uint32_t>(line)
+        };
+        //__debugbreak();
+    };
     };
 }
-
 
 void Debugger::dumpStackToRPT(GameState* gs) {
     if (!gs->get_vm_context()) return;
@@ -303,16 +298,13 @@ void Debugger::dumpStackToRPT(GameState* gs) {
     str << "Error at " << "L" << context.sdocpos.sourceline << " (" << context.sdocpos.sourcefile << ")\nCallstack:";
     intercept::sqf::diag_log(str.str());
     str.str(std::string());
-
     for (auto& it : context.callstack) {
         if (!it) continue;
-        RawCallstackVisitor callstackVisit;
-        visit_callstack_item(callstackVisit, it);
 
-        str << "\t[" << it->_scopeName << "] " << "L" << callstackVisit.sourceLine << " (" << callstackVisit.sourceFile << ")";
+        StackFrameSourceLocation loc = getCallstackLocation(it);
+        str << "\t[" << it->_scopeName << "] " << "L" << loc.line << " (" << loc.file << ")";
         intercept::sqf::diag_log(str.str());
         str.str(std::string());
-
 
         it->_varSpace.variables.for_each([&str, dumpFullArray](const game_variable& var) {
             if (!dumpFullArray && var.value.type_enum() == game_data_type::ARRAY && var.value.size() > 50) {
@@ -327,7 +319,6 @@ void Debugger::dumpStackToRPT(GameState* gs) {
             str.str(std::string());
         });
     }
-
     intercept::sqf::diag_log("CALLSTACK END;;;\n"sv);
     //intercept::sqf::hint("ArmaDebugEngine: Stack Dumped"); //This doesn't work before UI is ready, ex preStart
     intercept::sqf::system_chat("ArmaDebugEngine: Stack Dumped");
@@ -359,16 +350,16 @@ void Debugger::executeScriptInHalt(r_string script) {
 
 auto_array<std::pair<r_string, uint32_t>> Debugger::getCallstackRaw(GameState* gs) {
     auto_array<std::pair<r_string, uint32_t>> res;
+
     if (!gs->get_vm_context()) return res;
     auto& context = *gs->get_vm_context();
 
     for (auto& it : context.callstack) {
         if (!it) continue;
-        RawCallstackVisitor callstackVisit;
-        visit_callstack_item(callstackVisit, it);
-        res.emplace_back(callstackVisit.sourceFile, callstackVisit.sourceLine);
-    }
 
+        auto loc = getCallstackLocation(it);
+        res.emplace_back(loc.file, loc.line);
+    }
     return res;
 }
 
@@ -393,39 +384,27 @@ void Debugger::onScriptHalt(GameState* gs) {
     hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->get_vm_context(), gs });
 }
 
-namespace {
-    struct LastInstructionNameVisitor
+bool Debugger::allowStepInto(const DebuggerInstructionInfo& instructionInfo, int lastStepFrame)
+{
+    if (instructionInfo.context->callstack.size() <= 1)
     {
-        void visit(const CallStackItemSimple* stackItem, int) {
-            lastInstructionName = stackItem->_instructions.get(stackItem->_currentInstruction - 1)->get_name();
-        }
-
-        void visit(const CallStackItemData* stackItem, int) {
-            lastInstructionName = stackItem->_code->instructions.get(stackItem->_ip - 1)->get_name();
-        }
-
-        void visit(const CallStackItemArrayForEach* stackItem, int) {}
-        void visit(const CallStackItemArrayCount* stackItem, int) {}
-        void visit(const CallStackItemForBASIC* stackItem, int) {}
-        void visit(const CallStackItemApply* stackItem, int) {}
-        void visit(const CallStackItemConditionSelect* stackItem, int) {}
-        void visit(const CallStackItemArrayFindCond* stackItem, int) {}
-        void visit(const CallStackItemFor* stackItem, int) {}
-        void visit(const CallStackRepeat* stackItem, int) {}
-
-        r_string lastInstructionName;
-    };
-
-    bool allowStepInto(const DebuggerInstructionInfo& instructionInfo, int lastStepFrame)
-    {
-        if (instructionInfo.context->callstack.size() <= 1)
-        {
-            return true;
-        }
-        LastInstructionNameVisitor lastInst;
-        visit_callstack_item(lastInst, instructionInfo.context->callstack[lastStepFrame]);
-        return lastInst.lastInstructionName != r_string("operator call");
+        return true;
     }
+
+    auto& stackFrame = instructionInfo.context->callstack[lastStepFrame];
+    auto type_hash = typeid(stackFrame).hash_code();
+
+    switch (type_hash) {
+        case CallStackItemSimple::type_hash: {
+            const CallStackItemSimple* stackItem = static_cast<const CallStackItemSimple*>(stackFrame.get());
+            return stackItem->_instructions.get(stackItem->_currentInstruction - 1)->get_name() != r_string("operator call");
+        };
+        case CallStackItemData::type_hash: {
+            const CallStackItemData* stackItem = static_cast<const CallStackItemData*>(stackFrame.get());
+            return stackItem->_code->instructions.get(stackItem->_ip - 1)->get_name() != r_string("operator call");
+        };
+    };
+    return false;
 }
 
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
