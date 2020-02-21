@@ -30,11 +30,6 @@ struct BreakStateInfo {
     BreakPoint* bp{ nullptr };
 };
 
-struct StackFrameSourceLocation {
-    r_string file;
-    uint32_t line;
-};
-
 enum class DebuggerState {
     Uninitialized,
     running,
@@ -165,6 +160,6 @@ public:
 
 private:
     static bool allowStepInto(const DebuggerInstructionInfo& instructionInfo, int lastStepFrame);
-    static StackFrameSourceLocation getCallstackLocation(const ref<vm_context::callstack_item>& item);
+    static std::pair<r_string, uint32_t> getCallstackLocation(const ref<vm_context::callstack_item>& item);
 };
 

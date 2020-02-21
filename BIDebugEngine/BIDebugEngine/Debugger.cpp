@@ -250,19 +250,19 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 
 }
 
-StackFrameSourceLocation Debugger::getCallstackLocation(const ref<vm_context::callstack_item>& item)
+std::pair<r_string, uint32_t>  Debugger::getCallstackLocation(const ref<vm_context::callstack_item>& item)
 {
     switch (typeid(*item.get()).hash_code()) {
     case CallStackItemSimple::type_hash: {
         auto stackItem = static_cast<const CallStackItemSimple*>(item.get());
-        return StackFrameSourceLocation{
+        return {
             (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourcefile,
             (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourceline
         };
     };
     case CallStackItemData::type_hash: {
         auto stackItem = static_cast<const CallStackItemData*>(item.get());
-        return StackFrameSourceLocation{
+        return {
             (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile,
             (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline
         };
@@ -279,8 +279,8 @@ StackFrameSourceLocation Debugger::getCallstackLocation(const ref<vm_context::ca
         char fileBuffer[256]{ 0 };
         int line;
         item->getSourceDocPosition(fileBuffer, 255, line);
-        return StackFrameSourceLocation{
-            fileBuffer,
+        return {
+            r_string(fileBuffer),
             static_cast<uint32_t>(line)
         };
         //__debugbreak();
@@ -301,8 +301,9 @@ void Debugger::dumpStackToRPT(GameState* gs) {
     for (auto& it : context.callstack) {
         if (!it) continue;
 
-        StackFrameSourceLocation loc = getCallstackLocation(it);
-        str << "\t[" << it->_scopeName << "] " << "L" << loc.line << " (" << loc.file << ")";
+        
+        auto [file, line] = getCallstackLocation(it);
+        str << "\t[" << it->_scopeName << "] " << "L" << line << " (" << file << ")";
         intercept::sqf::diag_log(str.str());
         str.str(std::string());
 
@@ -357,8 +358,8 @@ auto_array<std::pair<r_string, uint32_t>> Debugger::getCallstackRaw(GameState* g
     for (auto& it : context.callstack) {
         if (!it) continue;
 
-        auto loc = getCallstackLocation(it);
-        res.emplace_back(loc.file, loc.line);
+        auto [file, line] = getCallstackLocation(it);
+        res.emplace_back(file, line);
     }
     return res;
 }
