@@ -124,30 +124,21 @@ public:
     //std::map<std::string, std::vector<BreakPoint>> breakPoints;
     class breakPointList : public std::vector<BreakPoint> {
     public:
-        breakPointList() {}
-        // breakPointList(const breakPointList& b) = delete;// : _name(b._name) { for (auto &it : b) emplace_back(std::move(it)); } //std::vector like's to still copy while passing rvalue-ref
-        //breakPointList(BreakPoint& b) : _name(b.filename) {push_back(std::move(b)); }
-        breakPointList(BreakPoint&& b) noexcept : _name(b.filename) { push_back(std::move(b)); }
-        breakPointList& operator=(breakPointList&& b) noexcept {
-            _name = (b._name); for (auto &it : b) emplace_back(std::move(it));
-            return *this;
-        }
+        breakPointList() = default;
+
+        breakPointList(BreakPoint&& b) noexcept : _name(b.filename) { emplace_back(std::move(b)); }
+        breakPointList(breakPointList&& b) noexcept = default;
+        breakPointList& operator=(breakPointList&& b) noexcept = default;
         r_string _name;
         const char* get_map_key() const { return _name.c_str(); }
-        breakPointList(breakPointList& b) {
-            if (!b._name.empty() && !_name.empty()) __debugbreak();
-            _name = (b._name); for (auto &&it : b) emplace_back(std::move(it));
-        }
-    private:
 
         // disable copying
-
-        breakPointList& operator=(const breakPointList&);
-
-
+        breakPointList(const breakPointList&) = delete;
+        breakPointList& operator=(const breakPointList&) = delete;
     };
     std::shared_mutex breakPointsLock;
     map_string_to_class<breakPointList, auto_array<breakPointList>> breakPoints; // All inputs have to be tolowered before accessing
+    //std::unordered_map<std::string, breakPointList> breakPoints; // All inputs have to be tolowered before accessing
     std::vector<std::shared_ptr<IMonitorBase>> monitors;
     NetworkController nController;
     std::shared_ptr<std::pair<std::condition_variable, bool>> breakStateContinueEvent;
@@ -158,7 +149,7 @@ public:
         r_string originFile;
         uint16_t originLevel;
         uint16_t stepLine;
-        uint8_t stepLevel;
+        uint8_t stepFrame;
         RV_VMContext* context;
     } stepInfo;
     struct productInfoStruct {
@@ -166,5 +157,9 @@ public:
         r_string gameVersion;
         void Serialize(JsonArchive &ar);
     } productInfo;
+
+private:
+    static bool allowStepInto(const DebuggerInstructionInfo& instructionInfo, int lastStepFrame);
+    static std::pair<r_string, uint32_t> getCallstackLocation(const ref<vm_context::callstack_item>& item);
 };
 

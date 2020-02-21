@@ -53,7 +53,7 @@ std::string Script::getScriptFromFirstLine(const intercept::types::sourcedocpos&
     auto readLineMacro = [&]() {
         curPos += 6;
         auto numberEnd = std::find(curPos, end, ' ');
-        auto number = std::stoi(std::string(curPos, numberEnd));
+        unsigned number = std::stoi(std::string(curPos, numberEnd));
         curPos = numberEnd + 2;
         auto nameEnd = std::find(curPos, end, '"');
         std::string name(curPos, nameEnd);

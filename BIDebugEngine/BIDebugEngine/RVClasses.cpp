@@ -80,12 +80,8 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
         }
 
         switch (hash) {
-#ifdef X64
-            case 0x796333d0f1231802: {
-#else
-            case 0xed08ac32: { //CallStackItemSimple
-#endif
-                auto stackItem = static_cast<const CallStackItemSimple*     >(item.get());
+            case CallStackItemSimple::type_hash: {
+                auto stackItem = static_cast<const CallStackItemSimple*>(item.get());
                 ar.Serialize("fileName", stackItem->_content.sourcefile);
                 ar.Serialize("contentSample", (std::string)stackItem->_content.content.substr(0, 100));
                 ar.Serialize("ip", stackItem->_currentInstruction);
@@ -95,11 +91,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 //ar.Serialize("instructions", stackItem->_instructions);
             }   break;
 
-#ifdef X64
-            case 0x6a5a9847820cfc77: {
-#else
-            case 0x224543d0: { //CallStackItemData
-#endif
+            case CallStackItemData::type_hash: {
                 auto stackItem = static_cast<const CallStackItemData*>(item.get());
 
                 ar.Serialize("ip", stackItem->_ip);
@@ -112,32 +104,28 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 //ar.Serialize("instructions", stackItem->_code->_instructions._code);
             }   break;
 
-
-
-#ifdef X64
-            case 0x648cf398b08788b9: {
-#else
-            case 0x254c4241: { //CallStackItemArrayForEach
-#endif
+            case CallStackItemArrayForEach::type_hash: {
                 auto stackItem = static_cast<const CallStackItemArrayForEach*>(item.get());
 
                 ar.Serialize("forEachIndex", stackItem->_forEachIndex);
             } break;
 
-            case 0x1d75078e7c270ec2: { //CallStackItemApply
+            case CallStackItemApply::type_hash: {
                 auto stackItem = static_cast<const CallStackItemApply*>(item.get());
                 ar.Serialize("forEachIndex", stackItem->_forEachIndex);
             } break;
-            case 0x64fd66ac9d9a6063: { //CallStackRepeat (while)
+
+            case CallStackRepeat::type_hash: {
             } break;
-            case 0xec123abb0b8aec96: { //CallStackItemConditionSelect (select)
-                auto stackItem = static_cast<const CallStackItemApply*>(item.get());
+
+            case CallStackItemConditionSelect::type_hash: {
+                auto stackItem = static_cast<const CallStackItemConditionSelect*>(item.get());
                 //Yes, that's a different name, but both have the same layout.
                 ar.Serialize("forEachIndex", stackItem->_forEachIndex);
             } break;
-            case 0x51097d4e8ac94aa9: { //CallStackItemForBASIC (for step)
-                auto stackItem = static_cast<const CallStackItemForBASIC*>(item.get());
 
+            case CallStackItemForBASIC::type_hash: {
+                auto stackItem = static_cast<const CallStackItemForBASIC*>(item.get());
                 ar.Serialize("varName", stackItem->_varName);
                 ar.Serialize("varValue", stackItem->_varValue);
                 ar.Serialize("to", stackItem->_to);
@@ -145,15 +133,13 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 
             } break;
 
-            case 0x9a611c77f320c98b: { //CallStackItemFor
+            case CallStackItemFor::type_hash: {
             } break;
 
-            case 0x9ec7cbd761a5b791: { //CallStackItemArrayFindCond (findIf)
+            case CallStackItemArrayFindCond::type_hash: {
                 auto stackItem = static_cast<const CallStackItemArrayFindCond*>(item.get());
                 ar.Serialize("forEachIndex", stackItem->_forEachIndex);
             } break;
-                
-
 
             default:
                 //__debugbreak(); 
@@ -338,19 +324,20 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
     auto hash = type.hash_code();
 
     switch (hash) {
-        case 0xed08ac32: { //CallStackItemSimple
+        case CallStackItemSimple::type_hash: {
             auto stackItem = static_cast<const CallStackItemSimple*>(&it);
             //#TODO test if this is the correct instruction or if i should -1 this
             const auto& lastInstruction = (stackItem->_instructions.get(stackItem->_currentInstruction))->sdp;
             return lastInstruction;
         }   break;
 
-        case 0x224543d0: { //CallStackItemData
+        case CallStackItemData::type_hash: { //CallStackItemData
             auto stackItem = static_cast<const CallStackItemData*>(&it);
             auto & lastInstruction = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp;
             return lastInstruction;
         }   break;
-        case 0x254c4241: { //CallStackItemArrayForEach
+
+        case CallStackItemArrayForEach::type_hash: { //CallStackItemArrayForEach
 
         } break;
     }
