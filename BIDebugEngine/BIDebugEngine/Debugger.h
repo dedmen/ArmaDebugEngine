@@ -130,27 +130,17 @@ public:
     class breakPointList : public std::vector<BreakPoint> {
     public:
         breakPointList() = default;
+
+        breakPointList(BreakPoint&& b) noexcept : _name(b.filename) { emplace_back(std::move(b)); }
+        breakPointList(breakPointList&& b) noexcept = default;
+        breakPointList& operator=(breakPointList&& b) noexcept = default;
+        r_string _name;
+        const char* get_map_key() const { return _name.c_str(); }
+
         // disable copying
         breakPointList(const breakPointList&) = delete;
         breakPointList& operator=(const breakPointList&) = delete;
-
-        // breakPointList(const breakPointList& b) = delete;// : _name(b._name) { for (auto &it : b) emplace_back(std::move(it)); } //std::vector like's to still copy while passing rvalue-ref
-        //breakPointList(BreakPoint& b) : _name(b.filename) {push_back(std::move(b)); }
-        breakPointList(BreakPoint&& b) noexcept : _name(b.filename) { emplace_back(std::move(b)); }
-        breakPointList(breakPointList&& b) noexcept = default;
-        //{
-        //    if (!b._name.empty() && !_name.empty()) __debugbreak();
-        //    _name = (b._name); for (auto &&it : b) emplace_back(std::move(it));
-        //}
-        breakPointList& operator=(breakPointList&& b) noexcept = default;
-        //{
-        //    _name = (b._name); for (auto &it : b) emplace_back(std::move(it));
-        //    return *this;
-        //}
-        r_string _name;
-        const char* get_map_key() const { return _name.c_str(); }
     };
-
     std::shared_mutex breakPointsLock;
     map_string_to_class<breakPointList, auto_array<breakPointList>> breakPoints; // All inputs have to be tolowered before accessing
     //std::unordered_map<std::string, breakPointList> breakPoints; // All inputs have to be tolowered before accessing

@@ -252,7 +252,7 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 
 StackFrameSourceLocation Debugger::getCallstackLocation(const ref<vm_context::callstack_item>& item)
 {
-    switch (typeid(item.get()).hash_code()) {
+    switch (typeid(*item.get()).hash_code()) {
     case CallStackItemSimple::type_hash: {
         auto stackItem = static_cast<const CallStackItemSimple*>(item.get());
         return StackFrameSourceLocation{
@@ -392,7 +392,7 @@ bool Debugger::allowStepInto(const DebuggerInstructionInfo& instructionInfo, int
     }
 
     auto& stackFrame = instructionInfo.context->callstack[lastStepFrame];
-    auto type_hash = typeid(stackFrame).hash_code();
+    auto type_hash = typeid(*stackFrame.get()).hash_code();
 
     switch (type_hash) {
         case CallStackItemSimple::type_hash: {
@@ -404,7 +404,7 @@ bool Debugger::allowStepInto(const DebuggerInstructionInfo& instructionInfo, int
             return stackItem->_code->instructions.get(stackItem->_ip - 1)->get_name() != r_string("operator call");
         };
     };
-    return false;
+    return true;
 }
 
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
