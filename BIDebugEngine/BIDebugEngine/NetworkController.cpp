@@ -80,8 +80,8 @@ void NetworkController::incomingMessage(const std::string& message) {
                     }
                     bpVec.push_back(std::move(bp));
                 } else {
-                    // GlobalDebugger.breakPoints.insert(Debugger::breakPointList(std::move(bp)));
-                    GlobalDebugger.breakPoints.emplace(std::string{bp.filename.c_str()}, std::move(bp));
+                    GlobalDebugger.breakPoints.insert(Debugger::breakPointList(std::move(bp)));
+                    //GlobalDebugger.breakPoints.emplace(std::string{bp.filename.c_str()}, std::move(bp));
                 }
             } break;
             case NC_CommandType::delBreakpoint: {
@@ -102,8 +102,8 @@ void NetworkController::incomingMessage(const std::string& message) {
                         found.erase(vecFound);
                     }
                     if (found.empty())
-                        GlobalDebugger.breakPoints.erase(fileName);
-                        //GlobalDebugger.breakPoints.remove(fileName.c_str());
+                        //GlobalDebugger.breakPoints.erase(fileName);
+                        GlobalDebugger.breakPoints.remove(fileName.c_str());
                 }
             } break;
             case NC_CommandType::BPContinue: {
