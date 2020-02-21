@@ -250,6 +250,49 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
 
 }
 
+
+namespace {
+    struct RawCallstackVisitor
+    {
+        void visit(const CallStackItemSimple* stackItem, int) {
+            sourceFile = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourcefile;
+            sourceLine = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourceline;
+        }
+
+        void visit(const CallStackItemData* stackItem, int) {
+            sourceFile = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile;
+            sourceLine = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline;
+        }
+
+        void visit(const CallStackItemArrayForEach* stackItem, int) {
+            //Level doesn't have any code. It's all inside a CallStackitemData one level lower
+        }
+
+        void visit(const CallStackItemArrayCount* stackItem, int) {
+            //Level doesn't have any code. It's all inside a CallStackitemData one level lower
+        }
+
+        void visit(CallStackItemForBASIC* stackItem, int) { default_visit(stackItem); }
+        void visit(CallStackItemApply* stackItem, int) { default_visit(stackItem); }
+        void visit(CallStackItemConditionSelect* stackItem, int) { default_visit(stackItem); }
+        void visit(CallStackItemArrayFindCond* stackItem, int) { default_visit(stackItem); }
+        void visit(CallStackItemFor* stackItem, int) { default_visit(stackItem); }
+        void visit(CallStackRepeat* stackItem, int) { default_visit(stackItem); }
+
+        void default_visit(vm_context::callstack_item* stackItem) {
+            int line{ 0 };
+            char fileBuffer[256]{ 0 };
+            stackItem->getSourceDocPosition(fileBuffer, 255, line);
+            sourceFile = fileBuffer;
+            sourceLine = line;
+        }
+
+        r_string sourceFile;
+        uint32_t sourceLine;
+    };
+}
+
+
 void Debugger::dumpStackToRPT(GameState* gs) {
     if (!gs->get_vm_context()) return;
     auto& context = *gs->get_vm_context();
@@ -260,62 +303,13 @@ void Debugger::dumpStackToRPT(GameState* gs) {
     str << "Error at " << "L" << context.sdocpos.sourceline << " (" << context.sdocpos.sourcefile << ")\nCallstack:";
     intercept::sqf::diag_log(str.str());
     str.str(std::string());
+
     for (auto& it : context.callstack) {
         if (!it) continue;
+        RawCallstackVisitor callstackVisit;
+        visit_callstack_item(callstackVisit, it);
 
-
-
-        r_string sourceFile;
-        int line{ 0 };
-
-        auto& type = typeid(*it.get());
-        auto hash = type.hash_code();
-
-        switch (hash) {
-#ifdef X64
-        case 0x796333d0f1231802: {
-#else
-        case 0xed08ac32: { //CallStackItemSimple
-#endif
-            auto stackItem = static_cast<const CallStackItemSimple*>(it.get());
-
-            sourceFile = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourcefile;
-            line = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourceline;
-        }   break;
-
-#ifdef X64
-        case 0x6a5a9847820cfc77: {
-#else
-        case 0x224543d0: { //CallStackItemData
-#endif
-            auto stackItem = static_cast<const CallStackItemData*>(it.get());
-            sourceFile = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile;
-            line = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline;
-
-        }   break;
-        case 0x254c4241: { //CallStackItemArrayForEach
-            continue;
-            //Level doesn't have any code. It's all inside a CallStackitemData one level lower
-        } break;
-#ifdef X64
-        case 0x2dc1ba43da7f1af7: {//CallStackItemArrayCount
-#else
-        case 0x1337: { //CallStackItemData
-#endif
-            continue;
-            //Level doesn't have any code. It's all inside a CallStackitemData one level lower
-        }
-        default:
-            char fileBuffer[256]{ 0 };
-
-            it->getSourceDocPosition(fileBuffer, 255, line);
-            sourceFile = fileBuffer;
-            //__debugbreak();
-        }
-
-
-
-        str << "\t[" << it->_scopeName << "] " << "L" << line << " (" << sourceFile << ")";
+        str << "\t[" << it->_scopeName << "] " << "L" << callstackVisit.sourceLine << " (" << callstackVisit.sourceFile << ")";
         intercept::sqf::diag_log(str.str());
         str.str(std::string());
 
@@ -333,6 +327,7 @@ void Debugger::dumpStackToRPT(GameState* gs) {
             str.str(std::string());
         });
     }
+
     intercept::sqf::diag_log("CALLSTACK END;;;\n"sv);
     //intercept::sqf::hint("ArmaDebugEngine: Stack Dumped"); //This doesn't work before UI is ready, ex preStart
     intercept::sqf::system_chat("ArmaDebugEngine: Stack Dumped");
@@ -364,63 +359,16 @@ void Debugger::executeScriptInHalt(r_string script) {
 
 auto_array<std::pair<r_string, uint32_t>> Debugger::getCallstackRaw(GameState* gs) {
     auto_array<std::pair<r_string, uint32_t>> res;
-
     if (!gs->get_vm_context()) return res;
     auto& context = *gs->get_vm_context();
 
     for (auto& it : context.callstack) {
         if (!it) continue;
-
-        r_string sourceFile;
-        int line{ 0 };
-
-        auto& type = typeid(*it.get());
-        auto hash = type.hash_code();
-
-        switch (hash) {
-#ifdef X64
-        case 0x796333d0f1231802: {
-#else
-        case 0xed08ac32: { //CallStackItemSimple
-#endif
-            auto stackItem = static_cast<const CallStackItemSimple*>(it.get());
-
-            sourceFile = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourcefile;
-            line = (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourceline;
-        }   break;
-
-#ifdef X64
-        case 0x6a5a9847820cfc77: {
-#else
-        case 0x224543d0: { //CallStackItemData
-#endif
-            auto stackItem = static_cast<const CallStackItemData*>(it.get());
-            sourceFile = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile;
-            line = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline;
-
-        }   break;
-        case 0x254c4241: { //CallStackItemArrayForEach
-            continue;
-            //Level doesn't have any code. It's all inside a CallStackitemData one level lower
-        } break;
-#ifdef X64
-        case 0x2dc1ba43da7f1af7: {//CallStackItemArrayCount
-#else
-        case 0x1337: { //CallStackItemData
-#endif
-            continue;
-            //Level doesn't have any code. It's all inside a CallStackitemData one level lower
-        }
-        default:
-            char fileBuffer[256]{ 0 };
-
-            it->getSourceDocPosition(fileBuffer, 255, line);
-            sourceFile = fileBuffer;
-            //__debugbreak();
-        }
-
-        res.emplace_back(sourceFile, line);
+        RawCallstackVisitor callstackVisit;
+        visit_callstack_item(callstackVisit, it);
+        res.emplace_back(callstackVisit.sourceFile, callstackVisit.sourceLine);
     }
+
     return res;
 }
 
@@ -445,6 +393,41 @@ void Debugger::onScriptHalt(GameState* gs) {
     hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->get_vm_context(), gs });
 }
 
+namespace {
+    struct LastInstructionNameVisitor
+    {
+        void visit(const CallStackItemSimple* stackItem, int) {
+            lastInstructionName = stackItem->_instructions.get(stackItem->_currentInstruction - 1)->get_name();
+        }
+
+        void visit(const CallStackItemData* stackItem, int) {
+            lastInstructionName = stackItem->_code->instructions.get(stackItem->_ip - 1)->get_name();
+        }
+
+        void visit(const CallStackItemArrayForEach* stackItem, int) {}
+        void visit(const CallStackItemArrayCount* stackItem, int) {}
+        void visit(const CallStackItemForBASIC* stackItem, int) {}
+        void visit(const CallStackItemApply* stackItem, int) {}
+        void visit(const CallStackItemConditionSelect* stackItem, int) {}
+        void visit(const CallStackItemArrayFindCond* stackItem, int) {}
+        void visit(const CallStackItemFor* stackItem, int) {}
+        void visit(const CallStackRepeat* stackItem, int) {}
+
+        r_string lastInstructionName;
+    };
+
+    bool allowStepInto(const DebuggerInstructionInfo& instructionInfo, int lastStepFrame)
+    {
+        if (instructionInfo.context->callstack.size() <= 1)
+        {
+            return true;
+        }
+        LastInstructionNameVisitor lastInst;
+        visit_callstack_item(lastInst, instructionInfo.context->callstack[lastStepFrame]);
+        return lastInst.lastInstructionName != r_string("operator call");
+    }
+}
+
 void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     if (state == DebuggerState::waitForHalt) {
         BPAction_Halt hAction(haltType::halt);
@@ -452,29 +435,36 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
         return;
     }
 
-    if (state == DebuggerState::stepState && instructionInfo.context != stepInfo.context) {
+    if (state == DebuggerState::stepState && instructionInfo.context == stepInfo.context) {
         //if (instructionInfo.context != stepInfo.context) { //Lost context. Can't step anymore
         //    //#TODO don't care about this if scriptVM stepping
         //    commandContinue(StepType::STContinue);
         //}
-        auto level = instructionInfo.context->callstack.count();
-        if (level <= stepInfo.stepLevel &&
-            //Prevent stepOver from triggering in the same Line
-            (stepInfo.stepType == StepType::STOver ? stepInfo.stepLine != instructionInfo.instruction->sdp.sourceline : true)
+        auto frame = instructionInfo.context->callstack.count() - 1;
+        if (stepInfo.stepType == StepType::STInto
+            ||
+            stepInfo.stepType == StepType::STOut && frame < stepInfo.stepFrame
+            ||
+            stepInfo.stepType == StepType::STOver
             &&
             (
-                //Don't trigger stepOver halt if it step into a lower scope in a different file (call for example)
-                stepInfo.stepType != StepType::STOver ||
-                stepInfo.originFile != instructionInfo.instruction->sdp.sourcefile ||
-                level <= stepInfo.originLevel
-            )
-            ) {
-
+                // Allow step out always
+                frame < stepInfo.stepFrame
+                ||
+                // Allow step in same frame only onto another source line
+                frame == stepInfo.stepFrame
+                &&
+                instructionInfo.instruction->sdp.sourceline != stepInfo.stepLine
+                ||
+                // Allow step into to non-call scopes only
+                allowStepInto(instructionInfo, stepInfo.stepFrame)
+            )) {
             BPAction_Halt hAction(haltType::step);
             hAction.execute(this, nullptr, instructionInfo);
             return; //We already halted here. Don't care if there are more breakpoints here.
         }
     }
+
     if (breakPoints.empty()) return;
     //if (_strcmpi(instructionInfo.instruction->_scriptPos._sourceFile.data(), "z\\ace\\addons\\explosives\\functions\\fnc_setupExplosive.sqf") == 0)
     //    __debugbreak();
@@ -608,30 +598,12 @@ void Debugger::commandContinue(StepType stepType) {
         stepInfo.stepType = stepType;
         if (!breakStateInfo.instruction || !breakStateInfo.instruction->instruction) {
             state = DebuggerState::running;
-            goto jumpOut;
-        }
-
-        stepInfo.originFile = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->sdp.sourcefile : breakStateInfo.instruction->context->sdocpos.sourcefile;
-        stepInfo.originLevel = breakStateInfo.instruction->context->callstack.count();
-        stepInfo.stepLine = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->sdp.sourceline : breakStateInfo.instruction->context->sdocpos.sourceline;
-        stepInfo.context = breakStateInfo.instruction->context;
-
-        switch (stepType) {
-            case StepType::STInto:
-                stepInfo.stepLevel = std::numeric_limits<decltype(stepInfo.stepLevel)>::max();
-                break;
-            case StepType::STOver:
-                stepInfo.stepLevel = std::numeric_limits<decltype(stepInfo.stepLevel)>::max();
-
-                    //static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.count());
-                break;
-            case StepType::STOut:
-                stepInfo.stepLevel = static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.count() - 1);
-                break;
-            default: break;
+        } else {
+            stepInfo.stepLine = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->sdp.sourceline : breakStateInfo.instruction->context->sdocpos.sourceline;
+            stepInfo.context = breakStateInfo.instruction->context;
+            stepInfo.stepFrame = static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.count() - 1);
         }
     }
-    jumpOut:
     if (breakStateContinueEvent) {
         breakStateContinueEvent->first.notify_all();
         breakStateContinueEvent->second = true;

@@ -154,12 +154,15 @@ public:
     std::shared_ptr<std::pair<std::condition_variable, bool>> breakStateContinueEvent;
     DebuggerState state{ DebuggerState::Uninitialized };
     BreakStateInfo breakStateInfo;
+
+    struct LineRange {
+        uint32_t start;
+        uint32_t end;
+    };
     struct {
         StepType stepType;
-        r_string originFile;
-        uint16_t originLevel;
-        uint16_t stepLine;
-        uint8_t stepLevel;
+        uint32_t stepLine;
+        uint32_t stepFrame;
         RV_VMContext* context;
     } stepInfo;
     struct productInfoStruct {
