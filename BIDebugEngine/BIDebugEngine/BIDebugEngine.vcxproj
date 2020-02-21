@@ -82,7 +82,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -451,6 +451,7 @@
     <ClInclude Include="VMContext.h" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="..\..\intercept\src\Intercept.natvis" />
     <Natvis Include="BIDebugEngine.natvis" />
   </ItemGroup>
   <ItemGroup>
