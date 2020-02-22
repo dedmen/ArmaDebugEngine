@@ -340,8 +340,21 @@ void Debugger::executeScriptInHalt(r_string script) {
    
     ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::ExecuteCodeResult));
 
-    JsonArchive data;
-    Serialize(*gdRtn, data);
+    auto allo = intercept::client::host::functions.get_engine_allocator();
+    auto ef = allo->evaluate_func;
+
+    auto code = intercept::sqf::compile(script);
+    auto data = code.get_as<game_data_code>();
+
+    if (!data->instructions.empty()) {
+        auto ns = lastKnownGameState->get_global_namespace(game_state::namespace_type::mission);
+        static r_string fname = "interceptCall"sv;
+
+        auto rtn = ef(*data, ns, fname);
+
+        if (rtn) {
+            JsonArchive data;
+            Serialize(rtn, data);
 
     ar.Serialize("data", data);
 
