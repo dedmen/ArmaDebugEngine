@@ -72,6 +72,7 @@ struct HookIntegrity {
     bool engineAlive{ false };
     bool enableMouse{ false };
     bool preprocRedirect{ false };
+    bool executeCode{ false };
 };
 
 
