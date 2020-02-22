@@ -211,7 +211,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                 ar.Serialize("script", script);
 
 
-                GlobalDebugger.executeScriptInHalt(script);
+                GlobalDebugger.executeScriptInHalt(script, packet.value<std::string>("handle", {}));
             } break;
 
         }

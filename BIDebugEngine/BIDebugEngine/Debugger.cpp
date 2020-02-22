@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <sqf.hpp>
 #include <intercept.hpp>
+#include "core.hpp"
 
 //std::array<const char*, 710> files{};
 Debugger::Debugger() {
@@ -325,27 +326,30 @@ void Debugger::dumpStackToRPT(GameState* gs) {
     intercept::sqf::system_chat("ArmaDebugEngine: Stack Dumped");
 }
 
-void Debugger::executeScriptInHalt(r_string script) {
-    auto rtn = breakStateInfo.instruction->context->callstack.back()->EvaluateExpression(script.c_str(), 10);
-
+void Debugger::executeScriptInHalt(r_string script, std::string handle) {
     JsonArchive ar;
-    if (rtn.is_null()) {
+    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::ExecuteCodeResult));
+    ar.Serialize("handle", handle);
+
+    auto testCompile = intercept::sqf::compile(script).get_as<game_data_code>();
+    if (!testCompile->instructions.empty()) {
+        auto rtn = breakStateInfo.instruction->context->callstack.back()->EvaluateExpression(script.c_str(), 10);
+        if (rtn) {
+            //We get a ptr to the IDebugValue of GameData. But we wan't the GameData vtable.
+            auto gdRtn = reinterpret_cast<GameData*>(rtn.get() - 2); //#TODO warning : 'reinterpret_cast' to class 'GameData *' from its base at non-zero offset 'IDebugValue *' behaves differently from 'static_cast'  -- use static_cast and remove ptr math
+            JsonArchive data;
+            Serialize(*gdRtn, data);
+
+            ar.Serialize("data", data);
+        } else {
+            ar.Serialize("error", "compile failed");
+        }
+    } else {
         ar.Serialize("error", "compile failed");
-        return;
     }
 
-    //We get a ptr to the IDebugValue of GameData. But we wan't the GameData vtable.
-    auto gdRtn = reinterpret_cast<GameData*>(rtn.get() - 2); //#TODO warning : 'reinterpret_cast' to class 'GameData *' from its base at non-zero offset 'IDebugValue *' behaves differently from 'static_cast'  -- use static_cast and remove ptr math
-
-   
-    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::ExecuteCodeResult));
-
-    JsonArchive data;
-    Serialize(*gdRtn, data);
-
-    ar.Serialize("data", data);
-
     auto text = ar.to_string();
+
     nController.sendMessage(text);
 }
 
