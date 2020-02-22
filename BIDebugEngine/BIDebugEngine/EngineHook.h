@@ -40,9 +40,11 @@ public:
 
     HookManager();
     bool placeHook(hookTypes, const Pattern& pat, uintptr_t jmpTo, uintptr_t& jmpBackRef, uint8_t jmpBackOffset = 0);
+    bool placeHookTrampoline(hookTypes hook_types_, const Pattern& pattern_, uintptr_t jmpTo, uintptr_t& origFunctionRef, uint32_t trampolineSize);
     bool placeHook(hookTypes, const Pattern& pat, uintptr_t jmpTo);
     uintptr_t placeHook(uintptr_t offset, uintptr_t jmpTo, uint8_t jmpBackOffset = 0);
     uintptr_t placeHookTotalOffs(uintptr_t offset, uintptr_t jmpTo);
+    void placeHookTrampolineTotalOffs(uintptr_t found_, uintptr_t jmp_to_, uintptr_t& orig_function_ref_, uint32_t trampoline_size_);
     bool MatchPattern(uintptr_t addr, const char* pattern, const char* mask);
     uintptr_t findPattern(const char* pattern, const char* mask, uintptr_t offset = 0);
     uintptr_t findPattern(const Pattern& pat, uintptr_t offset = 0);

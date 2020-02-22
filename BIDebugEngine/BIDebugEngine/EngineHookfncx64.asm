@@ -25,6 +25,9 @@ _TEXT    SEGMENT
 
     EXTERN instructionBreakpointJmpBack:                        qword
     EXTERN scriptVMSimulateStartJmpBack:                        qword
+
+    EXTERN scriptVMSimulateActual:                              qword
+
     EXTERN worldSimulateJmpBack:                                qword
     EXTERN worldMissionEventStartJmpBack:                       qword
     EXTERN worldMissionEventEndJmpBack:                         qword
@@ -89,24 +92,43 @@ _TEXT    SEGMENT
     PUBLIC scriptVMConstructor
     scriptVMConstructor PROC
 
+        push rax;
+        push rcx;
+        push rdx;
+        push r8;
+        push r9;
+        push r10;
+        push r11;
+
         push    rcx;
         push    rdx;
-        mov     rdx, rdi;                                        scriptVM Pointer
+        ;   rdx scriptVM Pointer
         mov     rcx, offset GlobalEngineHook;
         call    ?_scriptLoaded@EngineHook@@QEAAX_K@Z;            EngineHook::_scriptLoaded;
         ;_return:
 
-        pop     rdx;
-        pop     rcx;
-        mov     rax, rdi;                                        Fixup
-        add     rsp, 60h
-        pop     r15
-        pop     r14
-        pop     r13
-        pop     rdi
-        pop     rsi
-        pop     rbp
-        pop     rbx
+        pop rdx;
+        pop rcx;
+
+        pop r11;
+        pop r10;
+        pop r9;
+        pop r8;
+        pop rdx;
+        pop rcx;
+        pop rax;
+
+
+
+
+        mov     [rsp+8], rbx ; fixup
+        mov     [rsp+10h], rbp
+        mov     [rsp+20h], rsi
+        push    rdi
+        sub     rsp, 20h
+        ;movzx   ebp, r8b
+        ;mov     rbx, rdx
+        ;test    rdx, rdx
         jmp scriptVMConstructorJmpBack;
 
     scriptVMConstructor ENDP
@@ -188,6 +210,83 @@ _TEXT    SEGMENT
         pop     rbp
         ret
     scriptVMSimulateEnd ENDP
+
+
+    PUBLIC scriptVMSimulate
+    scriptVMSimulate PROC
+
+        push rcx;
+        push rdx;
+        push r8;
+        push r9;
+        push r10;
+        push r11;
+
+
+        push rcx;                                                scriptVM is at [rsp+10h]
+
+        mov     rcx, hookEnabled_Simulate;                        Skip if hook is disabled
+        test    rcx, rcx;
+        jz      _return;
+
+        pop rcx;
+        push rcx;
+
+        push    rcx;
+        push    rdx;
+
+        mov     rdx, rcx;                                        _scriptEntered arg
+        mov     rcx, offset GlobalEngineHook;
+        call    ?_scriptEntered@EngineHook@@QEAAX_K@Z;            EngineHook::_scriptEntered;
+    
+    
+        pop     rdx;
+        pop     rcx;
+
+
+
+        call scriptVMSimulateActual;
+
+        pop rcx;
+        push rdx;
+
+        mov     rdx, rcx;                            scriptVM
+        mov     rcx, offset GlobalEngineHook;
+
+        test    eax, eax;                                        rdi == done
+        jz      _notDone;                                        script is not Done  
+        call    ?_scriptTerminated@EngineHook@@QEAAX_K@Z;        EngineHook::_scriptTerminated;    script is Done
+        mov rax, 1
+        jmp     _returnPostCall;
+    _notDone:
+        call    ?_scriptLeft@EngineHook@@QEAAX_K@Z;                EngineHook::_scriptLeft;
+
+
+    _returnPostCall:
+
+        pop     rdx;
+
+        pop r11;
+        pop r10;
+        pop r9;
+        pop r8;
+        pop rdx;
+        pop rcx;
+        ret
+
+
+        _return:
+        pop rcx;
+        pop r11;
+        pop r10;
+        pop r9;
+        pop r8;
+        pop rdx;
+        pop rcx;
+        call scriptVMSimulateActual;
+        ret
+
+    scriptVMSimulate ENDP
     
     ;##########
     PUBLIC worldSimulate

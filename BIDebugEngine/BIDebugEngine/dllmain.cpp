@@ -205,12 +205,21 @@ bool HookManager::placeHook(hookTypes type, const Pattern& pat, uintptr_t jmpTo,
     return true;
 }
 
+bool HookManager::placeHookTrampoline(hookTypes, const Pattern& pat, uintptr_t jmpTo, uintptr_t& origFunctionRef, uint32_t trampolineSize) {
+    auto found = findPattern(pat);
+    if (found == 0) {
+        return false;
+    }
+    placeHookTrampolineTotalOffs(found, jmpTo, origFunctionRef, trampolineSize);
+    return true;
+}
+
 bool HookManager::placeHook(hookTypes, const Pattern & pat, uintptr_t jmpTo) {
     auto found = findPattern(pat);
     if (found == 0) {
-#ifdef _DEBUG
-        __debugbreak(); //#TODO report somehow
-#endif
+//#ifdef _DEBUG
+//        __debugbreak(); //#TODO report somehow
+//#endif
         return false;
     }
     placeHookTotalOffs(found, jmpTo);
@@ -257,6 +266,24 @@ uintptr_t HookManager::placeHookTotalOffs(uintptr_t totalOffset, uintptr_t jmpTo
 #endif
 
 
+}
+
+
+void HookManager::placeHookTrampolineTotalOffs(uintptr_t totalOffset, uintptr_t jmpTo, uintptr_t& orig_function_ref_, uint32_t trampolineSize) {
+    auto trampoline = (uintptr_t)malloc(trampolineSize + 50);
+
+    memcpy((void*)trampoline, (void*)totalOffset, trampolineSize);
+
+    //After trampoline, jump back to original function
+    placeHookTotalOffs(trampoline + trampolineSize, totalOffset + trampolineSize);
+
+    DWORD dwVirtualProtectBackup;
+    //Make trampoline executable
+    VirtualProtect(reinterpret_cast<LPVOID>(trampoline), trampolineSize + 14u, 0x40u, &dwVirtualProtectBackup);
+
+    orig_function_ref_ = trampoline;
+
+    placeHookTotalOffs(totalOffset, jmpTo); //Jmp to our target
 }
 
 

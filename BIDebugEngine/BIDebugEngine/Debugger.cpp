@@ -164,7 +164,7 @@ Debugger::~Debugger() {}
 
 void Debugger::clear() {
     if (VMPtrToScript.empty()) return;
-    std::vector<uintptr_t> to_delete;
+    std::vector<RV_VMContext*> to_delete;
     to_delete.reserve(VMPtrToScript.size());
     for (auto&it : VMPtrToScript) {
         if (it.second->canBeDeleted)
@@ -181,12 +181,12 @@ void Debugger::clear() {
 }
 
 std::shared_ptr<VMContext> Debugger::getVMContext(RV_VMContext* vm) {
-    uintptr_t contentPtr = reinterpret_cast<uintptr_t>(vm);
-    auto iter(VMPtrToScript.lower_bound(contentPtr));
+    //uintptr_t contentPtr = reinterpret_cast<uintptr_t>(vm);
+    auto iter(VMPtrToScript.lower_bound(vm));
     //Thank you SO! 
-    if (iter == VMPtrToScript.end() || contentPtr < iter->first) {    // not found
+    if (iter == VMPtrToScript.end() || vm < iter->first) {    // not found
         auto newEntry = std::make_shared<VMContext>();
-        VMPtrToScript.insert(iter, { contentPtr, newEntry });// hinted insertion
+        VMPtrToScript.insert(iter, { vm, newEntry });// hinted insertion
         return newEntry;
     }
     return iter->second;
