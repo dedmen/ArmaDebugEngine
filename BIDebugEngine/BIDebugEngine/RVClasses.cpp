@@ -71,7 +71,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 if (strcmp(type, "array") == 0) {
                     variableArchive.Serialize("value", var.value.to_array());
                 } else {
-                    variableArchive.Serialize("value", value->to_string());
+                    variableArchive.Serialize("value", static_cast<r_string>(var.value));
                 }
                 varArchive.Serialize(name.data(), variableArchive);
 
