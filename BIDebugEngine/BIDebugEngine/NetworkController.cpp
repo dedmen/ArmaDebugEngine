@@ -5,6 +5,8 @@
 #include "BreakPoint.h"
 #include "Debugger.h"
 #include "version.h"
+#include <client.hpp>
+#include <core.hpp>
 
 
 using nlohmann::json;
@@ -211,7 +213,27 @@ void NetworkController::incomingMessage(const std::string& message) {
                 ar.Serialize("script", script);
 
 
-                GlobalDebugger.executeScriptInHalt(script, packet.value<std::string>("handle", {}));
+                GlobalDebugger.executeScriptInHalt(script, packet.value<r_string>("handle", {}));
+            } break;
+
+            case NC_CommandType::LoadFile: {
+                intercept::client::invoker_lock lock;
+                JsonArchive ar(packet["data"]);
+
+                r_string path;
+                ar.Serialize("path", path);
+
+                auto result = intercept::sqf::load_file(path);
+                JsonArchive answerAr;
+                answerAr.Serialize("path", path);
+                answerAr.Serialize("content", result);
+
+                JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
+                answer.Serialize("data", answerAr);
+                answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::LoadFileResult));
+
+                sendMessage(answer.to_string());
             } break;
 
         }

@@ -444,7 +444,7 @@ void EngineHook::placeHooks() {
     HI.scriptEcho = echoHook.has_function();
     HI.preprocRedirect = preprocHook.has_function();
     HI.__instructionBreakpoint = GASM.ready;
-
+    HI.executeCode = intercept::client::host::functions.get_engine_allocator()->evaluate_func != nullptr;
 
 #else
 
@@ -500,7 +500,8 @@ void EngineHook::placeHooks() {
             && HI.scriptEcho
             && HI.engineAlive
             && HI.enableMouse
-            && HI.preprocRedirect)
+            && HI.preprocRedirect
+            && HI.executeCode)
         &&
         !getCommandLineParam("-server"sv) //not on server which might be headless
         ) {
@@ -523,6 +524,7 @@ void EngineHook::placeHooks() {
         if (!HI.engineAlive)              error += "ALIVE    \tFAILED WARNING    \n\tEffect: Game might think it froze if a breakpoint is triggered\n\n";
         if (!HI.enableMouse)              error += "ENMOUSE    \tFAILED WARNING    \n\tEffect: Mouse might be stuck in Game and has to be Freed by opening Task-Manager via CTRL+ALT+DEL\n\n";
         if (!HI.preprocRedirect)              error += "PREPROCRDIR    \tFAILED WARNING    \n\tEffect: Line Numbers of CfgFunctions scripts that use #include will be wrong and breakpoints will not work.\n\n";
+        if (!HI.executeCode) error += "EXECCODE    \tFAILED WARNING    \n\tEffect: Breakpoints cannot execute script code.\n\n";
         if (fatal) error += "\n A Fatal error occured. Your Game version is not compatible with ArmaDebugEngine. Please tell a dev.";
 
 #ifdef X64

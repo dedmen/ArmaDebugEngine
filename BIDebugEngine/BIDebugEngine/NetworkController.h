@@ -15,7 +15,8 @@ enum class NC_CommandType {
     getAllScriptCommands,
     getAvailableVariables,
     haltNow, //Triggers halt on next possible instruction
-    ExecuteCode //Executes code while halted, in current context and returns result
+    ExecuteCode, //Executes code while halted, in current context and returns result
+    LoadFile //literally runs loadFile command and returns result
 };
 
 enum class NC_OutgoingCommandType {
@@ -32,7 +33,8 @@ enum class NC_OutgoingCommandType {
     AvailableVariablesReturn, //returning from getAvailableVariables
     BreakpointLog, //A log breakpoint was triggered
     LogMessage, //A log message from the game, for example from echo script command
-    ExecuteCodeResult //Result of ExecuteCode command
+    ExecuteCodeResult, //Result of ExecuteCode command
+    LoadFileResult //Result of LoadFile command
 };
 
 class NetworkController {
