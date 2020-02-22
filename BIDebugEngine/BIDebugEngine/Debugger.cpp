@@ -823,7 +823,7 @@ void Debugger::grabCurrentCode(JsonArchive& answer, const std::string& file) con
         answer.Serialize("exception", "getCurrentCode: Not in breakState!");
         return;
     }
-    if (breakStateInfo.instruction->instruction->sdp.sourcefile != file) {
+    if (breakStateInfo.instruction->instruction == nullptr || breakStateInfo.instruction->instruction->sdp.sourcefile != file) {
 
         breakStateInfo.instruction->context->callstack.for_each_backwards([&](const ref<intercept::types::vm_context::callstack_item>& item) {
             auto fileCode = tryGetFilenameAndCode(*item);
@@ -835,9 +835,10 @@ void Debugger::grabCurrentCode(JsonArchive& answer, const std::string& file) con
             return false;
         });
 
-    }               
-    answer.Serialize("code", Script::getScriptFromFirstLine(breakStateInfo.instruction->instruction->sdp));
-    answer.Serialize("fileName", breakStateInfo.instruction->instruction->sdp.sourcefile);
+    } else {
+        answer.Serialize("code", Script::getScriptFromFirstLine(breakStateInfo.instruction->instruction->sdp));
+        answer.Serialize("fileName", breakStateInfo.instruction->instruction->sdp.sourcefile);
+    }
 }
 
 void Debugger::VariableInfo::Serialize(JsonArchive& ar) const {
