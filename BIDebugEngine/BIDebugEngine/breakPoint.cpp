@@ -5,6 +5,7 @@
 #include <memory>
 #include <fstream>
 #include <chrono>
+#include <core.hpp>
 using namespace std::chrono_literals;
 
 void BreakPoint::Serialize(JsonArchive& ar) {
@@ -149,11 +150,18 @@ void BreakPoint::executeActions(Debugger* dbg, const DebuggerInstructionInfo& in
 }
 
 bool BPCondition_Code::isMatching(Debugger*, BreakPoint*, const DebuggerInstructionInfo& info) {
-    auto rtn = info.context->callstack.back()->EvaluateExpression(code.c_str(), 10);
-    if (rtn.is_null())  return false; //#TODO this is code error.
-    //We get a ptr to the IDebugValue of GameData. But we wan't the GameData vtable.
-    auto gdRtn = reinterpret_cast<GameData*>(rtn.get() - 2); //#TODO warning : 'reinterpret_cast' to class 'GameData *' from its base at non-zero offset 'IDebugValue *' behaves differently from 'static_cast'  -- use static_cast and remove ptr math
-    return gdRtn->get_as_bool();
+    auto allo = intercept::client::host::functions.get_engine_allocator();
+    auto ef = allo->evaluate_func;
+    auto gs = allo->gameState;
+
+    auto data = intercept::sqf::compile(code).get_as<game_data_code>();
+
+    auto ns = gs->get_global_namespace(game_state::namespace_type::mission);
+    static r_string fname = "interceptCall"sv;
+
+    auto rtn = ef(*data, ns, fname);
+
+    return rtn;
 }
 
 void BPCondition_Code::Serialize(JsonArchive& ar) {
@@ -182,9 +190,18 @@ void BPCondition_HitCount::Serialize(JsonArchive& ar) {
 }
 
 void BPAction_ExecCode::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstructionInfo& info) {
-    info.context->callstack.back()->EvaluateExpression((code + " " + std::to_string(bp->hitcount) + ";" +
+    auto allo = intercept::client::host::functions.get_engine_allocator();
+    auto ef = allo->evaluate_func;
+    auto gs = allo->gameState;
+
+    auto data = intercept::sqf::compile(code + " " + std::to_string(bp->hitcount) + ";" +
         info.instruction->get_name().data() +
-        "\"").c_str(), 10);
+        "\"").get_as<game_data_code>();
+
+    auto ns = gs->get_global_namespace(game_state::namespace_type::mission);
+    static r_string fname = "interceptCall"sv;
+
+    auto rtn = ef(*data, ns, fname);
 }
 
 void BPAction_ExecCode::Serialize(JsonArchive& ar) {
