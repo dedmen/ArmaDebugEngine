@@ -152,6 +152,7 @@ void BreakPoint::executeActions(Debugger* dbg, const DebuggerInstructionInfo& in
 bool BPCondition_Code::isMatching(Debugger*, BreakPoint*, const DebuggerInstructionInfo& info) {
     auto allo = intercept::client::host::functions.get_engine_allocator();
     auto ef = allo->evaluate_func;
+    if (!ef) return false;
     auto gs = allo->gameState;
 
     auto data = intercept::sqf::compile(code).get_as<game_data_code>();
@@ -192,6 +193,7 @@ void BPCondition_HitCount::Serialize(JsonArchive& ar) {
 void BPAction_ExecCode::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstructionInfo& info) {
     auto allo = intercept::client::host::functions.get_engine_allocator();
     auto ef = allo->evaluate_func;
+    if (!ef) return;
     auto gs = allo->gameState;
 
     auto data = intercept::sqf::compile(code + " " + std::to_string(bp->hitcount) + ";" +

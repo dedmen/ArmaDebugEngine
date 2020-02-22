@@ -333,6 +333,12 @@ void Debugger::executeScriptInHalt(r_string script, r_string handle) {
 
     auto allo = intercept::client::host::functions.get_engine_allocator();
     auto ef = allo->evaluate_func;
+    if (!ef) {
+        ar.Serialize("error", "no exec possible");
+        auto text = ar.to_string();
+        nController.sendMessage(text);
+        return;
+    }
 
     auto code = intercept::sqf::compile(script);
     auto data = code.get_as<game_data_code>();
@@ -623,6 +629,7 @@ void Debugger::SerializeHookIntegrity(JsonArchive& answer) {
     answer.Serialize("Alive", HI.engineAlive);
     answer.Serialize("EnMouse", HI.enableMouse);
     answer.Serialize("PREPROCRDIR", HI.preprocRedirect);
+    answer.Serialize("EXECCODE", HI.executeCode);
 }
 
 void Debugger::onScriptEcho(r_string msg) {
