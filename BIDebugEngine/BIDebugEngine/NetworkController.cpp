@@ -217,7 +217,9 @@ void NetworkController::incomingMessage(const std::string& message) {
             } break;
 
             case NC_CommandType::LoadFile: {
-                intercept::client::invoker_lock lock;
+                intercept::client::invoker_lock lock(true);
+                if (GlobalDebugger.state != DebuggerState::running) lock.lock();
+
                 JsonArchive ar(packet["data"]);
 
                 r_string path;
