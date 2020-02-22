@@ -217,8 +217,14 @@ void NetworkController::incomingMessage(const std::string& message) {
             } break;
 
             case NC_CommandType::LoadFile: {
+                if (GlobalDebugger.state != DebuggerState::breakState) {
+                    answer.Serialize("exception", "getCurrentCode: Not in breakState!");
+                    return;
+                }
+
+
                 intercept::client::invoker_lock lock(true);
-                if (GlobalDebugger.state != DebuggerState::running) lock.lock();
+                if (GlobalDebugger.state != DebuggerState::breakState) lock.lock();
 
                 JsonArchive ar(packet["data"]);
 
