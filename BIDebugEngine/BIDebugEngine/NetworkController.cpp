@@ -89,6 +89,17 @@ void NetworkController::incomingMessage(const std::string& message) {
                     GlobalDebugger.breakPoints.emplace(bp.filename, std::move(bp));
                 }
             } break;
+            case NC_CommandType::clearAllBreakpoints: {
+                std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
+                GlobalDebugger.breakPoints.clear();
+            }   break;
+            case NC_CommandType::clearFileBreakpoints: { //clearFileBreakpoints
+                JsonArchive ar(packet["data"]);
+                r_string filename;
+                ar.Serialize("filename", filename);
+                std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
+                GlobalDebugger.breakPoints.erase(filename);
+            }   break;
             case NC_CommandType::delBreakpoint: {
                 JsonArchive ar(packet["data"]);
                 uint16_t lineNumber;
