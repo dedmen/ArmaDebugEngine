@@ -72,6 +72,7 @@ struct HookIntegrity {
     bool engineAlive{ false };
     bool enableMouse{ false };
     bool preprocRedirect{ false };
+    bool executeCode{ false };
 };
 
 
@@ -87,7 +88,7 @@ public:
     void writeFrameToFile(uint32_t frameCounter);
     void onInstruction(DebuggerInstructionInfo& instructionInfo);
     void dumpStackToRPT(GameState* gs);
-    void executeScriptInHalt(r_string script);
+    void executeScriptInHalt(r_string script, r_string handle);
     static auto_array<std::pair<r_string, uint32_t>> getCallstackRaw(GameState* gs);
     void onScriptError(GameState* gs);
     void onScriptAssert(GameState* gs);

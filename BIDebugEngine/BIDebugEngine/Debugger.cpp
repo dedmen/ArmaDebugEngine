@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <sqf.hpp>
 #include <intercept.hpp>
+#include "core.hpp"
 
 //std::array<const char*, 710> files{};
 Debugger::Debugger() {
@@ -325,27 +326,43 @@ void Debugger::dumpStackToRPT(GameState* gs) {
     intercept::sqf::system_chat("ArmaDebugEngine: Stack Dumped");
 }
 
-void Debugger::executeScriptInHalt(r_string script) {
-    auto rtn = breakStateInfo.instruction->context->callstack.back()->EvaluateExpression(script.c_str(), 10);
-
+void Debugger::executeScriptInHalt(r_string script, r_string handle) {
     JsonArchive ar;
-    if (rtn.is_null()) {
-        ar.Serialize("error", "compile failed");
+    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::ExecuteCodeResult));
+    ar.Serialize("handle", handle);
+
+    auto allo = intercept::client::host::functions.get_engine_allocator();
+    auto ef = allo->evaluate_func;
+    if (!ef) {
+        ar.Serialize("error", "no exec possible");
+        auto text = ar.to_string();
+        nController.sendMessage(text);
         return;
     }
 
-    //We get a ptr to the IDebugValue of GameData. But we wan't the GameData vtable.
-    auto gdRtn = reinterpret_cast<GameData*>(rtn.get() - 2); //#TODO warning : 'reinterpret_cast' to class 'GameData *' from its base at non-zero offset 'IDebugValue *' behaves differently from 'static_cast'  -- use static_cast and remove ptr math
+    auto code = intercept::sqf::compile(script);
+    auto data = code.get_as<game_data_code>();
 
-   
-    ar.Serialize("command", static_cast<int>(NC_OutgoingCommandType::ExecuteCodeResult));
+    if (!data->instructions.empty()) {
+        auto ns = lastKnownGameState->get_global_namespace(game_state::namespace_type::mission);
+        static r_string fname = "interceptCall"sv;
 
-    JsonArchive data;
-    Serialize(*gdRtn, data);
+        auto rtn = ef(*data, ns, fname);
 
-    ar.Serialize("data", data);
+        if (rtn) {
+            JsonArchive data;
+            Serialize(rtn, data);
+
+            ar.Serialize("data", data);
+        } else {
+            ar.Serialize("error", "compile failed");
+        }
+    } else {
+        ar.Serialize("error", "compile failed");
+    }
 
     auto text = ar.to_string();
+
     nController.sendMessage(text);
 }
 
@@ -612,6 +629,7 @@ void Debugger::SerializeHookIntegrity(JsonArchive& answer) {
     answer.Serialize("Alive", HI.engineAlive);
     answer.Serialize("EnMouse", HI.enableMouse);
     answer.Serialize("PREPROCRDIR", HI.preprocRedirect);
+    answer.Serialize("EXECCODE", HI.executeCode);
 }
 
 void Debugger::onScriptEcho(r_string msg) {
