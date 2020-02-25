@@ -16,7 +16,9 @@ enum class NC_CommandType {
     getAvailableVariables,
     haltNow, //Triggers halt on next possible instruction
     ExecuteCode, //Executes code while halted, in current context and returns result
-    LoadFile //literally runs loadFile command and returns result
+    LoadFile, //literally runs loadFile command and returns result
+    clearAllBreakpoints,
+    clearFileBreakpoints
 };
 
 enum class NC_OutgoingCommandType {

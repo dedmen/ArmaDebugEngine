@@ -89,6 +89,17 @@ void NetworkController::incomingMessage(const std::string& message) {
                     GlobalDebugger.breakPoints.emplace(bp.filename, std::move(bp));
                 }
             } break;
+            case NC_CommandType::clearAllBreakpoints: {
+                std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
+                GlobalDebugger.breakPoints.clear();
+            }   break;
+            case NC_CommandType::clearFileBreakpoints: { //clearFileBreakpoints
+                JsonArchive ar(packet["data"]);
+                r_string filename;
+                ar.Serialize("filename", filename);
+                std::unique_lock<std::shared_mutex> lk(GlobalDebugger.breakPointsLock);
+                GlobalDebugger.breakPoints.erase(filename);
+            }   break;
             case NC_CommandType::delBreakpoint: {
                 JsonArchive ar(packet["data"]);
                 uint16_t lineNumber;
@@ -217,30 +228,24 @@ void NetworkController::incomingMessage(const std::string& message) {
             } break;
 
             case NC_CommandType::LoadFile: {
-                if (GlobalDebugger.state != DebuggerState::breakState) {
-                    answer.Serialize("exception", "getCurrentCode: Not in breakState!");
-                    return;
-                }
-
-
-                intercept::client::invoker_lock lock(true);
-                if (GlobalDebugger.state != DebuggerState::breakState) lock.lock();
-
-                JsonArchive ar(packet["data"]);
-
-                r_string path;
-                ar.Serialize("path", path);
-
-                auto result = intercept::sqf::load_file(path);
-                JsonArchive answerAr;
-                answerAr.Serialize("path", path);
-                answerAr.Serialize("content", result);
-
                 JsonArchive answer;
                 answer.Serialize("handle", packet.value<std::string>("handle", {}));
-                answer.Serialize("data", answerAr);
                 answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::LoadFileResult));
+                if (GlobalDebugger.state != DebuggerState::breakState) {
+                    answer.Serialize("exception", "getCurrentCode: Not in breakState!");
+                } else {
+                    JsonArchive ar(packet["data"]);
+                    intercept::client::invoker_lock lock(true);
+                    if (GlobalDebugger.state != DebuggerState::breakState) lock.lock();
+                    r_string path;
+                    ar.Serialize("path", path);
+                    auto result = intercept::sqf::load_file(path);
+                    JsonArchive answerAr;
+                    answerAr.Serialize("path", path);
+                    answerAr.Serialize("content", result);
 
+                    answer.Serialize("data", answerAr);
+                }
                 sendMessage(answer.to_string());
             } break;
 
