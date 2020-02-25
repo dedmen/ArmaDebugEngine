@@ -354,13 +354,7 @@
     <ClCompile Include="..\..\lib\sqfvm\src\vmstack.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\configcmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\commands\diagcmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\genericcmds.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\commands\groupcmds.cpp">
@@ -379,12 +373,6 @@
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\commands\objectcmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\osspecificcmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\sqfvmcmds.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\commands\stringcmds.cpp">
@@ -561,9 +549,6 @@
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\fordata.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\git_sha1.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\groupdata.h">

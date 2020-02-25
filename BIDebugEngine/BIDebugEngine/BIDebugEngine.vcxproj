@@ -89,7 +89,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release141|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>LLVM-vs2014</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -431,17 +431,13 @@
     <ClCompile Include="..\..\lib\sqfvm\src\callstack_while.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\codedata.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commandmap.cpp" />
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\configcmds.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commands\diagcmds.cpp" />
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\genericcmds.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commands\groupcmds.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commands\logiccmds.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commands\markercmds.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commands\mathcmds.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commands\namespacecmds.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commands\objectcmds.cpp" />
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\osspecificcmds.cpp" />
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\sqfvmcmds.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commands\stringcmds.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commands\unimplementedcmds.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\configdata.cpp" />
@@ -556,7 +552,6 @@
     <ClInclude Include="..\..\lib\sqfvm\src\fileio.h" />
     <ClInclude Include="..\..\lib\sqfvm\src\filesystem.h" />
     <ClInclude Include="..\..\lib\sqfvm\src\fordata.h" />
-    <ClInclude Include="..\..\lib\sqfvm\src\git_sha1.h" />
     <ClInclude Include="..\..\lib\sqfvm\src\groupdata.h" />
     <ClInclude Include="..\..\lib\sqfvm\src\innerobj.h" />
     <ClInclude Include="..\..\lib\sqfvm\src\instassignto.h" />
