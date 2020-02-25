@@ -328,8 +328,7 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
             auto stackItem = static_cast<const CallStackItemSimple*>(&it);
             //#TODO test if this is the correct instruction or if i should -1 this
             auto instructionIdx = stackItem->_currentInstruction - 1;
-            if(instructionIdx >= 0 && instructionIdx < stackItem->_instructions.size())
-            {
+            if(instructionIdx >= 0 && instructionIdx < stackItem->_instructions.size()) {
                 return stackItem->_instructions.get(instructionIdx)->sdp;
             }
         }   break;
@@ -337,8 +336,7 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
         case CallStackItemData::type_hash: { //CallStackItemData
             auto stackItem = static_cast<const CallStackItemData*>(&it);
             auto instructionIdx = stackItem->_ip - 1;
-            if (instructionIdx >= 0 && instructionIdx < stackItem->_code->instructions.size())
-            {
+            if (instructionIdx >= 0 && instructionIdx < stackItem->_code->instructions.size()) {
                 return stackItem->_code->instructions.get(instructionIdx)->sdp;
             }
         }   break;
