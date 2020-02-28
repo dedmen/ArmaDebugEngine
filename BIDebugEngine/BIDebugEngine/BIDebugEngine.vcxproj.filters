@@ -201,205 +201,22 @@
     <ClCompile Include="SQF-Assembly-Iface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\networking.c">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\string_op.c">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\arraydata.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_apply.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_catch.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_configclasses.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_configproperties.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_count.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_exitwith.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_findif.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_for_step.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_foreach.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_isnil.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_select.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_sqftry.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_switch.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_waituntil.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\callstack_while.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\codedata.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\commandmap.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\configdata.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\convert.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\fileio.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\filesystem.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\groupdata.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\innerobj.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\instassignto.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\instassigntolocal.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\instcallbinary.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\instcallnular.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\instcallunary.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\instendstatement.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\instgetvariable.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\instmakearray.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\instpush.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\instruction.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\interactive_helper.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\logging.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\marker.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\netserver.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\objectdata.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\scalardata.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\scriptdata.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\sidedata.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\stringdata.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\switchdata.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\type.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\value.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\varscope.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\virtualmachine.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\vmstack.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\diagcmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\groupcmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\logiccmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\markercmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\mathcmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\namespacecmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\objectcmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\stringcmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\commands\unimplementedcmds.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\networking\network_client.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\networking\network_server.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\parsing\astnode.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\parsing\parseassembly.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\parsing\parseconfig.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\parsing\parsepreprocessor.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\parsing\parsesqf.cpp">
+    <ClCompile Include="SQFVM_Replacements.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
   </ItemGroup>
@@ -461,85 +278,13 @@
     <ClInclude Include="SQF-Assembly-Iface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\arraydata.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\booldata.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\breakpoint.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_apply.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_catch.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_configclasses.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_configproperties.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_count.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_exitwith.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_findif.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_for_step.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_foreach.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_isnil.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_select.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_sqftry.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_switch.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_waituntil.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\callstack_while.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\cmd.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\codedata.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\commandmap.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\compiletime.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\configdata.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\convert.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\data.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\dlops.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\fileio.h">
@@ -551,139 +296,22 @@
     <ClInclude Include="..\..\lib\sqfvm\src\fordata.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\groupdata.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\innerobj.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\instassignto.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\instassigntolocal.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\instcallbinary.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\instcallnular.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\instcallunary.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\instendstatement.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\instgetvariable.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\instmakearray.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\instpush.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\instruction.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\interactive_helper.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\logging.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\marker.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\netserver.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\networking.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\objectdata.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\scalardata.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\scriptdata.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\sidedata.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\sqfnamespace.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\stackdump.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\string_op.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\stringdata.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\switchdata.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\type.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\utility.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\value.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\varscope.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\virtualmachine.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\vmstack.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\networking\nethelper.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\networking\network_client.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\networking\network_server.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\networking\streamable.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\networking\messages\net_message.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\parsing\astnode.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\parsing\debugsegment.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\parsing\macro.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\parsing\parseassembly.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\parsing\parseconfig.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\parsing\parsepreprocessor.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\parsing\parsesqf.h">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\sqfvm\src\parsing\position_info.h">
       <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
   </ItemGroup>
