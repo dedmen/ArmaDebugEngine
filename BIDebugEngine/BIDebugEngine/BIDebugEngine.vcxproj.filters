@@ -207,9 +207,6 @@
     <ClCompile Include="..\..\lib\sqfvm\src\commandmap.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\lib\sqfvm\src\fileio.cpp">
-      <Filter>Source Files\sqfvm</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\logging.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
