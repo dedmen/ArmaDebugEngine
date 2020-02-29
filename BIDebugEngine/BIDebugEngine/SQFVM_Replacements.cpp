@@ -17,8 +17,7 @@ std::optional<std::string> sqf::filesystem::try_get_physical_path(std::string_vi
         auto parentDirectory = std::filesystem::path(current).parent_path(); //Get parent of current file
         auto wantedFile = (parentDirectory / virt).lexically_normal();
 
-        auto absolute = std::filesystem::absolute(wantedFile);
-        return absolute.string();
+        return wantedFile.string();
     } else { //global path
         return std::string(virt);
     }
