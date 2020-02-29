@@ -474,10 +474,10 @@ void EngineHook::placeHooks() {
         auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
 
         auto parsedcontents = parser.parse(vm.get(), filecontents, errflag, par);
-        return parsedcontents;
+        if (!errflag)
+            return parsedcontents;
 
-
-        //return intercept::sqf::preprocess_file_line_numbers(par);
+        return intercept::sqf::preprocess_file_line_numbers(par);
     }, game_data_type::NOTHING, game_data_type::STRING);
 
     static auto preprocLinesHook = intercept::client::host::register_sqf_command("preprocessFileLineNumbers"sv, "", [](game_state&, game_value_parameter par) -> game_value {
@@ -488,9 +488,10 @@ void EngineHook::placeHooks() {
         auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
 
         auto parsedcontents = parser.parse(vm.get(), filecontents, errflag, par);
-        return parsedcontents;
+        if (!errflag)
+            return parsedcontents;
 
-        //return intercept::sqf::preprocess_file_line_numbers(par);
+        return intercept::sqf::preprocess_file_line_numbers(par);
     }, game_data_type::NOTHING, game_data_type::STRING);
 
 
