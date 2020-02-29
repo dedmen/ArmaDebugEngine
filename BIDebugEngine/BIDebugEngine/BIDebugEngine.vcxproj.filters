@@ -201,6 +201,9 @@
     <ClCompile Include="SQF-Assembly-Iface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WebSocketServer.cpp">
+      <Filter>Source Files\RC</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\lib\sqfvm\src\string_op.c">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
@@ -274,6 +277,9 @@
     </ClInclude>
     <ClInclude Include="SQF-Assembly-Iface.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WebSocketServer.h">
+      <Filter>Header Files\RC</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lib\sqfvm\src\cmd.h">
       <Filter>Source Files\sqfvm</Filter>

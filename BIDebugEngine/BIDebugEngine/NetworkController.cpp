@@ -28,30 +28,11 @@ NetworkController::~NetworkController() {
 void NetworkController::init() {
     //server.messageRead.connect([this](const std::string& msg) {incomingMessage(msg); });
     pipeThread = new std::thread([this]() {
+
+        server.onClientConnectedStateChanged.connect([this](bool state) {clientConnected = state; });
+        server.messageRead.connect([this](std::string message) { incomingMessage(message); });
+
         server.open();
-
-        server.messageReadFailed.connect([this]() {
-            clientConnected = false;
-            // If client disconnects unfreeze
-            GlobalDebugger.commandContinue(StepType::STContinue);
-        });
-
-        while (pipeThreadShouldRun) {
-            auto msg = server.readMessageBlocking();
-
-            if (!msg.empty()) {
-                clientConnected = true;
-                std::istringstream ss(msg);
-                std::string token;
-                while (std::getline(ss, token)) {
-                    incomingMessage(token);
-                }
-            }
-
-            //server.messageRead(msg);
-            //pServer->writeMessage(/*msg+*/"teeest");
-        }
-
     });
 }
 extern "C" uintptr_t hookEnabled_Instruction;
@@ -261,5 +242,5 @@ void NetworkController::sendMessage(const std::string& message) {
 }
 
 void NetworkController::onShutdown() {
-    pipeThreadShouldRun = false;
+    server.close();
 }

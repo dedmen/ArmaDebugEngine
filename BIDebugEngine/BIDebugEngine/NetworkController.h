@@ -1,5 +1,5 @@
 #pragma once
-#include "NamedPipeServer.h"
+#include "WebSocketServer.h"
 #include <thread>
 
 enum class NC_CommandType {
@@ -50,7 +50,7 @@ public:
 
     void onShutdown();
 private:
-    NamedPipeServer server;
+    WebSocketServer server;
     bool pipeThreadShouldRun{ true };
     std::thread* pipeThread{ nullptr };
     bool clientConnected{ false };
