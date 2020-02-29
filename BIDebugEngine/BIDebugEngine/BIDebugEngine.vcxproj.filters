@@ -46,6 +46,9 @@
     <Filter Include="Source Files\Intercept">
       <UniqueIdentifier>{a2074222-c2bb-466b-ac65-8f0380dfaea4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\sqfvm">
+      <UniqueIdentifier>{d67aff59-531d-43e5-86ff-3514fa420e56}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -198,6 +201,21 @@
     <ClCompile Include="SQF-Assembly-Iface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\sqfvm\src\string_op.c">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sqfvm\src\commandmap.cpp">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sqfvm\src\logging.cpp">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sqfvm\src\parsing\parsepreprocessor.cpp">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
+    <ClCompile Include="SQFVM_Replacements.cpp">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BIDebugEngine.h">
@@ -256,6 +274,42 @@
     </ClInclude>
     <ClInclude Include="SQF-Assembly-Iface.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\cmd.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\commandmap.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\compiletime.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\fileio.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\filesystem.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\fordata.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\logging.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\sqfnamespace.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\string_op.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\utility.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\parsing\macro.h">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\sqfvm\src\parsing\parsepreprocessor.h">
+      <Filter>Source Files\sqfvm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

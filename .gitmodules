@@ -1,3 +1,6 @@
 [submodule "intercept"]
 	path = intercept
 	url = https://github.com/intercept/intercept.git
+[submodule "lib/sqfvm"]
+	path = lib/sqfvm
+	url = https://github.com/SQFvm/vm.git

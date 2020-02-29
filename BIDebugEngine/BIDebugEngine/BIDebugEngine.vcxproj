@@ -89,7 +89,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release141|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>LLVM-vs2014</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -159,10 +159,13 @@
       <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;WIN32;_DEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Async</ExceptionHandling>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;$(SolutionDir)..\lib\sqfvm\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -183,9 +186,13 @@
       <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;WIN32;_DEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <MSCompatibility>true</MSCompatibility>
       <ExceptionHandling>Async</ExceptionHandling>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;$(SolutionDir)..\lib\sqfvm\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -206,12 +213,14 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;_DEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;DISABLE_CLIPBOARD;_DEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;$(SolutionDir)..\lib\sqfvm\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -229,9 +238,14 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;_DEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;DISABLE_CLIPBOARD;_DEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <ExceptionHandling>Async</ExceptionHandling>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;$(SolutionDir)..\lib\sqfvm\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -256,8 +270,10 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;$(SolutionDir)..\lib\sqfvm\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -284,8 +300,11 @@
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <ExceptionHandling>Async</ExceptionHandling>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;$(SolutionDir)..\lib\sqfvm\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -308,12 +327,14 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;NDEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;DISABLE_CLIPBOARD;NDEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;$(SolutionDir)..\lib\sqfvm\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -335,10 +356,14 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;NDEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>$(AppVeyor);NOMINMAX;X64;DISABLE_CLIPBOARD;NDEBUG;_WINDOWS;_USRDLL;BIDEBUGENGINE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;$(SolutionDir)..\lib\sqfvm\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -388,6 +413,10 @@
     <ClCompile Include="..\..\intercept\src\client\intercept\shared\client_types.cpp" />
     <ClCompile Include="..\..\intercept\src\client\intercept\shared\containers.cpp" />
     <ClCompile Include="..\..\intercept\src\client\intercept\shared\types.cpp" />
+    <ClCompile Include="..\..\lib\sqfvm\src\commandmap.cpp" />
+    <ClCompile Include="..\..\lib\sqfvm\src\logging.cpp" />
+    <ClCompile Include="..\..\lib\sqfvm\src\parsing\parsepreprocessor.cpp" />
+    <ClCompile Include="..\..\lib\sqfvm\src\string_op.c" />
     <ClCompile Include="SQF-Assembly-Iface.cpp" />
     <ClCompile Include="BIDebugEngine.cpp" />
     <ClCompile Include="BreakPoint.cpp" />
@@ -426,10 +455,23 @@
     <ClCompile Include="RVIDebugInterface.cpp" />
     <ClCompile Include="Script.cpp" />
     <ClCompile Include="Serialize.cpp" />
+    <ClCompile Include="SQFVM_Replacements.cpp" />
     <ClCompile Include="Tracker.cpp" />
     <ClCompile Include="VMContext.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\lib\sqfvm\src\cmd.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\commandmap.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\compiletime.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\fileio.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\filesystem.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\fordata.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\logging.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\parsing\macro.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\parsing\parsepreprocessor.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\sqfnamespace.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\string_op.h" />
+    <ClInclude Include="..\..\lib\sqfvm\src\utility.h" />
     <ClInclude Include="SQF-Assembly-Iface.h" />
     <ClInclude Include="BIDebugEngine.h" />
     <ClInclude Include="BreakPoint.h" />

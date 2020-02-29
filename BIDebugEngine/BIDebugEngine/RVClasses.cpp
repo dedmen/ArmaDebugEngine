@@ -319,7 +319,7 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
 
     auto& type = typeid(*&it);
     //#TODO X64 fails on this
-    __debugbreak(); //Some place already has these
+    // __debugbreak(); //Some place already has these
     const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
     auto hash = type.hash_code();
 
@@ -327,14 +327,18 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
         case CallStackItemSimple::type_hash: {
             auto stackItem = static_cast<const CallStackItemSimple*>(&it);
             //#TODO test if this is the correct instruction or if i should -1 this
-            const auto& lastInstruction = (stackItem->_instructions.get(stackItem->_currentInstruction))->sdp;
-            return lastInstruction;
+            auto instructionIdx = stackItem->_currentInstruction - 1;
+            if(instructionIdx >= 0 && instructionIdx < stackItem->_instructions.size()) {
+                return stackItem->_instructions.get(instructionIdx)->sdp;
+            }
         }   break;
 
         case CallStackItemData::type_hash: { //CallStackItemData
             auto stackItem = static_cast<const CallStackItemData*>(&it);
-            auto & lastInstruction = (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp;
-            return lastInstruction;
+            auto instructionIdx = stackItem->_ip - 1;
+            if (instructionIdx >= 0 && instructionIdx < stackItem->_code->instructions.size()) {
+                return stackItem->_code->instructions.get(instructionIdx)->sdp;
+            }
         }   break;
 
         case CallStackItemArrayForEach::type_hash: { //CallStackItemArrayForEach

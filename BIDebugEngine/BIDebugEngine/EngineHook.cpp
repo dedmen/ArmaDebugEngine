@@ -8,6 +8,13 @@
 #include <intercept.hpp>
 #include "SQF-Assembly-Iface.h"
 #include <future>
+
+
+//SQF VM
+#include "virtualmachine.h"
+#include "parsing/parsepreprocessor.h"
+
+
 using namespace std::chrono_literals;
 
 bool inScriptVM;
@@ -350,6 +357,29 @@ std::optional<std::string> getCommandLineParam(std::string_view needle) {
     return {};
 }
 
+class SQFVM_DiagLog_Logger : public Logger {
+public:
+    SQFVM_DiagLog_Logger() : Logger() {}
+
+    virtual void log(loglevel l, std::string_view message) override {
+        r_string msg;
+        switch (l) {
+            case loglevel::fatal: msg += "[FATAL] "; break;
+            case loglevel::error: msg += "[ERROR] ";break;
+            case loglevel::warning: msg += "[WARN] ";break;
+            case loglevel::info: msg += "[INFO] ";break;
+            case loglevel::verbose: msg += "[VERBOSE] ";break;
+            case loglevel::trace: msg += "[TRACE] ";break;
+            default: ;
+        }
+
+        msg += message;
+        intercept::sqf::diag_log(msg);
+
+    }
+};
+
+
 void EngineHook::placeHooks() {
 
     //char* productType = reinterpret_cast<char*>(GlobalHookManager.findPattern(pat_productType));
@@ -430,9 +460,41 @@ void EngineHook::placeHooks() {
         GlobalEngineHook._onScriptEcho(par);
         return {};
     }, game_data_type::NOTHING, game_data_type::STRING);
+
+    static std::unique_ptr<sqf::virtualmachine> vm;
+    static SQFVM_DiagLog_Logger vm_logger;
+
+    vm = std::make_unique<sqf::virtualmachine>(vm_logger);
+
     static auto preprocHook = intercept::client::host::register_sqf_command("preprocessFile"sv, "", [](game_state&, game_value_parameter par) -> game_value {
+
+
+        auto filecontents = intercept::sqf::load_file(par);
+        bool errflag = false;
+        auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
+
+        auto parsedcontents = parser.parse(vm.get(), filecontents, errflag, par);
+        if (!errflag)
+            return parsedcontents;
+
         return intercept::sqf::preprocess_file_line_numbers(par);
     }, game_data_type::NOTHING, game_data_type::STRING);
+
+    static auto preprocLinesHook = intercept::client::host::register_sqf_command("preprocessFileLineNumbers"sv, "", [](game_state&, game_value_parameter par) -> game_value {
+
+
+        auto filecontents = intercept::sqf::load_file(par);
+        bool errflag = false;
+        auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
+
+        auto parsedcontents = parser.parse(vm.get(), filecontents, errflag, par);
+        if (!errflag)
+            return parsedcontents;
+
+        return intercept::sqf::preprocess_file_line_numbers(par);
+    }, game_data_type::NOTHING, game_data_type::STRING);
+
+
     static auto dumpCallstack = intercept::client::host::register_sqf_command("ade_dumpCallstack"sv, "", [](game_state& gs) -> game_value {
         intercept::sqf::diag_log("ArmaDebugEngine Forced callstrack");
         GlobalDebugger.dumpStackToRPT(&gs);
@@ -442,7 +504,7 @@ void EngineHook::placeHooks() {
     HI.scriptAssert = assertHook.has_function();
     HI.scriptHalt = haltHook.has_function();
     HI.scriptEcho = echoHook.has_function();
-    HI.preprocRedirect = preprocHook.has_function();
+    HI.preprocRedirect = preprocHook.has_function() && preprocLinesHook.has_function();
     HI.__instructionBreakpoint = GASM.ready;
     HI.executeCode = intercept::client::host::functions.get_engine_allocator()->evaluate_func != nullptr;
 
