@@ -29,7 +29,12 @@ void NetworkController::init() {
     //server.messageRead.connect([this](const std::string& msg) {incomingMessage(msg); });
     pipeThread = new std::thread([this]() {
 
-        server.onClientConnectedStateChanged.connect([this](bool state) {clientConnected = state; });
+        server.onClientConnectedStateChanged.connect([this](bool state) {
+            clientConnected = state;
+            if (!clientConnected) {
+                GlobalDebugger.commandContinue(StepType::STContinue);
+            }
+        });
         server.messageRead.connect([this](std::string message) { incomingMessage(message); });
 
         server.open();
