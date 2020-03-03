@@ -32,23 +32,36 @@ void WebSocketServer::open() {
     });
 
     server.set_open_handler([this](websocketpp::connection_hdl hdl) {
-        std::lock_guard guard(m_connection_lock);
-        connections.insert(hdl);
-        bool hasClients = !connections.empty();
+        bool hasClients = false;
+        {
+            std::lock_guard guard(m_connection_lock);
+            connections.insert(hdl);
+            hasClients = !connections.empty();
+        }
+        // Don't call this is a locked context
         onClientConnectedStateChanged(hasClients);
     });
 
     server.set_close_handler([this](websocketpp::connection_hdl hdl) {
-        std::lock_guard guard(m_connection_lock);
-        connections.erase(hdl);
-        bool hasClients = !connections.empty();
+        bool hasClients = false;
+        {
+            std::lock_guard guard(m_connection_lock);
+            connections.erase(hdl);
+            hasClients = !connections.empty();
+        }
+        // Don't call this is a locked context
         onClientConnectedStateChanged(hasClients);
     });
 
     server.init_asio();
-    server.listen(9002);
-    server.start_accept();
-    server.run();
+    try {
+        server.listen(9002);
+        server.start_accept();
+        server.run();
+    }
+    catch (const std::exception& /*ex*/) {
+        // Probably the port is already taken
+    }
 }
 
 void WebSocketServer::close() {
