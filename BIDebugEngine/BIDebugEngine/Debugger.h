@@ -35,7 +35,7 @@ enum class DebuggerState {
     running,
     breakState,
     stepState,
-    waitForHalt
+    waitForHalt //Halt at next possible instruction
 };
 
 enum class VariableScope { //This is a bitflag
