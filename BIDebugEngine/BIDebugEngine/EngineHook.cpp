@@ -496,7 +496,7 @@ void EngineHook::placeHooks() {
         bool errflag = false;
         auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
 
-        auto parsedcontents = parser.parse(vm.get(), filecontents, errflag, path.c_str());
+        auto parsedcontents = parser.parse(vm.get(), std::string(filecontents), errflag, path.c_str());
         if (!errflag)
             return parsedcontents;
 
@@ -528,7 +528,7 @@ void EngineHook::placeHooks() {
         bool errflag = false;
         auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
 
-        auto parsedcontents = parser.parse(vm.get(), filecontents, errflag, path.c_str());
+        auto parsedcontents = parser.parse(vm.get(), std::string(filecontents), errflag, path.c_str());
         if (!errflag)
             return parsedcontents;
 

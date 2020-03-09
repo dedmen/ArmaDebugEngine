@@ -31,7 +31,7 @@ sqf::virtualmachine::~virtualmachine() {}
 
 std::string load_file(const std::string& filename)
 {
-    return intercept::sqf::load_file(filename);
+    return std::string(intercept::sqf::load_file(filename));
 }
 
 std::vector<char> readFile(const std::string& filename)
