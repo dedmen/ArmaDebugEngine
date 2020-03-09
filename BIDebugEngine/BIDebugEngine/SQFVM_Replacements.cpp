@@ -110,9 +110,10 @@ int get_bom_skip(const std::vector<char>& buff)
     return 0;
 }
 
-
+extern bool (*fileExists)(r_string);
 bool file_exists(const std::string& filename)
 {
+    if (fileExists) return fileExists(r_string(filename));
     auto res = intercept::sqf::load_file(filename);
     return !res.empty();
 }

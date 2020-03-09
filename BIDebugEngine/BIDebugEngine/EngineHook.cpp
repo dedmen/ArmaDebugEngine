@@ -379,6 +379,7 @@ public:
     }
 };
 
+bool (*fileExists)(r_string);
 
 void EngineHook::placeHooks() {
 
@@ -466,7 +467,7 @@ void EngineHook::placeHooks() {
 
     vm = std::make_unique<sqf::virtualmachine>(vm_logger);
 
-    static bool (*fileExists)(r_string);
+    
     fileExists = static_cast<bool (*)(r_string)>(intercept::client::host::request_plugin_interface("sqfasm_fileExists", 1).value_or(nullptr));
     
 
@@ -475,16 +476,21 @@ void EngineHook::placeHooks() {
     static auto preprocHook = intercept::client::host::register_sqf_command("preprocessFile"sv, "", [](game_state& gs, game_value_parameter par) -> game_value {
         r_string inputPath, path;
         inputPath = path = par;
-        if (inputPath.front() == '\\') { //absolute path
-
+        r_string missionPath = intercept::sqf::get_mission_path(inputPath);
+        
+        if (fileExists && fileExists(missionPath)) {
+            path = missionPath;
         } else {
-            auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
-            path = (curPath.parent_path() / inputPath.c_str()).string();
-            if (fileExists && !fileExists(path)) {
-                path = "\\" + inputPath;
+            if (inputPath.front() == '\\') { //absolute path
+
+            } else {
+                auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
+                path = (curPath.parent_path() / inputPath.c_str()).string();
+                if (fileExists && !fileExists(path)) {
+                    path = "\\" + inputPath;
+                }
             }
         }
-
 
         auto filecontents = intercept::sqf::load_file(path);
         bool errflag = false;
@@ -501,13 +507,19 @@ void EngineHook::placeHooks() {
 
         r_string inputPath, path;
         inputPath = path = par;
-        if (inputPath.front() == '\\') { //absolute path
-            
+        r_string missionPath = intercept::sqf::get_mission_path(inputPath);
+
+        if (fileExists && fileExists(missionPath)) {
+            path = missionPath;
         } else {
-            auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
-            path = (curPath.parent_path() / inputPath.c_str()).string();
-            if (fileExists && !fileExists(path)) {
-                path = "\\" + inputPath;
+            if (inputPath.front() == '\\') { //absolute path
+
+            } else {
+                auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
+                path = (curPath.parent_path() / inputPath.c_str()).string();
+                if (fileExists && !fileExists(path)) {
+                    path = "\\" + inputPath;
+                }
             }
         }
 
