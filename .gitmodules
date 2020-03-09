@@ -10,4 +10,4 @@
 	branch = develop
 [submodule "asio"]
 	path = asio
-	url = https://github.com/chriskohlhoff/asio.gitasio.git
+	url = https://github.com/chriskohlhoff/asio.git
