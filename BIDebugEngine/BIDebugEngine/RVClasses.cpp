@@ -83,7 +83,9 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
             case CallStackItemSimple::type_hash: {
                 auto stackItem = static_cast<const CallStackItemSimple*>(item.get());
                 ar.Serialize("fileName", stackItem->_content.sourcefile);
+#ifdef SerializeScriptContent
                 ar.Serialize("contentSample", (std::string)stackItem->_content.content.substr(0, 100));
+#endif
                 ar.Serialize("ip", stackItem->_currentInstruction);
                 JsonArchive arInst;
                 ::Serialize(*(stackItem->_instructions.get(stackItem->_currentInstruction - 1)), arInst);
@@ -97,7 +99,9 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 ar.Serialize("ip", stackItem->_ip);
                 ar.Serialize("final", stackItem->_code->is_final);
                 ar.Serialize("compiled", stackItem->_code->instructions);
+#ifdef SerializeScriptContent
                 ar.Serialize("contentSample", (std::string)stackItem->_code->code_string.substr(0, 100)); //#TODO send whole code over
+#endif
                 JsonArchive arInst;
                 ::Serialize(*(stackItem->_code->instructions.get(stackItem->_ip - 1)), arInst);
                 ar.Serialize("lastInstruction", arInst);
@@ -220,7 +224,9 @@ void SerializeError(const intercept::types::game_state::game_evaluator& e,JsonAr
 
     ar.Serialize("message", e._errorMessage);
     ar.Serialize("filename", e._errorPosition.sourcefile);
+#ifdef SerializeScriptContent
     ar.Serialize("content", Script::getScriptFromFirstLine(e._errorPosition));
+#endif
 }
 
 void GameNular::Serialize(JsonArchive &ar) const {

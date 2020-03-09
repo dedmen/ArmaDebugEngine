@@ -546,8 +546,9 @@ void Debugger::onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> 
 
         assertAr.Serialize("fileOffset", { _errorPosition.sourceline, _errorPosition.pos, Script::getScriptLineOffset(_errorPosition) });
         assertAr.Serialize("filename", _errorPosition.sourcefile);
+#ifdef SerializeScriptContent
         assertAr.Serialize("content", Script::getScriptFromFirstLine(_errorPosition));
-
+#endif
 
         ar.Serialize("halt", assertAr);
     }

@@ -223,10 +223,11 @@ void NetworkController::incomingMessage(const std::string& message) {
                     JsonArchive ar(packet["data"]);
                     r_string path;
                     ar.Serialize("path", path);
-                    auto result = intercept::sqf::load_file(path);
                     JsonArchive answerAr;
                     answerAr.Serialize("path", path);
-                    answerAr.Serialize("content", result);
+#ifdef SerializeScriptContent
+                    answerAr.Serialize("content", intercept::sqf::load_file(path));
+#endif
 
                     answer.Serialize("data", answerAr);
                 }
