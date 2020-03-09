@@ -466,28 +466,57 @@ void EngineHook::placeHooks() {
 
     vm = std::make_unique<sqf::virtualmachine>(vm_logger);
 
-    static auto preprocHook = intercept::client::host::register_sqf_command("preprocessFile"sv, "", [](game_state&, game_value_parameter par) -> game_value {
+    static bool (*fileExists)(r_string);
+    fileExists = static_cast<bool (*)(r_string)>(intercept::client::host::request_plugin_interface("sqfasm_fileExists", 1).value_or(nullptr));
+    
 
 
-        auto filecontents = intercept::sqf::load_file(par);
+
+    static auto preprocHook = intercept::client::host::register_sqf_command("preprocessFile"sv, "", [](game_state& gs, game_value_parameter par) -> game_value {
+        r_string inputPath, path;
+        inputPath = path = par;
+        if (inputPath.front() == '\\') { //absolute path
+
+        } else {
+            auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
+            path = (curPath.parent_path() / inputPath.c_str()).string();
+            if (fileExists && !fileExists(path)) {
+                path = "\\" + inputPath;
+            }
+        }
+
+
+        auto filecontents = intercept::sqf::load_file(path);
         bool errflag = false;
         auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
 
-        auto parsedcontents = parser.parse(vm.get(), filecontents, errflag, par);
+        auto parsedcontents = parser.parse(vm.get(), filecontents, errflag, path.c_str());
         if (!errflag)
             return parsedcontents;
 
         return intercept::sqf::preprocess_file_line_numbers(par);
     }, game_data_type::NOTHING, game_data_type::STRING);
 
-    static auto preprocLinesHook = intercept::client::host::register_sqf_command("preprocessFileLineNumbers"sv, "", [](game_state&, game_value_parameter par) -> game_value {
+    static auto preprocLinesHook = intercept::client::host::register_sqf_command("preprocessFileLineNumbers"sv, "", [](game_state& gs, game_value_parameter par) -> game_value {
+
+        r_string inputPath, path;
+        inputPath = path = par;
+        if (inputPath.front() == '\\') { //absolute path
+            
+        } else {
+            auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
+            path = (curPath.parent_path() / inputPath.c_str()).string();
+            if (fileExists && !fileExists(path)) {
+                path = "\\" + inputPath;
+            }
+        }
 
 
-        auto filecontents = intercept::sqf::load_file(par);
+        auto filecontents = intercept::sqf::load_file(path);
         bool errflag = false;
         auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
 
-        auto parsedcontents = parser.parse(vm.get(), filecontents, errflag, par);
+        auto parsedcontents = parser.parse(vm.get(), filecontents, errflag, path.c_str());
         if (!errflag)
             return parsedcontents;
 
