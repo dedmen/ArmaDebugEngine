@@ -470,70 +470,76 @@ void EngineHook::placeHooks() {
     
     fileExists = static_cast<bool (*)(r_string)>(intercept::client::host::request_plugin_interface("sqfasm_fileExists", 1).value_or(nullptr));
     
-
-
-
-    static auto preprocHook = intercept::client::host::register_sqf_command("preprocessFile"sv, "", [](game_state& gs, game_value_parameter par) -> game_value {
-        r_string inputPath, path;
-        inputPath = path = par;
-        r_string missionPath = intercept::sqf::get_mission_path(inputPath);
-        
-        if (fileExists && fileExists(missionPath)) {
-            path = missionPath;
-        } else {
-            if (inputPath.front() == '\\') { //absolute path
-
+    static registered_sqf_function preprocHook;
+    static registered_sqf_function preprocLinesHook;
+    if (getCommandLineParam("-ade_preprocessor"sv)) {
+        preprocHook = intercept::client::host::register_sqf_command("preprocessFile"sv, "", [](game_state& gs, game_value_parameter par) -> game_value {
+            r_string inputPath, path;
+            inputPath = path = par;
+            r_string missionPath = intercept::sqf::get_mission_path(inputPath);
+            
+            if (fileExists && fileExists(missionPath)) {
+                path = missionPath;
             } else {
-                auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
-                path = (curPath.parent_path() / inputPath.c_str()).string();
-                if (fileExists && !fileExists(path)) {
-                    path = "\\" + inputPath;
+                if (inputPath.front() == '\\') { //absolute path
+
+                } else {
+                    auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
+                    path = (curPath.parent_path() / inputPath.c_str()).string();
+                    if (fileExists && !fileExists(path)) {
+                        path = "\\" + inputPath;
+                    }
                 }
             }
-        }
 
-        auto filecontents = intercept::sqf::load_file(path);
-        bool errflag = false;
-        auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
+            auto filecontents = intercept::sqf::load_file(path);
+            bool errflag = false;
+            auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
 
-        auto parsedcontents = parser.parse(vm.get(), std::string(filecontents), errflag, path.c_str());
-        if (!errflag)
-            return parsedcontents;
+            auto parsedcontents = parser.parse(vm.get(), std::string(filecontents), errflag, path.c_str());
+            if (!errflag)
+                return parsedcontents;
 
-        return intercept::sqf::preprocess_file_line_numbers(par);
-    }, game_data_type::NOTHING, game_data_type::STRING);
+            return intercept::sqf::preprocess_file_line_numbers(par);
+        }, game_data_type::NOTHING, game_data_type::STRING);
 
-    static auto preprocLinesHook = intercept::client::host::register_sqf_command("preprocessFileLineNumbers"sv, "", [](game_state& gs, game_value_parameter par) -> game_value {
+        preprocLinesHook = intercept::client::host::register_sqf_command("preprocessFileLineNumbers"sv, "", [](game_state& gs, game_value_parameter par) -> game_value {
 
-        r_string inputPath, path;
-        inputPath = path = par;
-        r_string missionPath = intercept::sqf::get_mission_path(inputPath);
+            r_string inputPath, path;
+            inputPath = path = par;
+            r_string missionPath = intercept::sqf::get_mission_path(inputPath);
 
-        if (fileExists && fileExists(missionPath)) {
-            path = missionPath;
-        } else {
-            if (inputPath.front() == '\\') { //absolute path
-
+            if (fileExists && fileExists(missionPath)) {
+                path = missionPath;
             } else {
-                auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
-                path = (curPath.parent_path() / inputPath.c_str()).string();
-                if (fileExists && !fileExists(path)) {
-                    path = "\\" + inputPath;
+                if (inputPath.front() == '\\') { //absolute path
+
+                } else {
+                    auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
+                    path = (curPath.parent_path() / inputPath.c_str()).string();
+                    if (fileExists && !fileExists(path)) {
+                        path = "\\" + inputPath;
+                    }
                 }
             }
-        }
 
 
-        auto filecontents = intercept::sqf::load_file(path);
-        bool errflag = false;
-        auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
+            auto filecontents = intercept::sqf::load_file(path);
+            bool errflag = false;
+            auto parser = sqf::parse::preprocessor(vm_logger, vm.get());
 
-        auto parsedcontents = parser.parse(vm.get(), std::string(filecontents), errflag, path.c_str());
-        if (!errflag)
-            return parsedcontents;
+            auto parsedcontents = parser.parse(vm.get(), std::string(filecontents), errflag, path.c_str());
+            if (!errflag)
+                return parsedcontents;
 
-        return intercept::sqf::preprocess_file_line_numbers(par);
-    }, game_data_type::NOTHING, game_data_type::STRING);
+            return intercept::sqf::preprocess_file_line_numbers(par);
+        }, game_data_type::NOTHING, game_data_type::STRING);
+    } else {
+        preprocHook = intercept::client::host::register_sqf_command("preprocessFile"sv, "", [](game_state& gs, game_value_parameter par) -> game_value {
+            return intercept::sqf::preprocess_file_line_numbers(par);
+        }, game_data_type::NOTHING, game_data_type::STRING);
+    }
+
 
 
     static auto dumpCallstack = intercept::client::host::register_sqf_command("ade_dumpCallstack"sv, "", [](game_state& gs) -> game_value {
@@ -545,7 +551,7 @@ void EngineHook::placeHooks() {
     HI.scriptAssert = assertHook.has_function();
     HI.scriptHalt = haltHook.has_function();
     HI.scriptEcho = echoHook.has_function();
-    HI.preprocRedirect = preprocHook.has_function() && preprocLinesHook.has_function();
+    HI.preprocRedirect = preprocHook.has_function() && preprocLinesHook.has_function() || !getCommandLineParam("-ade_preprocessor"sv);
     HI.__instructionBreakpoint = GASM.ready;
     HI.executeCode = intercept::client::host::functions.get_engine_allocator()->evaluate_func != nullptr;
 
