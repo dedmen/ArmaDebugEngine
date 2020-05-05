@@ -218,7 +218,7 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
     //auto text = ar.to_string();
     //f.write(text.c_str(), text.length());
     //f.close();
-    if (monitors.empty() && breakPoints.empty() && state != DebuggerState::waitForHalt) return;
+    if (monitors.empty() && breakPoints.empty() && state != DebuggerState::waitForHalt && state != DebuggerState::stepState) return;
     instructionInfo.instruction->sdp.sourcefile.to_lower();
     checkForBreakpoint(instructionInfo);
 
@@ -709,7 +709,7 @@ std::map<VariableScope, std::vector<r_string>> Debugger::getAvailableVariables(V
 
     if (scope & VariableScope::profileNamespace) {
         std::vector<r_string> list;
-        intercept::client::invoker_lock lock;
+        intercept::client::invoker_lock lock(state == DebuggerState::breakState);
         auto& varSpace = intercept::sqf::profile_namespace().get_as<game_data_namespace>()->_variables;
         varSpace.for_each([&](const game_variable& var) {
             list.push_back(var.name);
