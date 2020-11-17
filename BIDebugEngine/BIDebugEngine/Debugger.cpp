@@ -219,7 +219,7 @@ void Debugger::onInstruction(DebuggerInstructionInfo& instructionInfo) {
     //f.write(text.c_str(), text.length());
     //f.close();
     if (monitors.empty() && breakPoints.empty() && state != DebuggerState::waitForHalt && state != DebuggerState::stepState) return;
-    instructionInfo.instruction->sdp.sourcefile.to_lower();
+    instructionInfo.instruction->sdp->sourcefile.to_lower();
     checkForBreakpoint(instructionInfo);
 
     for (auto& it : monitors)
@@ -257,15 +257,15 @@ std::pair<r_string, uint32_t>  Debugger::getCallstackLocation(const ref<vm_conte
     case CallStackItemSimple::type_hash: {
         auto stackItem = static_cast<const CallStackItemSimple*>(item.get());
         return {
-            (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourcefile,
-            (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp.sourceline
+            (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp->sourcefile,
+            (stackItem->_instructions.get(stackItem->_currentInstruction - 1))->sdp->sourceline
         };
     };
     case CallStackItemData::type_hash: {
         auto stackItem = static_cast<const CallStackItemData*>(item.get());
         return {
-            (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourcefile,
-            (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp.sourceline
+            (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp->sourcefile,
+            (stackItem->_code->instructions.get(stackItem->_ip - 1))->sdp->sourceline
         };
     };
     case CallStackItemArrayForEach::type_hash: {
@@ -451,7 +451,7 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
                 // Allow step in same frame only onto another source line
                 frame == stepInfo.stepFrame
                 &&
-                instructionInfo.instruction->sdp.sourceline != stepInfo.stepLine
+                instructionInfo.instruction->sdp->sourceline != stepInfo.stepLine
                 ||
                 // Allow step into to non-call scopes only
                 allowStepInto(instructionInfo, stepInfo.stepFrame)
@@ -469,8 +469,8 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     std::shared_lock<std::shared_mutex> lk(breakPointsLock);
     //static bool doBreeak = true;
     //if (doBreeak && instructionInfo.instruction->sdp.sourcefile.find("dedmen\\") != std::string::npos) __debugbreak();
-    auto space = instructionInfo.instruction->sdp.sourcefile.find("[");
-    auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp.sourcefile.substr(0, space-1) : instructionInfo.instruction->sdp.sourcefile;
+    auto space = instructionInfo.instruction->sdp->sourcefile.find("[");
+    auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp->sourcefile.substr(0, space-1) : instructionInfo.instruction->sdp->sourcefile;
     auto foundItr = breakPoints.find(properPath);
 
     if (foundItr == breakPoints.end() || foundItr->second.empty()) return;
@@ -478,7 +478,7 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     const auto& found = foundItr->second;
 
     std::vector<BreakPoint> BPsToTrigger;
-    std::copy_if(found.begin(), found.end(), std::back_inserter(BPsToTrigger), [line = instructionInfo.instruction->sdp.sourceline](const BreakPoint& bp) {
+    std::copy_if(found.begin(), found.end(), std::back_inserter(BPsToTrigger), [line = instructionInfo.instruction->sdp->sourceline](const BreakPoint& bp) {
         return bp.line == line;
     });
     // We don't need to remain locked anymore
@@ -567,7 +567,7 @@ void Debugger::onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> 
     f.close();
     std::ofstream f2("P:\\break.sqf", std::ios::out | std::ios::binary);
     if (instructionInfo.instruction) {
-        f2.write(instructionInfo.instruction->sdp.content.data(), instructionInfo.instruction->sdp.content.length());
+        f2.write(instructionInfo.instruction->sdp->content.data(), instructionInfo.instruction->sdp->content.length());
     } else {
         f2.write(instructionInfo.gs->get_evaluator()->_errorPosition.content.data(), instructionInfo.gs->get_evaluator()->_errorPosition.content.length());
     }
@@ -597,7 +597,7 @@ void Debugger::commandContinue(StepType stepType) {
         if (!breakStateInfo.instruction || !breakStateInfo.instruction->instruction) {
             state = DebuggerState::running;
         } else {
-            stepInfo.stepLine = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->sdp.sourceline : breakStateInfo.instruction->context->sdocpos.sourceline;
+            stepInfo.stepLine = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->sdp->sourceline : breakStateInfo.instruction->context->sdocpos.sourceline;
             stepInfo.context = breakStateInfo.instruction->context;
             stepInfo.stepFrame = static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.count() - 1);
         }
@@ -824,7 +824,7 @@ void Debugger::grabCurrentCode(JsonArchive& answer, const std::string& file) con
         answer.Serialize("exception", "getCurrentCode: Not in breakState!");
         return;
     }
-    if (breakStateInfo.instruction->instruction == nullptr || breakStateInfo.instruction->instruction->sdp.sourcefile != file) {
+    if (breakStateInfo.instruction->instruction == nullptr || breakStateInfo.instruction->instruction->sdp->sourcefile != file) {
 
         breakStateInfo.instruction->context->callstack.for_each_backwards([&](const ref<intercept::types::vm_context::callstack_item>& item) {
             auto fileCode = tryGetFilenameAndCode(*item);
@@ -837,8 +837,8 @@ void Debugger::grabCurrentCode(JsonArchive& answer, const std::string& file) con
         });
 
     } else {
-        answer.Serialize("code", Script::getScriptFromFirstLine(breakStateInfo.instruction->instruction->sdp));
-        answer.Serialize("fileName", breakStateInfo.instruction->instruction->sdp.sourcefile);
+        answer.Serialize("code", Script::getScriptFromFirstLine(*breakStateInfo.instruction->instruction->sdp));
+        answer.Serialize("fileName", breakStateInfo.instruction->instruction->sdp->sourcefile);
     }
 }
 

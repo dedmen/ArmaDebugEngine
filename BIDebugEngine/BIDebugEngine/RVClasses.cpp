@@ -10,12 +10,12 @@ void Serialize(const game_instruction& in, JsonArchive& ar) {
     const auto typeName = ((&type) && ((__std_type_info_data*) &type)->_UndecoratedName) ? type.name() : "TypeFAIL";
     ar.Serialize("type", typeName);
     ar.Serialize("name", in.get_name());
-    auto space = in.sdp.sourcefile.find("[");
-    auto properPath = (space != std::string::npos) ? in.sdp.sourcefile.substr(0, space-1) : in.sdp.sourcefile;
+    auto space = in.sdp->sourcefile.find("[");
+    auto properPath = (space != std::string::npos) ? in.sdp->sourcefile.substr(0, space-1) : in.sdp->sourcefile;
 
     ar.Serialize("filename", (std::string)properPath);
 
-    ar.Serialize("fileOffset", { in.sdp.sourceline, in.sdp.pos, Script::getScriptLineOffset(in.sdp) });
+    ar.Serialize("fileOffset", { in.sdp->sourceline, in.sdp->pos, Script::getScriptLineOffset(*in.sdp) });
 
 }
 
@@ -335,7 +335,7 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
             //#TODO test if this is the correct instruction or if i should -1 this
             auto instructionIdx = stackItem->_currentInstruction - 1;
             if(instructionIdx >= 0 && instructionIdx < stackItem->_instructions.size()) {
-                return stackItem->_instructions.get(instructionIdx)->sdp;
+                return *stackItem->_instructions.get(instructionIdx)->sdp;
             }
         }   break;
 
@@ -343,7 +343,7 @@ sourcedocpos tryGetFilenameAndCode(const intercept::types::vm_context::callstack
             auto stackItem = static_cast<const CallStackItemData*>(&it);
             auto instructionIdx = stackItem->_ip - 1;
             if (instructionIdx >= 0 && instructionIdx < stackItem->_code->instructions.size()) {
-                return stackItem->_code->instructions.get(instructionIdx)->sdp;
+                return *stackItem->_code->instructions.get(instructionIdx)->sdp;
             }
         }   break;
 

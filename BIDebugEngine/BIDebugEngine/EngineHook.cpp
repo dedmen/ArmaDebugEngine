@@ -749,13 +749,13 @@ void EngineHook::_scriptInstruction(intercept::types::game_instruction* instr, i
     auto ctx = reinterpret_cast<RV_VMContext *>(&ctxi);
     auto gs = reinterpret_cast<GameState *>(&state);
 #ifdef OnlyOneInstructionPerLine
-    if (instruction->sdp.sourceline != lastInstructionLine || instruction->sdp.content.data() != lastInstructionFile) {
+    if (instruction->sdp->sourceline != lastInstructionLine || instruction->sdp->content.data() != lastInstructionFile) {
 #endif
         DebuggerInstructionInfo info{ instruction, ctx, gs };
         GlobalDebugger.onInstruction(info);
 #ifdef OnlyOneInstructionPerLine
-        lastInstructionLine = instruction->sdp.sourceline;
-        lastInstructionFile = instruction->sdp.content.data();
+        lastInstructionLine = instruction->sdp->sourceline;
+        lastInstructionFile = instruction->sdp->content.data();
     }
 #endif       
 

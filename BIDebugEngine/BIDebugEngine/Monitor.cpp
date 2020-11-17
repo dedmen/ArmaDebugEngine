@@ -4,7 +4,7 @@
 #include <fstream>
 
 void Monitor_knownScriptFiles::onInstruction(Debugger*, const DebuggerInstructionInfo& instructionInfo) {
-    scriptLines[instructionInfo.instruction->sdp.sourcefile].insert(instructionInfo.instruction->sdp.sourceline);
+    scriptLines[instructionInfo.instruction->sdp->sourcefile].insert(instructionInfo.instruction->sdp->sourceline);
 }
 
 void Monitor_knownScriptFiles::onShutdown() {
