@@ -379,8 +379,6 @@ public:
     }
 };
 
-bool (*fileExists)(r_string);
-
 void EngineHook::placeHooks() {
 
     //char* productType = reinterpret_cast<char*>(GlobalHookManager.findPattern(pat_productType));
@@ -467,9 +465,7 @@ void EngineHook::placeHooks() {
 
     vm = std::make_unique<sqf::virtualmachine>(vm_logger);
 
-    
-    fileExists = static_cast<bool (*)(r_string)>(intercept::client::host::request_plugin_interface("sqfasm_fileExists", 1).value_or(nullptr));
-    
+
     static registered_sqf_function preprocHook;
     static registered_sqf_function preprocLinesHook;
     if (getCommandLineParam("-ade_preprocessor"sv)) {
@@ -478,7 +474,7 @@ void EngineHook::placeHooks() {
             inputPath = path = par;
             r_string missionPath = intercept::sqf::get_mission_path(inputPath);
             
-            if (fileExists && fileExists(missionPath)) {
+            if (intercept::sqf::file_exists(missionPath)) {
                 path = missionPath;
             } else {
                 if (inputPath.front() == '\\') { //absolute path
@@ -486,7 +482,7 @@ void EngineHook::placeHooks() {
                 } else {
                     auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
                     path = (curPath.parent_path() / inputPath.c_str()).string();
-                    if (fileExists && !fileExists(path)) {
+                    if (!intercept::sqf::file_exists(path)) {
                         path = "\\" + inputPath;
                     }
                 }
@@ -509,7 +505,7 @@ void EngineHook::placeHooks() {
             inputPath = path = par;
             r_string missionPath = intercept::sqf::get_mission_path(inputPath);
 
-            if (fileExists && fileExists(missionPath)) {
+            if (intercept::sqf::file_exists(missionPath)) {
                 path = missionPath;
             } else {
                 if (inputPath.front() == '\\') { //absolute path
@@ -517,7 +513,7 @@ void EngineHook::placeHooks() {
                 } else {
                     auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
                     path = (curPath.parent_path() / inputPath.c_str()).string();
-                    if (fileExists && !fileExists(path)) {
+                    if (!intercept::sqf::file_exists(path)) {
                         path = "\\" + inputPath;
                     }
                 }
