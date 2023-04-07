@@ -110,7 +110,6 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 
             case CallStackItemArrayForEach::type_hash: {
                 auto stackItem = static_cast<const CallStackItemArrayForEach*>(item.get());
-
                 ar.Serialize("forEachIndex", stackItem->_forEachIndex);
             } break;
 
@@ -120,11 +119,11 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
             } break;
 
             case CallStackRepeat::type_hash: {
+                //auto stackItem = static_cast<const CallStackRepeat*>(item.get());
             } break;
 
             case CallStackItemConditionSelect::type_hash: {
                 auto stackItem = static_cast<const CallStackItemConditionSelect*>(item.get());
-                //Yes, that's a different name, but both have the same layout.
                 ar.Serialize("forEachIndex", stackItem->_forEachIndex);
             } break;
 
@@ -138,6 +137,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
             } break;
 
             case CallStackItemFor::type_hash: {
+                //auto stackItem = static_cast<const CallStackItemFor*>(item.get());
             } break;
 
             case CallStackItemArrayFindCond::type_hash: {

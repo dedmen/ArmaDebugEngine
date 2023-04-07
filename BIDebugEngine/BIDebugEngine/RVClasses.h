@@ -45,6 +45,12 @@ public:
 
 void Serialize(const game_value&, JsonArchive& ar);
 
+class ICallStackItemLoop
+{
+    virtual void SkipIteration(const game_state*, int) = 0;
+    virtual void ExitLoop(const game_state*, int) = 0;
+};
+
 class CallStackItemSimple : public vm_context::callstack_item {
 public:
     auto_array<ref<game_instruction>> _instructions;
@@ -64,7 +70,7 @@ public:
     static constexpr size_t type_hash = 0x6a5a9847820cfc77;
 };
 
-class CallStackItemArrayForEach : public vm_context::callstack_item {
+class CallStackItemArrayForEach : public vm_context::callstack_item, public ICallStackItemLoop {
 public:
     intercept::types::ref<game_data_code> _code; // compiled code
     intercept::types::ref<game_data_array> _array;
@@ -73,12 +79,12 @@ public:
     static constexpr size_t type_hash = 0x648cf398b08788b9;
 };
 
-class CallStackItemArrayCount : public vm_context::callstack_item {
+class CallStackItemArrayCount : public vm_context::callstack_item, public ICallStackItemLoop {
 public:
     static constexpr size_t type_hash = 0x2dc1ba43da7f1af7;
 };
 
-class CallStackItemForBASIC : public vm_context::callstack_item {
+class CallStackItemForBASIC : public vm_context::callstack_item, public ICallStackItemLoop {
 public:
     r_string _varName;
     float _varValue;
@@ -89,7 +95,7 @@ public:
     static constexpr size_t type_hash = 0x51097d4e8ac94aa9;
 };
 
-class CallStackItemApply : public vm_context::callstack_item {
+class CallStackItemApply : public vm_context::callstack_item, public ICallStackItemLoop {
 public:
     intercept::types::ref<game_data_code> _code; // compiled code
     intercept::types::ref<game_data_array> _array;
@@ -104,7 +110,7 @@ public:
     static constexpr size_t type_hash = 0xec123abb0b8aec96;
 };
 
-class CallStackItemArrayFindCond : public vm_context::callstack_item {
+class CallStackItemArrayFindCond : public vm_context::callstack_item, public ICallStackItemLoop {
 public:
     intercept::types::ref<game_data_code> _code; // compiled code
     intercept::types::ref<game_data_array> _array;
@@ -113,13 +119,26 @@ public:
     static constexpr size_t type_hash = 0x9ec7cbd761a5b791;
 };
 
-class CallStackItemFor : public vm_context::callstack_item {
+class CallStackItemFor : public vm_context::callstack_item, public ICallStackItemLoop {
 public:
+    intercept::types::ref<game_data_code> _init;
+    intercept::types::ref<game_data_code> _condition;
+    intercept::types::ref<game_data_code> _advance;
+    intercept::types::ref<game_data_code> _code;
+    int _phase;
+    int _instruction;
+
     static constexpr size_t type_hash = 0x9a611c77f320c98b;
 };
 
-class CallStackRepeat : public vm_context::callstack_item {
+class CallStackRepeat : public vm_context::callstack_item, public ICallStackItemLoop {
 public:
+    intercept::types::ref<game_data_code> _condition;
+    intercept::types::ref<game_data_code> _code;
+    int _phase;
+    int _iteration;
+    int _maxIterations;
+
     static constexpr size_t type_hash = 0x64fd66ac9d9a6063;
 };
 
