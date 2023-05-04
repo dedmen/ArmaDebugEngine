@@ -11,7 +11,8 @@ public:
         GameInstructionOperator,
         GameInstructionAssignment,
         GameInstructionVariable,
-        GameInstructionArray
+        GameInstructionArray,
+        GameInstructionNular
     };
 
     void init();

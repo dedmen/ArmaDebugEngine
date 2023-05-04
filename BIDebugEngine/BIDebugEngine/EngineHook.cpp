@@ -436,6 +436,9 @@ void EngineHook::placeHooks() {
     GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionArray, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
         GlobalEngineHook._scriptInstruction(instr, state, ctx);
     });
+    GASM.setHook(SQF_Assembly_Iface::InstructionType::GameInstructionNular, [](intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx) -> void {
+        GlobalEngineHook._scriptInstruction(instr, state, ctx);
+        });
 
     //HI.__instructionBreakpoint = GlobalHookManager.placeHook(hookTypes::instructionBreakpoint, pat_instructionBreakpoint, reinterpret_cast<uintptr_t>(instructionBreakpoint), instructionBreakpointJmpBack, 0);
     //has to jmpback 13CF0B6 wants 0x00000000013cf0af

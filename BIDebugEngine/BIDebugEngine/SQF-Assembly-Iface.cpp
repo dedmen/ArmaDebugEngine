@@ -11,6 +11,7 @@ static struct {
     void* vt_GameInstructionAssignment;
     void* vt_GameInstructionVariable;
     void* vt_GameInstructionArray;
+    void* vt_GameInstructionNular;
 } oldFunc;
 
 
@@ -23,6 +24,7 @@ static struct vtables {
     void** vt_GameInstructionAssignment;
     void** vt_GameInstructionVariable;
     void** vt_GameInstructionArray;
+    void** vt_GameInstructionNular;
 } GVt;
 
 
@@ -33,6 +35,7 @@ SQF_Assembly_Iface::instructionExecFnc h_GameInstructionOperator{ nullptr };
 SQF_Assembly_Iface::instructionExecFnc h_GameInstructionAssignment{ nullptr };
 SQF_Assembly_Iface::instructionExecFnc h_GameInstructionVariable{ nullptr };
 SQF_Assembly_Iface::instructionExecFnc h_GameInstructionArray{ nullptr };
+SQF_Assembly_Iface::instructionExecFnc h_GameInstructionNular{ nullptr };
 
 #define CALL_HOOK(x) if (h_##x) h_##x(this,state,t)
 
@@ -129,6 +132,19 @@ public:
     virtual r_string get_name() const { return ""sv; }
 };
 
+class GameInstructionNular : public game_instruction {
+public:
+    const intercept::__internal::gsNular* _nular {nullptr};
+    virtual bool exec(game_state& state, vm_context& t) {
+        CALL_HOOK(GameInstructionNular);
+
+        typedef bool(__thiscall* OrigEx)(game_instruction*, game_state&, vm_context&);
+        return reinterpret_cast<OrigEx>(oldFunc.vt_GameInstructionNular)(this, state, t);
+    }
+    virtual int stack_size(void* t) const { return 0; }
+    virtual r_string get_name() const { return ""sv; }
+};
+
 void SQF_Assembly_Iface::init() {
     auto iface = intercept::client::host::request_plugin_interface("sqf_asm_devIf", 1);
     if (!iface) {
@@ -184,6 +200,16 @@ void SQF_Assembly_Iface::init() {
     VirtualProtect(reinterpret_cast<LPVOID>(GVt.vt_GameInstructionAssignment), 14u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
     delete ins;
 
+    if (GVt.vt_GameInstructionNular)
+    {
+        ins = new GameInstructionNular();
+        VirtualProtect(reinterpret_cast<LPVOID>(GVt.vt_GameInstructionNular), 14u, 0x40u, &dwVirtualProtectBackup);
+        oldFunc.vt_GameInstructionNular = GVt.vt_GameInstructionNular[3];
+        GVt.vt_GameInstructionNular[3] = (*reinterpret_cast<void***>(ins))[3];
+        VirtualProtect(reinterpret_cast<LPVOID>(GVt.vt_GameInstructionNular), 14u, dwVirtualProtectBackup, &dwVirtualProtectBackup);
+        delete ins;
+    }
+
     ready = true;
 }
 
@@ -196,6 +222,7 @@ void SQF_Assembly_Iface::setHook(InstructionType type, instructionExecFnc func) 
         case InstructionType::GameInstructionAssignment: h_GameInstructionAssignment = func; break;
         case InstructionType::GameInstructionVariable: h_GameInstructionVariable = func; break;
         case InstructionType::GameInstructionArray: h_GameInstructionArray = func; break;
+        case InstructionType::GameInstructionNular: h_GameInstructionNular = func; break;
         default: __debugbreak();
     }
 }
