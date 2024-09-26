@@ -413,10 +413,16 @@
     <ClCompile Include="..\..\intercept\src\client\intercept\shared\client_types.cpp" />
     <ClCompile Include="..\..\intercept\src\client\intercept\shared\containers.cpp" />
     <ClCompile Include="..\..\intercept\src\client\intercept\shared\types.cpp" />
+    <ClCompile Include="..\..\lib\sqfvm\src\arraydata.cpp" />
+    <ClCompile Include="..\..\lib\sqfvm\src\codedata.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\commandmap.cpp" />
+    <ClCompile Include="..\..\lib\sqfvm\src\convert.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\logging.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\parsing\parsepreprocessor.cpp" />
+    <ClCompile Include="..\..\lib\sqfvm\src\scalardata.cpp" />
+    <ClCompile Include="..\..\lib\sqfvm\src\stringdata.cpp" />
     <ClCompile Include="..\..\lib\sqfvm\src\string_op.c" />
+    <ClCompile Include="..\..\lib\sqfvm\src\value.cpp" />
     <ClCompile Include="SQF-Assembly-Iface.cpp" />
     <ClCompile Include="BIDebugEngine.cpp" />
     <ClCompile Include="BreakPoint.cpp" />

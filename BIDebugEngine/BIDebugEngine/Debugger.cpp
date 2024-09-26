@@ -334,9 +334,28 @@ void Debugger::executeScriptInHalt(r_string script, r_string handle) {
     auto allo = intercept::client::host::functions.get_engine_allocator();
     auto ef = allo->evaluate_func;
     if (!ef) {
-        ar.Serialize("error", "no exec possible");
+
+        // What is the reason that I cannot just do this as a fallback? It will execute in wrong namespace?, it will not see local variables?
+
+        auto data = intercept::sqf::compile(script);
+        auto rtn = intercept::sqf::call(data);
+
+        if (rtn) {
+            JsonArchive data;
+            Serialize(rtn, data);
+
+            ar.Serialize("data", data);
+        } else {
+            ar.Serialize("error", "compile failed");
+        }
+
         auto text = ar.to_string();
+
         nController.sendMessage(text);
+
+        //ar.Serialize("error", "no exec possible");
+        //auto text = ar.to_string();
+        //nController.sendMessage(text);
         return;
     }
 

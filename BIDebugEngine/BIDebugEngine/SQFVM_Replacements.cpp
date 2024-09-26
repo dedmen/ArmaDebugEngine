@@ -1,4 +1,5 @@
 #include <type.h>
+#include <value.h>
 #include <virtualmachine.h>
 
 
@@ -25,6 +26,12 @@ std::optional<std::string> sqf::filesystem::try_get_physical_path(std::string_vi
 
 sqf::virtualmachine::virtualmachine(Logger& logger, unsigned long long maxinst) : CanLog(logger) {}
 sqf::virtualmachine::~virtualmachine() {}
+
+::sqf::value sqf::virtualmachine::evaluate_expression(std::string_view view, bool& success, bool request_halt)
+{
+    success = false;
+    return {};
+}
 
 #include "fileio.h"
 #include <intercept.hpp>

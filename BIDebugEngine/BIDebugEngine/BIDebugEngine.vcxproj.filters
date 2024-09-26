@@ -219,6 +219,24 @@
     <ClCompile Include="SQFVM_Replacements.cpp">
       <Filter>Source Files\sqfvm</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\lib\sqfvm\src\value.cpp">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sqfvm\src\scalardata.cpp">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sqfvm\src\stringdata.cpp">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sqfvm\src\arraydata.cpp">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sqfvm\src\codedata.cpp">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sqfvm\src\convert.cpp">
+      <Filter>Source Files\sqfvm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BIDebugEngine.h">
