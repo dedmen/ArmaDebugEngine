@@ -159,6 +159,8 @@ public:
         void Serialize(JsonArchive &ar);
     } productInfo;
 
+    uint64_t exceptionFilter = ~0ull;
+
 private:
     static bool allowStepInto(const DebuggerInstructionInfo& instructionInfo, int lastStepFrame);
     static std::pair<r_string, uint32_t> getCallstackLocation(const ref<vm_context::callstack_item>& item);

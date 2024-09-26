@@ -18,7 +18,8 @@ enum class NC_CommandType {
     ExecuteCode, //Executes code while halted, in current context and returns result
     LoadFile, //literally runs loadFile command and returns result
     clearAllBreakpoints,
-    clearFileBreakpoints
+    clearFileBreakpoints,
+    SetExceptionFilter = 16
 };
 
 enum class NC_OutgoingCommandType {

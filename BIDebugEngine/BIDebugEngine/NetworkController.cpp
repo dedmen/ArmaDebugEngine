@@ -234,6 +234,18 @@ void NetworkController::incomingMessage(const std::string& message) {
                 sendMessage(answer.to_string());
             } break;
 
+            case NC_CommandType::SetExceptionFilter:
+            {
+                GlobalDebugger.exceptionFilter = 0;
+
+                for (const auto& filterEntry : packet["data"]["scriptErrFilters"])
+                {
+                    uint32_t num = filterEntry.get<uint32_t>();
+                    GlobalDebugger.exceptionFilter |= (1ull << num);
+                }
+
+            } break;
+
         }
     }
     catch (std::exception &ex) {

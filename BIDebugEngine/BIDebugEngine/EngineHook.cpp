@@ -555,7 +555,7 @@ void EngineHook::placeHooks() {
     HI.scriptEcho = echoHook.has_function();
     HI.preprocRedirect = preprocHook.has_function() && preprocLinesHook.has_function() || !getCommandLineParam("-ade_preprocessor"sv);
     HI.__instructionBreakpoint = GASM.ready;
-    HI.executeCode = intercept::client::host::functions.get_engine_allocator()->evaluate_func != nullptr;
+    HI.executeCode = true; // If it fails we just use the Intercept sqf::call wrapper // intercept::client::host::functions.get_engine_allocator()->evaluate_func != nullptr;
 
 #else
 

@@ -403,8 +403,15 @@ auto_array<std::pair<r_string, uint32_t>> Debugger::getCallstackRaw(GameState* g
 
 void Debugger::onScriptError(GameState * gs) {
     if (nController.isClientConnected()) {
-        BPAction_Halt hAction(haltType::error);
-        hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->get_vm_context(), gs });
+
+
+        if (exceptionFilter & (1ull << static_cast<uint32_t>(gs->get_evaluator()->_errorType)))
+        {
+            // Filter allows it
+
+            BPAction_Halt hAction(haltType::error);
+            hAction.execute(this, nullptr, DebuggerInstructionInfo{ nullptr,(RV_VMContext*)gs->get_vm_context(), gs });
+        }
     } else {
         dumpStackToRPT(gs);
     }
