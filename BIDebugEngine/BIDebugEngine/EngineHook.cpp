@@ -191,13 +191,16 @@ HookManager::Pattern pat_worldSimulate{//PROF ONLY
 
 
 
-HookManager::Pattern pat_onScriptError{//1.68.140.940prof 1393640 base 0
-    //1.82.144.848 14130C3E0 base 0x140000000 -> 130C3E0 base 0
-    //1.92.145.639 141327680 base 0x140000000
-    //1.94.145.986013EFB80 b0
-    //Be careful. There are two functions that are very similar. We want the one with only 1 arg
-    "xxxxxxxxxxxxxxx????xxx????xxxxxx?????xx",
-    "\x48\x8B\xC4\x48\x89\x48\x08\x55\x48\x8D\x68\xA1\x48\x81\xEC\x00\x00\x00\x00\x48\x8B\x91\x00\x00\x00\x00\x48\x89\x55\xD7\xF7\x42\x00\x00\x00\x00\x00\x0F\x84"
+HookManager::Pattern pat_onScriptError{
+    //gs setError, rethook
+    //"xxxxxxxxxxxxxxxxxxx????xxx????xxxxxxxxx????xx????xxxxxx????xxxxxxxxxxxxxxxxx????xxx????xxxxxxxxxxxxxxxxxxxx????x????xxxxxxxxxxxxxxxxx",
+    //"\x4C\x8B\xDC\x45\x89\x43\x18\x4D\x89\x4B\x20\x53\x56\x57\x41\x57\x48\x81\xEC\x00\x00\x00\x00\x48\x8B\x81\x00\x00\x00\x00\x4C\x8B\xFA\x48\x8B\xF1\x41\xF7\xC0\x00\x00\x00\x00\x0F\x84\x00\x00\x00\x00\x83\x78\x20\x00\x0F\x85\x00\x00\x00\x00\x44\x89\x40\x20\x41\x8B\x4B\x18\x49\x89\x6B\xD8\x4D\x89\x73\xD0\xE8\x00\x00\x00\x00\x48\x8D\x2D\x00\x00\x00\x00\x48\x8B\x10\x48\x85\xD2\x74\x06\x48\x83\xC2\x10\xEB\x03\x48\x8B\xD5\x48\x8D\x0D\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x8B\xF8\x48\x85\xC0\x74\x09\xF0\xFF\x00\x4C\x8D\x40\x10\xEB\x03",
+    //0x000000014143E055 - 0x000000014143DE50
+
+    "xxxxxxxx?xxxx?xxxxxx????xxx????xxxxxxxxxxx????xx????xxxxx????xxxxxx????xxxx????xxxxxxx????xxxxx????xxxxx????x????x????xxxxxxxxxxxxxxxxxxxx????x????xxxxxxxx",
+    "\x89\x54\x24\x10\x4C\x89\x44\x24\x00\x4C\x89\x4C\x24\x00\x53\x55\x57\x48\x81\xEC\x00\x00\x00\x00\x48\x8B\x81\x00\x00\x00\x00\x33\xFF\x48\x8B\xE9\x89\x7C\x24\x20\xF7\xC2\x00\x00\x00\x00\x0F\x84\x00\x00\x00\x00\x39\x78\x20\x0F\x85\x00\x00\x00\x00\x89\x50\x20\x48\x8B\x81\x00\x00\x00\x00\x48\x89\xB4\x24\x00\x00\x00\x00\x83\x78\x20\x23\x48\x8D\x35\x00\x00\x00\x00\x75\x09\x48\x8D\x0D\x00\x00\x00\x00\xEB\x78\x8B\x8C\x24\x00\x00\x00\x00\xBF\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x8B\x10\x48\x85\xD2\x74\x06\x48\x83\xC2\x10\xEB\x03\x48\x8B\xD6\x48\x8D\x0D\x00\x00\x00\x00\xE8\x00\x00\x00\x00\x48\x85\xC0\x74\x03\xF0\xFF\x00",
+    0x00007FF6C704E29A - 0x00007FF6C704E070
+
 };
 
 HookManager::Pattern pat_scriptPreprocessorConstructor{// this is Preproc not FilePreproc!
@@ -483,7 +486,7 @@ void EngineHook::placeHooks() {
                 if (inputPath.front() == '\\') { //absolute path
 
                 } else {
-                    auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
+                    auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos->sourcefile.c_str());
                     path = (curPath.parent_path() / inputPath.c_str()).string();
                     if (!intercept::sqf::file_exists(path)) {
                         path = "\\" + inputPath;
@@ -514,7 +517,7 @@ void EngineHook::placeHooks() {
                 if (inputPath.front() == '\\') { //absolute path
 
                 } else {
-                    auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos.sourcefile.c_str());
+                    auto curPath = std::filesystem::path(gs.get_vm_context()->sdocpos->sourcefile.c_str());
                     path = (curPath.parent_path() / inputPath.c_str()).string();
                     if (!intercept::sqf::file_exists(path)) {
                         path = "\\" + inputPath;
@@ -703,8 +706,8 @@ void EngineHook::_scriptEntered(uintptr_t scrVMPtr) {
 
     auto context = GlobalDebugger.getVMContext(&scVM->_context);
     auto script = context->getScriptByContent(scVM->_context.sdoc.content);
-    if (!scVM->_context.sdoc.sourcefile.empty() || !scVM->_context.sdocpos.sourcefile.empty())
-        script->_fileName = scVM->_context.sdoc.sourcefile.empty() ? scVM->_context.sdocpos.sourcefile : scVM->_context.sdoc.sourcefile;
+    if (!scVM->_context.sdoc.sourcefile.empty() || !scVM->_context.sdocpos->sourcefile.empty())
+        script->_fileName = scVM->_context.sdoc.sourcefile.empty() ? scVM->_context.sdocpos->sourcefile : scVM->_context.sdoc.sourcefile;
     context->dbg_EnterContext();
 }
 
@@ -714,7 +717,7 @@ void EngineHook::_scriptTerminated(uintptr_t scrVMPtr) {
     GlobalDebugger.getVMContext(&scVM->_context)->dbg_LeaveContext();
     auto myCtx = GlobalDebugger.getVMContext(&scVM->_context);
     //scVM->debugPrint("Term " + std::to_string(myCtx->totalRuntime.count()));
-    if (scVM->_context.callstack.count() - 1 > 0) {
+    if (scVM->_context.callstack.size() - 1 > 0) {
         auto scope = scVM->_context.callstack.back();
         printAllVariables(*scope);
     }
@@ -789,12 +792,15 @@ void EngineHook::_world_OnMissionEventEnd() {
     currentContext = scriptExecutionContext::Invalid;
 }
 
-void EngineHook::_onScriptError(uintptr_t gameState) {
-    auto gs = reinterpret_cast<GameState *>(gameState);
-   if (gs && gs->get_evaluator()->_errorType != game_state::game_evaluator::evaluator_error_type::ok) {
-       waitForErrorHandler = true;
-       while (waitForErrorHandler) _mm_pause(); //Don't ASK!!!!
-   }
+void EngineHook::_onScriptError() {
+
+    auto gs = intercept::client::host::functions.get_engine_allocator()->gameState;
+    //auto gs = reinterpret_cast<GameState *>(gameState);
+
+    if (gs && gs->get_evaluator()->_errorType != game_state::game_evaluator::evaluator_error_type::ok) {
+        waitForErrorHandler = true;
+        while (waitForErrorHandler) _mm_pause(); //Don't ASK!!!!
+    }
 }
 
 void EngineHook::_onScriptAssert(uintptr_t gameState) {

@@ -296,7 +296,7 @@ void Debugger::dumpStackToRPT(GameState* gs) {
 
     bool dumpFullArray = (gs->get_evaluator() && gs->get_evaluator()->local) ? gs->get_evaluator()->local->get_variable("_debug_dumpFullArrays") != nullptr : false;
 
-    str << "Error at " << "L" << context.sdocpos.sourceline << " (" << context.sdocpos.sourcefile << ")\nCallstack:";
+    str << "Error at " << "L" << context.sdocpos->sourceline << " (" << context.sdocpos->sourcefile << ")\nCallstack:";
     intercept::sqf::diag_log(str.str());
     str.str(std::string());
     for (auto& it : context.callstack) {
@@ -456,7 +456,7 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
         //    //#TODO don't care about this if scriptVM stepping
         //    commandContinue(StepType::STContinue);
         //}
-        auto frame = instructionInfo.context->callstack.count() - 1;
+        auto frame = instructionInfo.context->callstack.size() - 1;
         if (stepInfo.stepType == StepType::STInto
             ||
             stepInfo.stepType == StepType::STOut && frame < stepInfo.stepFrame
@@ -563,8 +563,8 @@ void Debugger::onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> 
 
         auto& _errorPosition = instructionInfo.context->sdocpos; //#BUG context could be nullptr
 
-        assertAr.Serialize("fileOffset", { _errorPosition.sourceline, _errorPosition.pos, Script::getScriptLineOffset(_errorPosition) });
-        assertAr.Serialize("filename", _errorPosition.sourcefile);
+        assertAr.Serialize("fileOffset", { _errorPosition->sourceline, _errorPosition->pos, Script::getScriptLineOffset(*_errorPosition) });
+        assertAr.Serialize("filename", _errorPosition->sourcefile);
 #ifdef SerializeScriptContent
         assertAr.Serialize("content", Script::getScriptFromFirstLine(_errorPosition));
 #endif
@@ -616,9 +616,9 @@ void Debugger::commandContinue(StepType stepType) {
         if (!breakStateInfo.instruction || !breakStateInfo.instruction->instruction) {
             state = DebuggerState::running;
         } else {
-            stepInfo.stepLine = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->sdp->sourceline : breakStateInfo.instruction->context->sdocpos.sourceline;
+            stepInfo.stepLine = breakStateInfo.instruction->instruction ? breakStateInfo.instruction->instruction->sdp->sourceline : breakStateInfo.instruction->context->sdocpos->sourceline;
             stepInfo.context = breakStateInfo.instruction->context;
-            stepInfo.stepFrame = static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.count() - 1);
+            stepInfo.stepFrame = static_cast<uint8_t>(breakStateInfo.instruction->context->callstack.size() - 1);
         }
     }
     if (breakStateContinueEvent) {

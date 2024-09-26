@@ -85,7 +85,7 @@ public:
     void _scriptInstruction(intercept::types::game_instruction* instr, intercept::types::game_state& state, intercept::types::vm_context& ctx);
     void _world_OnMissionEventStart(uintptr_t eventType);
     void _world_OnMissionEventEnd();
-    void _onScriptError(uintptr_t gameState);
+    void _onScriptError();
     void _onScriptAssert(uintptr_t gameState);
     void _onScriptHalt(uintptr_t gameState);
     void _onScriptEcho(intercept::types::r_string message);

@@ -22,7 +22,7 @@ void Serialize(const game_instruction& in, JsonArchive& ar) {
 
 void RV_ScriptVM::debugPrint(std::string prefix) {
     std::string title = static_cast<std::string>(_displayName);
-    std::string filename = static_cast<std::string>(_context.sdoc.sourcefile.empty() ? _context.sdocpos.sourcefile : _context.sdoc.sourcefile);
+    std::string filename = static_cast<std::string>(_context.sdoc.sourcefile.empty() ? _context.sdocpos->sourcefile : _context.sdoc.sourcefile);
     std::string data;// = _doc._content.data();
     OutputDebugStringA((prefix + " " + title + "F " + filename + " " + data + "\n").c_str());
 }
@@ -97,7 +97,8 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 auto stackItem = static_cast<const CallStackItemData*>(item.get());
 
                 ar.Serialize("ip", stackItem->_ip);
-                ar.Serialize("final", stackItem->_code->is_final);
+                bool isFinal = stackItem->_code->get_final();
+                ar.Serialize("final", isFinal);
                 ar.Serialize("compiled", stackItem->_code->instructions);
 #ifdef SerializeScriptContent
                 ar.Serialize("contentSample", (std::string)stackItem->_code->code_string.substr(0, 100)); //#TODO send whole code over

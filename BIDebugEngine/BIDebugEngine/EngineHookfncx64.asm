@@ -12,7 +12,8 @@ _TEXT    SEGMENT
     EXTERN ?_world_OnMissionEventStart@EngineHook@@QEAAX_K@Z:   PROC;    EngineHook::_world_OnMissionEventStart
     EXTERN ?_world_OnMissionEventEnd@EngineHook@@QEAAXXZ:       PROC;    EngineHook::_world_OnMissionEventEnd
     EXTERN ?_worldSimulate@EngineHook@@QEAAXXZ:                 PROC;    EngineHook::_worldSimulate
-    EXTERN ?_onScriptError@EngineHook@@QEAAX_K@Z:               PROC;    EngineHook::_onScriptError
+    ;EXTERN ?_onScriptError@EngineHook@@QEAAX_K@Z:               PROC;    EngineHook::_onScriptError
+    EXTERN ?_onScriptError@EngineHook@@QEAAXXZ:               PROC;    EngineHook::_onScriptError
     EXTERN ?_onScriptAssert@EngineHook@@QEAAX_K@Z:              PROC;    EngineHook::_onScriptAssert
     EXTERN ?_onScriptHalt@EngineHook@@QEAAX_K@Z:                PROC;    EngineHook::_onScriptHalt
     ;EXTERN ?_onScriptEcho@EngineHook@@QEAAX_K@Z:                PROC;    EngineHook::_onScriptEcho
@@ -255,22 +256,34 @@ _TEXT    SEGMENT
     PUBLIC onScriptError
     onScriptError PROC
 
+        call    qword ptr [rax+18h];
+        push    rbx; Guard
+        push    rax;
+        push    rbp;
         push    rcx;
+        pushf;
+        push    rdx;
         push    rdx;
 
-        mov     rdx, rcx;                                           gameState Ptr
+        ;mov     rdx, rcx;                                           gameState Ptr
         mov     rcx, offset GlobalEngineHook;
-        call    ?_onScriptError@EngineHook@@QEAAX_K@Z;              EngineHook::_onScriptError;
-        
-        pop     rdx;
-        pop     rcx;                                                
+        call    ?_onScriptError@EngineHook@@QEAAXXZ;              EngineHook::_onScriptError;
 
-        mov     rax, rsp;                                           Fixup
-        mov     [rax+8], rcx
-        push    rbp
-        lea     rbp, [rax-5Fh]
-        sub     rsp, 0E0h
-        jmp     onScriptErrorJmpBack;
+        pop     rdx;  Guard (First one is corrupted)
+        pop     rdx;  Guard
+        popf;
+        pop     rcx;
+        pop     rbp;
+        pop     rax;
+        pop     rbx;
+
+        pop rbx; I don't know what this is, somehow we are off by 8
+
+        add     rsp, 470h ; Fixup
+        pop     rbp
+        pop     rbx
+        ret
+        ;jmp     onScriptErrorJmpBack;
     onScriptError ENDP
 
      ;##########
