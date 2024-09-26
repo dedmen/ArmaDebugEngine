@@ -225,9 +225,21 @@ void NetworkController::incomingMessage(const std::string& message) {
                     ar.Serialize("path", path);
                     JsonArchive answerAr;
                     answerAr.Serialize("path", path);
-#ifdef SerializeScriptContent
-                    answerAr.Serialize("content", intercept::sqf::load_file(path));
-#endif
+//#ifdef SerializeScriptContent
+
+                    if (path.find("/temp/bin/a3/") == 0) // Invalid paths written into vanilla SQFC files by ArmaScriptCompiler
+                        path = path.substr(9, -1);
+
+                    std::string path2 = path.c_str();
+                    //path2.startsWith c++20
+                    for (char& path1 : path2)
+                    {
+                        if (path1 == '/')
+                            path1 = '\\';
+                    }
+
+                    answerAr.Serialize("content", intercept::sqf::load_file(path2));
+//#endif
 
                     answer.Serialize("data", answerAr);
                 }
