@@ -567,6 +567,10 @@ void Debugger::onHalt(std::shared_ptr<std::pair<std::condition_variable, bool>> 
         assertAr.Serialize("filename", _errorPosition->sourcefile);
 #ifdef SerializeScriptContent
         assertAr.Serialize("content", Script::getScriptFromFirstLine(_errorPosition));
+#else
+        // If filename is not available, we always push content, because there is no other way to get it
+        if (_errorPosition->sourcefile.empty())
+            assertAr.Serialize("content", Script::getScriptFromFirstLine(*_errorPosition));
 #endif
 
         ar.Serialize("halt", assertAr);

@@ -86,6 +86,10 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 #ifdef SerializeScriptContent
                 ar.Serialize("contentSample", (std::string)stackItem->_content.content.substr(0, 100));
 #endif
+                // If filename is not available, we always push content, because there is no other way to get it
+                if (stackItem->_content.sourcefile.empty())
+                    ar.Serialize("content", stackItem->_content.content);
+
                 ar.Serialize("ip", stackItem->_currentInstruction);
                 JsonArchive arInst;
                 ::Serialize(*(stackItem->_instructions.get(stackItem->_currentInstruction - 1)), arInst);
@@ -103,6 +107,10 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
 #ifdef SerializeScriptContent
                 ar.Serialize("contentSample", (std::string)stackItem->_code->code_string.substr(0, 100)); //#TODO send whole code over
 #endif
+                // If filename is not available, we always push content, because there is no other way to get it
+                // if (stackItem->_content.sourcefile.empty()) Data never has a file reference? Well the first instruction inside it probably would have it..
+                    ar.Serialize("content", stackItem->_code->code_string);
+
                 JsonArchive arInst;
                 ::Serialize(*(stackItem->_code->instructions.get(stackItem->_ip - 1)), arInst);
                 ar.Serialize("lastInstruction", arInst);
@@ -227,6 +235,10 @@ void SerializeError(const intercept::types::game_state::game_evaluator& e,JsonAr
     ar.Serialize("filename", e._errorPosition.sourcefile);
 #ifdef SerializeScriptContent
     ar.Serialize("content", Script::getScriptFromFirstLine(e._errorPosition));
+#else
+    // If filename is not available, we always push content, because there is no other way to get it
+    if (e._errorPosition.sourcefile.empty())
+        ar.Serialize("content", e._errorPosition.content);
 #endif
 }
 
