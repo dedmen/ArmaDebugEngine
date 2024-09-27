@@ -16,7 +16,6 @@ void Serialize(const game_instruction& in, JsonArchive& ar) {
     ar.Serialize("filename", (std::string)properPath);
 
     ar.Serialize("fileOffset", { in.sdp->sourceline, in.sdp->pos, Script::getScriptLineOffset(*in.sdp) });
-
 }
 
 

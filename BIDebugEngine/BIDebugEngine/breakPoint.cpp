@@ -6,6 +6,7 @@
 #include <fstream>
 #include <chrono>
 #include <core.hpp>
+#include <windows.h> // Mouse cursor handling
 using namespace std::chrono_literals;
 
 void BreakPoint::Serialize(JsonArchive& ar) {
@@ -232,7 +233,13 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
 
     try {
         //#TODO also want to SkipKeysInThisFrame See 1.68.140.940
+
+        // Game also force sets cursor pos, we don't want that if the mouse was already free. Keep cursor where it was
+        POINT curPos;
+        GetCursorPos(&curPos);
         if (EngineEnableMouseFnc && EngStable_EnableMouse) EngineEnableMouseFnc(false); //Free mouse from Arma
+        ShowCursor(1);
+        SetCursorPos(curPos.x, curPos.y);
     } catch (...) {
         EngStable_EnableMouse = false;
     }
