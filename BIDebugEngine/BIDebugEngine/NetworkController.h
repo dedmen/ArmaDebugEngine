@@ -19,7 +19,8 @@ enum class NC_CommandType {
     LoadFile, //literally runs loadFile command and returns result
     clearAllBreakpoints,
     clearFileBreakpoints,
-    SetExceptionFilter = 16
+    SetExceptionFilter = 16,
+    FetchAllFunctionsInNamespace = 17
 };
 
 enum class NC_OutgoingCommandType {
@@ -37,7 +38,8 @@ enum class NC_OutgoingCommandType {
     BreakpointLog, //A log breakpoint was triggered
     LogMessage, //A log message from the game, for example from echo script command
     ExecuteCodeResult, //Result of ExecuteCode command
-    LoadFileResult //Result of LoadFile command
+    LoadFileResult, //Result of LoadFile command
+    AllFunctionsInNamespaceResult // Result of FetchAllFunctionsInNamespace command
 };
 
 class NetworkController {

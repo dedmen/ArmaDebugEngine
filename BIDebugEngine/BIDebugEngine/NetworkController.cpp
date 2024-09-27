@@ -217,9 +217,10 @@ void NetworkController::incomingMessage(const std::string& message) {
                 JsonArchive answer;
                 answer.Serialize("handle", packet.value<std::string>("handle", {}));
                 answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::LoadFileResult));
-                if (GlobalDebugger.state != DebuggerState::breakState) {
-                    answer.Serialize("exception", "getCurrentCode: Not in breakState!");
-                } else {
+
+                intercept::client::invoker_lock lock(GlobalDebugger.state == DebuggerState::breakState); // need to run script command
+
+                {
                     JsonArchive ar(packet["data"]);
                     r_string path;
                     ar.Serialize("path", path);
@@ -246,8 +247,7 @@ void NetworkController::incomingMessage(const std::string& message) {
                 sendMessage(answer.to_string());
             } break;
 
-            case NC_CommandType::SetExceptionFilter:
-            {
+            case NC_CommandType::SetExceptionFilter: {
                 GlobalDebugger.exceptionFilter = 0;
 
                 for (const auto& filterEntry : packet["data"]["scriptErrFilters"])
@@ -258,6 +258,63 @@ void NetworkController::incomingMessage(const std::string& message) {
 
             } break;
 
+            case NC_CommandType::FetchAllFunctionsInNamespace: {
+                JsonArchive ar(packet["data"]);
+                uint16_t scope;
+                ar.Serialize("scope", scope);
+
+                intercept::client::invoker_lock lock(GlobalDebugger.state == DebuggerState::breakState);
+
+                auto functions = GlobalDebugger.getCodeVariables(static_cast<VariableScope>(scope));
+
+                JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
+                answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::AllFunctionsInNamespaceResult));
+
+                JsonArchive answerAr;
+                auto& _array = (*answerAr.getRaw())["modules"];
+
+                for (const auto& function : functions)
+                {
+                    // We need to get a filename
+                    if (auto code = function.var->value.get_as<game_data_code>())
+                    {
+                        if (code->instructions.is_empty())
+                            continue;
+                        if (!code->instructions.front()->sdp)
+                            continue;
+                        if (code->instructions.front()->sdp->sourcefile.empty())
+                            continue;
+
+                        JsonArchive element;
+                        element.Serialize("name", function.var->name);
+                        element.Serialize("ns", static_cast<int>(function.ns));
+
+                        std::string path = code->instructions.front()->sdp->sourcefile.c_str();
+                        for (char& path1 : path)
+                        {
+                            if (path1 == '/')
+                                path1 = '\\';
+                        }
+
+                        //if (path.front() == '\\')
+                        //    path.erase(0, 1);
+
+                        if (path.find("temp\\bin\\A3\\") == 0) // Invalid paths written into vanilla SQFC files by ArmaScriptCompiler
+                            path = path.substr(9, -1);
+
+                        //if (path.find("fn_3den_init.sqf") != -1)
+                        //    __debugbreak();
+
+                        element.Serialize("path", path);
+
+                        _array.push_back(*element.getRaw());
+                    }
+                }
+
+                answer.Serialize("data", answerAr);
+                sendMessage(answer.to_string());
+            } break;
         }
     }
     catch (std::exception &ex) {

@@ -120,6 +120,7 @@ public:
         void Serialize(JsonArchive& ar) const;
     };
     std::vector<VariableInfo> getVariables(VariableScope, std::vector<std::string>& varName) const;
+    std::vector<VariableInfo> getCodeVariables(VariableScope) const;
     void grabCurrentCode(JsonArchive& answer,const std::string& file) const;
     std::map<uintptr_t, std::shared_ptr<VMContext>> VMPtrToScript;
     //std::map<std::string, std::vector<BreakPoint>> breakPoints;

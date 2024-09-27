@@ -849,6 +849,60 @@ std::vector<Debugger::VariableInfo> Debugger::getVariables(VariableScope scope, 
     return output;
 }
 
+std::vector<Debugger::VariableInfo> Debugger::getCodeVariables(VariableScope scope) const
+{
+    std::vector<Debugger::VariableInfo> ret;
+    auto gs = intercept::client::host::functions.get_engine_allocator()->gameState;
+    //if (scope & VariableScope::local) {
+    //    std::vector<r_string> list;
+    //    if (gs->get_evaluator()->local) {
+    //        gs->get_evaluator()->local->variables.for_each([&](const game_variable& var) {
+    //            list.push_back(var.name);
+    //            });
+    //    }
+    //    ret[VariableScope::local] = std::move(list);
+    //}
+
+    if (scope & VariableScope::missionNamespace) {
+        auto& varSpace = gs->get_global_namespace(game_state::namespace_type::mission)->_variables;
+
+        varSpace.for_each([&](const game_variable& var) {
+            if (var.value.type_enum() == game_data_type::CODE)
+                ret.emplace_back(&var, VariableScope::missionNamespace);
+        });
+    }
+
+    if (scope & VariableScope::uiNamespace) {
+        auto& varSpace = gs->get_global_namespace(game_state::namespace_type::ui)->_variables;
+
+        varSpace.for_each([&](const game_variable& var) {
+            if (var.value.type_enum() == game_data_type::CODE)
+                ret.emplace_back(&var, VariableScope::missionNamespace);
+            });
+    }
+
+    if (scope & VariableScope::profileNamespace) {
+        intercept::client::invoker_lock lock(state == DebuggerState::breakState);
+        auto& varSpace = intercept::sqf::profile_namespace().get_as<game_data_namespace>()->_variables;
+
+        varSpace.for_each([&](const game_variable& var) {
+            if (var.value.type_enum() == game_data_type::CODE)
+                ret.emplace_back(&var, VariableScope::missionNamespace);
+            });
+    }
+
+    if (scope & VariableScope::parsingNamespace) {
+        auto& varSpace = gs->get_global_namespace(game_state::namespace_type::parsing)->_variables;
+
+        varSpace.for_each([&](const game_variable& var) {
+            if (var.value.type_enum() == game_data_type::CODE)
+                ret.emplace_back(&var, VariableScope::missionNamespace);
+            });
+    }
+
+    return ret;
+}
+
 void Debugger::grabCurrentCode(JsonArchive& answer, const std::string& file) const {
     if (state != DebuggerState::breakState) {
         answer.Serialize("exception", "getCurrentCode: Not in breakState!");
