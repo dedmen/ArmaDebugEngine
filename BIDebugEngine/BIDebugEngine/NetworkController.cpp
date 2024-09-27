@@ -315,6 +315,48 @@ void NetworkController::incomingMessage(const std::string& message) {
                 answer.Serialize("data", answerAr);
                 sendMessage(answer.to_string());
             } break;
+    
+            case NC_CommandType::FetchInstructionRef: {
+                JsonArchive ar(packet["data"]);
+                std::string instructionRef;
+                ar.Serialize("instructionRef", instructionRef);
+
+                const auto_array<ref<game_instruction>>* instructions {};
+                if (instructionRef.starts_with("CSIS_"))
+                {
+                    uint64_t ptr;
+                    std::from_chars(instructionRef.c_str() + 5, &instructionRef.back()+1, ptr, 10);
+                    auto stackItem = reinterpret_cast<const CallStackItemSimple*>(ptr);
+
+                    auto& x2 = typeid(*stackItem);
+                    if (std::string_view(x2.raw_name()).find("CallStackItemSimple") != -1)
+                        instructions = &stackItem->_instructions;
+                }
+                else if (instructionRef.starts_with("CSID_"))
+                {
+                    uint64_t ptr;
+                    std::from_chars(instructionRef.c_str() + 5, &instructionRef.back() + 1, ptr, 10);
+                    auto stackItem = reinterpret_cast<const CallStackItemData*>(ptr);
+
+                    auto& x2 = typeid(*stackItem);
+                    if (std::string_view(x2.raw_name()).find("CallStackItemData") != -1)
+                        instructions = &stackItem->_code->instructions;
+                }
+
+                if (!instructions)
+                    return; //#TODO send error reply??
+
+                JsonArchive answer;
+                answer.Serialize("handle", packet.value<std::string>("handle", {}));
+                answer.Serialize("command", static_cast<int>(NC_OutgoingCommandType::InstructionRefResult));
+
+                JsonArchive answerAr;
+                answerAr.Serialize("instructions", *const_cast<auto_array<ref<game_instruction>>*>(instructions));
+
+                answer.Serialize("data", answerAr);
+                sendMessage(answer.to_string());
+            } break;
+
         }
     }
     catch (std::exception &ex) {

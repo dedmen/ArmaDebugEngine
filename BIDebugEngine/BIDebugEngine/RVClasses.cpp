@@ -89,6 +89,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 if (stackItem->_content.sourcefile.empty())
                     ar.Serialize("content", stackItem->_content.content);
 
+                ar.Serialize("instructionRef", std::format("CSIS_{}", (uint64_t)stackItem));
                 ar.Serialize("ip", stackItem->_currentInstruction);
                 JsonArchive arInst;
                 ::Serialize(*(stackItem->_instructions.get(stackItem->_currentInstruction - 1)), arInst);
@@ -110,6 +111,7 @@ void RV_VMContext::Serialize(JsonArchive& ar) {
                 // if (stackItem->_content.sourcefile.empty()) Data never has a file reference? Well the first instruction inside it probably would have it..
                     ar.Serialize("content", stackItem->_code->code_string);
 
+                ar.Serialize("instructionRef", std::format("CSID_{}", (uint64_t)stackItem));
                 JsonArchive arInst;
                 ::Serialize(*(stackItem->_code->instructions.get(stackItem->_ip - 1)), arInst);
                 ar.Serialize("lastInstruction", arInst);

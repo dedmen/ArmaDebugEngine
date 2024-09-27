@@ -20,7 +20,8 @@ enum class NC_CommandType {
     clearAllBreakpoints,
     clearFileBreakpoints,
     SetExceptionFilter = 16,
-    FetchAllFunctionsInNamespace = 17
+    FetchAllFunctionsInNamespace = 17,
+    FetchInstructionRef = 18 // Serialize all instructions from a InstructionRef
 };
 
 enum class NC_OutgoingCommandType {
@@ -39,7 +40,8 @@ enum class NC_OutgoingCommandType {
     LogMessage, //A log message from the game, for example from echo script command
     ExecuteCodeResult, //Result of ExecuteCode command
     LoadFileResult, //Result of LoadFile command
-    AllFunctionsInNamespaceResult // Result of FetchAllFunctionsInNamespace command
+    AllFunctionsInNamespaceResult, // Result of FetchAllFunctionsInNamespace command
+    InstructionRefResult = 16 // Result of FetchInstructionRef command
 };
 
 class NetworkController {
