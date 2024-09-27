@@ -218,7 +218,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
       <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;$(SolutionDir)..\lib\sqfvm\src;$(SolutionDir)..\websocketpp;$(SolutionDir)..\asio\asio\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -332,7 +332,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
       <AdditionalIncludeDirectories>$(SolutionDir)..\intercept\src\client\headers;$(SolutionDir)..\intercept\src\client\headers\client;$(SolutionDir)..\intercept\src\client\headers\client\sqf;$(SolutionDir)..\intercept\src\client\headers\shared;$(SolutionDir)..\lib\sqfvm\src;$(SolutionDir)..\websocketpp;$(SolutionDir)..\asio\asio\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>

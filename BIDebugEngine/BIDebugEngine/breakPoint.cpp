@@ -237,7 +237,7 @@ void BPAction_Halt::execute(Debugger* dbg, BreakPoint* bp, const DebuggerInstruc
         // Game also force sets cursor pos, we don't want that if the mouse was already free. Keep cursor where it was
         POINT curPos;
         GetCursorPos(&curPos);
-        if (EngineEnableMouseFnc && EngStable_EnableMouse) EngineEnableMouseFnc(false); //Free mouse from Arma
+        if (EngineEnableMouseFnc && EngStable_EnableMouse && dbg->nController.isClientConnected()) EngineEnableMouseFnc(false); //Free mouse from Arma
         ShowCursor(1);
         SetCursorPos(curPos.x, curPos.y);
     } catch (...) {

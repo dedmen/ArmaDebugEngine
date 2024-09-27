@@ -337,17 +337,17 @@ void Debugger::executeScriptInHalt(r_string script, r_string handle) {
 
         // What is the reason that I cannot just do this as a fallback? It will execute in wrong namespace?, it will not see local variables?
 
-        auto data = intercept::sqf::compile(script);
-        auto rtn = intercept::sqf::call(data);
+        auto compiledCode = intercept::sqf::compile(script);
+        auto rtn = intercept::sqf::call(compiledCode);
 
-        if (rtn) {
-            JsonArchive data;
-            Serialize(rtn, data);
+        //if (rtn) {
+            JsonArchive resultData;
+            Serialize(rtn, resultData);
 
-            ar.Serialize("data", data);
-        } else {
-            ar.Serialize("error", "compile failed");
-        }
+            ar.Serialize("data", resultData);
+        //} else {
+        //    ar.Serialize("error", "compile failed");
+        //}
 
         auto text = ar.to_string();
 
@@ -496,7 +496,7 @@ void Debugger::checkForBreakpoint(DebuggerInstructionInfo& instructionInfo) {
     //static bool doBreeak = true;
     //if (doBreeak && instructionInfo.instruction->sdp.sourcefile.find("dedmen\\") != std::string::npos) __debugbreak();
     auto space = instructionInfo.instruction->sdp->sourcefile.find("[");
-    auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp->sourcefile.substr(0, space-1) : instructionInfo.instruction->sdp->sourcefile;
+    auto properPath = (space != std::string::npos) ? instructionInfo.instruction->sdp->sourcefile.substr(0, space-1) : std::string_view(instructionInfo.instruction->sdp->sourcefile);
     auto foundItr = breakPoints.find(properPath);
 
     if (foundItr == breakPoints.end() || foundItr->second.empty()) return;
